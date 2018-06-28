@@ -50,8 +50,8 @@ INSTALLED_APPS = [
 
     'rest_framework',
 
-    'account',
-    'tft',
+    'account.apps.AccountConfig',
+    'tft.apps.TftConfig',
     'action',
 ]
 
@@ -155,7 +155,10 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     ),
-}
+    'DEFAULT_PERMISSION_CLASSES': (
+            'rest_framework.permissions.IsAuthenticated',
+        )
+    }
 
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=7)

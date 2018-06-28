@@ -12,7 +12,7 @@ class User(AbstractUser):
     realname = models.CharField('真名', max_length=10, blank=True, null=True)
     email = models.EmailField(_('邮箱'), max_length=100, unique=True, blank=True, null=True)
     mobile = models.CharField("电话", max_length=11, unique=True, blank=True, null=True)
-    avatar = models.ImageField('头像', upload_to='avatars/%Y/%m', default="avatars/default.png")
+    avatar = models.ImageField('头像', upload_to='avatars/%Y/%m', blank=True, null=True, default="avatars/default.png")
 
     gender = models.CharField("性别", max_length=1, choices=GENDER_CHOICES, default="M")
     birthday = models.DateField("出生年月", blank=True, null=True)
