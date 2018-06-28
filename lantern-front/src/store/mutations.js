@@ -1,6 +1,8 @@
 export default {
-  setInfo (state, username, token) {
-    state.name = username
-    state.token = token
+  setLoginStatus (state, isLogged) {
+    state.isLogged = isLogged
+  },
+  setTest (state, val) {
+    state.test = val
   }
 }

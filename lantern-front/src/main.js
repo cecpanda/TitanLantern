@@ -6,7 +6,7 @@ import router from './router'
 import store from './store/index'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
-import cookie from '../static/cookie'
+// import cookie from '../static/cookie'
 
 Vue.config.productionTip = false
 
@@ -18,20 +18,5 @@ new Vue({
   router,
   store,
   components: { App },
-  template: '<App/>',
-  methods: {
-    checkLogin () {
-      if (!cookie.getCookie('token')) {
-        this.$router.push({name: 'Login'})
-      } else {
-        this.$router.push({name: 'Home'})
-      }
-    }
-  },
-  created () {
-    this.checkLogin()
-  },
-  watch: {
-    '$route': 'checkLogin'
-  }
+  template: '<App/>'
 })

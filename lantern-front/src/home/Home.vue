@@ -27,8 +27,11 @@
     </el-submenu>
     <el-menu-item index="4" disabled>SL</el-menu-item>
     <el-menu-item index="5">
-      <router-link to='/user' v-if='logged'>用户</router-link>
-      <router-link to='/user' v-else>登录</router-link>
+      <template v-if='isLogged'>
+        <router-link to='' >用户信息</router-link>
+        <router-link to='/logout'>退出</router-link>
+      </template>
+      <router-link to='/login' v-else>登录</router-link>
     </el-menu-item>
   </el-menu>
 </template>
@@ -39,22 +42,19 @@ export default {
   data () {
     return {
       activeIndex: '1',
-      activeIndex2: '1'
+      activeIndex2: '1',
+      isLogged: this.$store.state.isLogged
     }
   },
   computed: {
-    logged () {
-      if (this.$store.state.token) {
-        return true
-      } else {
-        return false
-      }
-      // return this.$store.state.token ? true : false
-    }
   },
   methods: {
     handleSelect (key, keyPath) {
-      console.log(key, keyPath)
+      this.$store.dispatch('setTest', 'hehe')
+    },
+    logOut () {
+      localStorage.removeItem('token')
+      this.$router.push('/')
     }
   }
 }

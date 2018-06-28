@@ -20,8 +20,8 @@
 </template>
 
 <script>
-import cookie from '../../static/cookie'
-import { login } from '../api/api'
+// import cookie from '../../static/cookie'
+import { jwtAuth } from '../api/user'
 
 export default {
   data () {
@@ -62,15 +62,15 @@ export default {
     },
     login () {
       var that = this
-      login({
+      jwtAuth({
         username: this.ruleForm.username,
         password: this.ruleForm.password
       }).then((response) => {
-        console.log(response)
         // cookie.setCookie('username', this.ruleForm, 7)
         // cookie.setCookie('token', response.data.token, 7)
-        localStorage.token = 
-        that.$store.dispatch('setInfo', this.ruleForm, response.data.token)
+        localStorage.setItem('name', JSON.stringify(this.ruleForm.username))
+        localStorage.setItem('token', JSON.stringify(response.data.token))
+        // that.$store.dispatch('setInfo', this.ruleForm, response.data.token)
         that.$router.push({name: 'Home'})
       })
     }
