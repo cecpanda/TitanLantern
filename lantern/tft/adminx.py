@@ -2,7 +2,7 @@ import xadmin
 
 from .models import EqKind, Eq, Step, \
                     LotInfo, Lot, \
-                    Order, OpenOrder, RecoverOrder
+                    Order# , OpenOrder, RecoverOrder
 
 
 # class LotAdmin(object):
@@ -31,5 +31,5 @@ xadmin.site.register(LotInfo)
 xadmin.site.register(Lot)
 
 xadmin.site.register(Order)
-xadmin.site.register(OpenOrder)
-xadmin.site.register(RecoverOrder)
+# xadmin.site.register(OpenOrder)
+# xadmin.site.register(RecoverOrder)

@@ -39,6 +39,7 @@ urlpatterns = [
 
     # account
     path('account/', include('account.urls', namespace='account')),
+
     # tft
     path('tft/', include('tft.urls', namespace='tft')),
 ]
