@@ -39,6 +39,14 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('username',)
 
 
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserModel
+        fields = ('username', 'realname', 'email',  'mobile', 'phone', 'avatar',
+                  'gender', 'birthday',)
+        read_only_fields = ('username',)
+
+
 class PasswordSerializer(serializers.Serializer):
     old_password =  serializers.CharField(style={'input_type': 'password'})
     new_password = serializers.CharField(style={'input_type': 'password'})

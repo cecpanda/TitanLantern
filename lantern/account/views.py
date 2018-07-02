@@ -12,14 +12,15 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from .models import User
-from .serializers import UserSerializer, PasswordSerializer, GroupSerializer, GroupUserSerializer
+from .serializers import UserSerializer, PasswordSerializer, GroupSerializer, \
+                          GroupUserSerializer, UserUpdateSerializer
 from .utils import UserPagination
 from .filters import UserFilter
 
 
 class UserViewSet(ListModelMixin,
                   RetrieveModelMixin,
-                  # UpdateModelMixin,
+                  UpdateModelMixin,
                   viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -42,6 +43,15 @@ class UserViewSet(ListModelMixin,
             user.save()
             return Response({'status': 'ok'}, status.HTTP_202_ACCEPTED)
         return Response({'error': 'wrong password'}, status.HTTP_400_BAD_REQUEST)
+
+    # 因为 UpdateModelMixin 的 url 不优雅，重新写
+    @action(methods=['put'], detail=False, url_path='change-profile', url_name='change_profile')
+    def change_profile(self, request, pk=None):
+        user = self.request.user
+        serializer = UserUpdateSerializer(user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status.HTTP_200_OK)
 
 
 class GroupViewSet(ListModelMixin,
