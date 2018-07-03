@@ -15,6 +15,7 @@ class EqKind(models.Model):
     def __str__(self):
         return self.name
 
+
 class Eq(models.Model):
     kind = models.ForeignKey(EqKind, related_name='eqs', blank=True, null=True, on_delete=models.SET_NULL, verbose_name='装置类别')
     name = models.CharField('装置名', max_length=8)
@@ -25,6 +26,7 @@ class Eq(models.Model):
 
     def __str__(self):
         return  self.name
+
 
 class Step(models.Model):
     name = models.CharField('工程站点', max_length=5)
