@@ -29,5 +29,9 @@ class Lot(models.Model):
         verbose_name = '批次'
         verbose_name_plural = verbose_name
 
+    def save(self, *args, **kwargs):
+        self.name = self.name.upper()
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f'{self.name}'
+        return self.name

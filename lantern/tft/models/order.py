@@ -14,7 +14,7 @@ UserModel = get_user_model()
 
 def default_order_sn():
     now = timezone.localtime()
-    return now.strftime('%Y-%m-%d-%H-%M-%S-%f')
+    return now.strftime('%y%m%d-%H%M%S-%f')
 
 
 class Order(models.Model):
@@ -36,12 +36,15 @@ class Order(models.Model):
         verbose_name = '订单'
         verbose_name_plural = verbose_name
 
+    def __str__(self):
+        return self.sn
+
 
 def report_handler(instance, filename):
-    filename = filename.strip()
-    name = os.path.split(filename)
-    suffix = os.path.splitext(filename)
-    return f"{instance.order.sn}/{instance.order.sn}-{instance.id}{suffix}"
+    # instance.id 还未存在
+    filename = os.path.split(filename.strip())[-1]
+    # name, suffix = os.path.splitext(filename)
+    return f"reports/{instance.order.sn}/{filename}"
 
 
 class ReportFile(models.Model):
@@ -52,33 +55,127 @@ class ReportFile(models.Model):
         verbose_name = '调查报告'
         verbose_name_plural = verbose_name
 
+    def __str__(self):
+        return self.order.sn
+
 
 class StartOrder(models.Model):
     order = models.OneToOneField(Order, related_name='startorder', on_delete=models.CASCADE, verbose_name='订单')
     draft = models.BooleanField('放入草稿箱', default=False)
-    applicant = models.ForeignKey(UserModel, related_name='startorders', on_delete=models.PROTECT, verbose_name='申请人')
+    appl = models.ForeignKey(UserModel, related_name='startorders', on_delete=models.PROTECT, verbose_name='申请人')
     # department，从 user 中自取
     created = models.DateTimeField('申请时间', auto_now_add=True)
     # charge_group 从停机设备中获取
     # charge_group = models.ManyToManyField(Group, related_name='startorders', blank=True, verbose_name='开单部门')
     eq = models.ManyToManyField(Eq, related_name='startorders', verbose_name='停机设备')
-    kind = models.CharField('停机机种', max_length=5)
+    kind = models.CharField('停机机种', max_length=10)
     found_time = models.DateTimeField('发现时间')
     found_step = models.CharField('发现站点', max_length=10)
     # 做验证，这个站点下是否有停机设备
-    step = models.ManyToManyField(Step, related_name='startorders', blank=True, verbose_name='停机站点')
-    reason = models.TextField('停机原因', max_length=110)
+    step = models.ManyToManyField(Step, related_name='+', blank=True, verbose_name='停机站点')
+    reason = models.TextField('停机原因', max_length=100)
     users = models.ManyToManyField(UserModel, related_name='+', blank=True, verbose_name='通知生产人员')
     # 做验证，必须停机设备的组下的人员
     charge_users = models.ManyToManyField(UserModel, related_name='+', blank=True, verbose_name='通知制程人员')
-    desc = models.TextField('异常描述', max_length=320)
+    desc = models.TextField('异常描述', max_length=300, blank=True)
     start_time = models.DateTimeField('受害开始时间', blank=True, null=True)
     end_time = models.DateTimeField('受害结束时间', blank=True, null=True)
-    lot_num = models.PositiveIntegerField('受害批次数')
+    lot_num = models.PositiveIntegerField('受害批次数', blank=True)
     lots = models.ManyToManyField(Lot, related_name="+", blank=True, verbose_name='异常批次')
-    condition = models.TextField('复机条件', max_length=200)
-    deal = models.CharField('处理方法', max_length=25, blank=True, default='停机')
+    condition = models.TextField('复机条件', max_length=200, blank=True)
+    deal = models.TextField('处理方法', max_length=100, blank=True, default='停机')
 
 
+    class Meta:
+        verbose_name = '开单'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.order.sn
 
 
+class StartAudit(models.Model):
+    order = models.OneToOneField(Order, related_name='startaudit', on_delete=models.CASCADE, verbose_name='订单')
+    
+    p_signer = models.ForeignKey(UserModel, related_name='p_startaudit', on_delete=models.PROTECT, verbose_name='生产签停')
+    p_time = models.DateTimeField('生产签停时间')
+    
+    c_signer = models.ForeignKey(UserModel, related_name='c_startaudits', on_delete=models.PROTECT, verbose_name='责任工程签停时间')
+    c_time = models.DateTimeField('责任工程签停时间')
+    
+    recipe_close = models.CharField('Recipe关闭', max_length=10, blank=True, null=True)
+    recipe_confirm = models.CharField('Recipe确认关闭', max_length=10, blank=True, null=True)
+
+    rejected = models.BooleanField('是否拒签', default=False)
+    reason = models.TextField('拒签理由', max_length=100, blank=True, null=True)
+
+    created = models.DateTimeField('创建时间', auto_now_add=True)
+    modified = models.DateTimeField('最近修改', auto_now=True)
+
+    class Meta:
+        verbose_name = '开单审核'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.order.sn
+
+
+class RecoverOrder(models.Model):
+    order = models.ForeignKey(Order, related_name='recoverorders', on_delete=models.CASCADE, verbose_name='订单')
+    appl = models.ForeignKey(UserModel, related_name='recoverorders', on_delete=models.PROTECT, verbose_name='申请人')
+    created = models.DateTimeField('申请时间', auto_now_add=True)
+
+    partial = models.BooleanField('部分复机', default=False)
+    kind = models.CharField('部分复机机种', max_length=10)
+    step = models.ManyToManyField(Step, related_name='+', blank=True, verbose_name='部分复机站点')
+    reason = models.TextField('部分复机理由', max_length=100, blank=True, null=True)
+
+    solution = models.TextField('责任单位对策说明', max_length=300, blank=True)
+    explain = models.TextField('先行lot结果说明', max_length=300, blank=True)
+
+    class Meta:
+        verbose_name = '复机申请'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.order.sn
+
+
+class RecoverAudit(models.Model):
+    recover_order = models.OneToOneField(RecoverOrder, related_name='audit', on_delete=models.CASCADE, verbose_name='复机申请单')
+
+    qc_signer = models.ForeignKey(UserModel, related_name='qc_recoveraudits', on_delete=models.PROTECT, verbose_name='QC签停')
+    qc_time = models.DateTimeField('QC签停时间')
+    
+    p_signer = models.ForeignKey(UserModel, related_name='p_recoveraudit', on_delete=models.PROTECT, verbose_name='生产签停')
+    p_time = models.DateTimeField('生产签停时间')
+    remark = models.TextField('生产批注', max_length=200, blank=True, null=True)
+
+    rejected = models.BooleanField('是否拒签', default=False)
+    reason = models.TextField('拒签理由', max_length=100, blank=True, null=True)
+
+    created = models.DateTimeField('创建时间', auto_now_add=True)
+    modified = models.DateTimeField('最近修改', auto_now=True)
+
+    class Meta:
+        verbose_name = '复机审核'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.recover_order.order.sn
+
+
+class Remark(models.Model):
+    order = models.ForeignKey(Order, related_name='remarks', on_delete=models.CASCADE, verbose_name='订单')
+    content = models.TextField('内容', max_length=300)
+
+    created = models.DateTimeField('创建时间', auto_now_add=True)
+    modified = models.DateTimeField('最近修改', auto_now=True)
+
+    class Meta:
+        ordering = ['-created', '-modified']
+        verbose_name = '最新批注'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.order.sn
