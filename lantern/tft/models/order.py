@@ -61,7 +61,7 @@ class ReportFile(models.Model):
 
 class StartOrder(models.Model):
     order = models.OneToOneField(Order, related_name='startorder', on_delete=models.CASCADE, verbose_name='订单')
-    draft = models.BooleanField('放入草稿箱', default=False)
+    draft = models.BooleanField('草稿箱', default=False)
     appl = models.ForeignKey(UserModel, related_name='startorders', on_delete=models.PROTECT, verbose_name='申请人')
     # department，从 user 中自取
     created = models.DateTimeField('申请时间', auto_now_add=True)
@@ -70,10 +70,10 @@ class StartOrder(models.Model):
     eq = models.ManyToManyField(Eq, related_name='startorders', verbose_name='停机设备')
     kind = models.CharField('停机机种', max_length=10)
     found_time = models.DateTimeField('发现时间')
-    found_step = models.CharField('发现站点', max_length=10)
+    found_step = models.CharField('发现站点', max_length=10, blank=True, null=True)
     # 做验证，这个站点下是否有停机设备
     step = models.ManyToManyField(Step, related_name='+', blank=True, verbose_name='停机站点')
-    reason = models.TextField('停机原因', max_length=100)
+    reason = models.TextField('停机原因', max_length=100, blank=True, null=True)
     users = models.ManyToManyField(UserModel, related_name='+', blank=True, verbose_name='通知生产人员')
     # 做验证，必须停机设备的组下的人员
     charge_users = models.ManyToManyField(UserModel, related_name='+', blank=True, verbose_name='通知制程人员')
@@ -97,16 +97,16 @@ class StartOrder(models.Model):
 class StartAudit(models.Model):
     order = models.OneToOneField(Order, related_name='startaudit', on_delete=models.CASCADE, verbose_name='订单')
     
-    p_signer = models.ForeignKey(UserModel, related_name='p_startaudit', on_delete=models.PROTECT, verbose_name='生产签停')
-    p_time = models.DateTimeField('生产签停时间')
+    p_signer = models.ForeignKey(UserModel, related_name='p_startaudit', blank=True, null=True, on_delete=models.PROTECT, verbose_name='生产签停')
+    p_time = models.DateTimeField('生产签停时间', blank=True, null=True)
     
-    c_signer = models.ForeignKey(UserModel, related_name='c_startaudits', on_delete=models.PROTECT, verbose_name='责任工程签停时间')
-    c_time = models.DateTimeField('责任工程签停时间')
+    c_signer = models.ForeignKey(UserModel, related_name='c_startaudits', blank=True, null=True, on_delete=models.PROTECT, verbose_name='责任工程签停时间')
+    c_time = models.DateTimeField('责任工程签停时间', blank=True, null=True)
     
     recipe_close = models.CharField('Recipe关闭', max_length=10, blank=True, null=True)
     recipe_confirm = models.CharField('Recipe确认关闭', max_length=10, blank=True, null=True)
 
-    rejected = models.BooleanField('是否拒签', default=False)
+    rejected = models.BooleanField('拒签', default=False)
     reason = models.TextField('拒签理由', max_length=100, blank=True, null=True)
 
     created = models.DateTimeField('创建时间', auto_now_add=True)
@@ -126,7 +126,7 @@ class RecoverOrder(models.Model):
     created = models.DateTimeField('申请时间', auto_now_add=True)
 
     partial = models.BooleanField('部分复机', default=False)
-    kind = models.CharField('部分复机机种', max_length=10)
+    kind = models.CharField('部分复机机种', max_length=10, blank=True, null=True)
     step = models.ManyToManyField(Step, related_name='+', blank=True, verbose_name='部分复机站点')
     reason = models.TextField('部分复机理由', max_length=100, blank=True, null=True)
 
@@ -144,14 +144,14 @@ class RecoverOrder(models.Model):
 class RecoverAudit(models.Model):
     recover_order = models.OneToOneField(RecoverOrder, related_name='audit', on_delete=models.CASCADE, verbose_name='复机申请单')
 
-    qc_signer = models.ForeignKey(UserModel, related_name='qc_recoveraudits', on_delete=models.PROTECT, verbose_name='QC签停')
-    qc_time = models.DateTimeField('QC签停时间')
+    qc_signer = models.ForeignKey(UserModel, related_name='qc_recoveraudits', blank=True, null=True, on_delete=models.PROTECT, verbose_name='QC签停')
+    qc_time = models.DateTimeField('QC签停时间', blank=True, null=True)
     
-    p_signer = models.ForeignKey(UserModel, related_name='p_recoveraudit', on_delete=models.PROTECT, verbose_name='生产签停')
-    p_time = models.DateTimeField('生产签停时间')
+    p_signer = models.ForeignKey(UserModel, related_name='p_recoveraudit', blank=True, null=True, on_delete=models.PROTECT, verbose_name='生产签停')
+    p_time = models.DateTimeField('生产签停时间', blank=True, null=True)
     remark = models.TextField('生产批注', max_length=200, blank=True, null=True)
 
-    rejected = models.BooleanField('是否拒签', default=False)
+    rejected = models.BooleanField('拒签', default=False)
     reason = models.TextField('拒签理由', max_length=100, blank=True, null=True)
 
     created = models.DateTimeField('创建时间', auto_now_add=True)

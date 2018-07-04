@@ -2,15 +2,28 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
+from rest_framework.generics import GenericAPIView
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny, SAFE_METHODS
 from rest_framework.authentication import SessionAuthentication
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from .models import Order
-from .serializers import OpenOrderSerializer
+from .models import Order, StartOrder
+from .serializers import CreateStartOrderSerializer
 from .permissons import IsOpenOrderUser
 
+
+class CreateStartOrder(CreateModelMixin, GenericAPIView):
+    queryset = StartOrder.objects.all()
+    lookup_field = 'sn'
+    serializer_class = CreateStartOrderSerializer
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+
+    def post(self, request, *args, **kwargs):
+        self.create(request, *args, **kwargs)
+
+
+'''
 class OpenOrderViewSet(ListModelMixin,
                        CreateModelMixin,
                        RetrieveModelMixin,
@@ -65,3 +78,4 @@ class OpenOrderViewSet(ListModelMixin,
 
     def perform_update(self, serializer):
         return serializer.save()
+'''
