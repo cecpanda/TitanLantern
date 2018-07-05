@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
-from .eq import Eq, Step
+from .eq import Eq
 from .lot import LotInfo, Lot
 
 
@@ -29,7 +29,7 @@ class Order(models.Model):
         ('7', '完成部分复机'),
         ('8', '完成复机')
     )
-    sn = models.CharField('编号', max_length=50, unique=True, default=default_order_sn)
+    sn = models.CharField('编号', max_length=25, unique=True, default=default_order_sn)
     status = models.CharField('状态', choices=STATUS_CHOICES, max_length=2, default='0')
 
     class Meta:
@@ -63,20 +63,23 @@ class StartOrder(models.Model):
     order = models.OneToOneField(Order, related_name='startorder', on_delete=models.CASCADE, verbose_name='订单')
     draft = models.BooleanField('草稿箱', default=False)
     appl = models.ForeignKey(UserModel, related_name='startorders', on_delete=models.PROTECT, verbose_name='申请人')
-    # department，从 user 中自取
     created = models.DateTimeField('申请时间', auto_now_add=True)
-    # charge_group 从停机设备中获取
-    # charge_group = models.ManyToManyField(Group, related_name='startorders', blank=True, verbose_name='开单部门')
+
+    # department  开单工程  从 appl 中自取
+    # charge_group  责任工程  从停机设备中获取
+
     eq = models.ManyToManyField(Eq, related_name='startorders', verbose_name='停机设备')
-    kind = models.CharField('停机机种', max_length=10)
+    kind = models.CharField('停机机种', max_length=30, blank=True, null=True)
+    step = models.CharField('停机站点', max_length=100, blank=True, null=True)
     found_time = models.DateTimeField('发现时间')
-    found_step = models.CharField('发现站点', max_length=10, blank=True, null=True)
     # 做验证，这个站点下是否有停机设备
-    step = models.ManyToManyField(Step, related_name='+', blank=True, verbose_name='停机站点')
+    found_step = models.CharField('发现站点', max_length=10, blank=True, null=True)
+    
     reason = models.TextField('停机原因', max_length=100, blank=True, null=True)
-    users = models.ManyToManyField(UserModel, related_name='+', blank=True, verbose_name='通知生产人员')
+    users = models.ManyToManyField(UserModel, related_name='noticed_startorders', blank=True, verbose_name='通知生产人员')
     # 做验证，必须停机设备的组下的人员
-    charge_users = models.ManyToManyField(UserModel, related_name='+', blank=True, verbose_name='通知制程人员')
+    charge_users = models.ManyToManyField(UserModel, related_name='charged_startorders', blank=True, verbose_name='通知制程人员')
+    
     desc = models.TextField('异常描述', max_length=300, blank=True)
     start_time = models.DateTimeField('受害开始时间', blank=True, null=True)
     end_time = models.DateTimeField('受害结束时间', blank=True, null=True)
@@ -127,7 +130,7 @@ class RecoverOrder(models.Model):
 
     partial = models.BooleanField('部分复机', default=False)
     kind = models.CharField('部分复机机种', max_length=10, blank=True, null=True)
-    step = models.ManyToManyField(Step, related_name='+', blank=True, verbose_name='部分复机站点')
+    step = models.CharField('部分复机站点', max_length=100, blank=True, null=True)
     reason = models.TextField('部分复机理由', max_length=100, blank=True, null=True)
 
     solution = models.TextField('责任单位对策说明', max_length=300, blank=True)

@@ -1,6 +1,6 @@
 import xadmin
 
-from .models import EqKind, Eq, Step, \
+from .models import EqKind, Eq, \
                     Lot, \
                     Order, \
                     StartOrder, StartAudit, \
@@ -15,10 +15,6 @@ class EqKindAdmin(object):
 
 class EqAdmin(object):
     list_display = ['name', 'kind']
-
-
-class StepAdmin(object):
-    list_display = ['name', 'eq']
 
 
 class OrderAdmin(object):
@@ -43,7 +39,6 @@ class RecoverAuditAdmin(object):
 
 xadmin.site.register(EqKind, EqKindAdmin)
 xadmin.site.register(Eq, EqAdmin)
-xadmin.site.register(Step, StepAdmin)
 
 xadmin.site.register(Lot)
 

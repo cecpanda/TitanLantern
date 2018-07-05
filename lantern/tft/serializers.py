@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from drf_writable_nested import WritableNestedModelSerializer
 
-from .models import Order, StartOrder, ReportFile, Remark, Eq, Step
+from .models import Order, StartOrder, ReportFile, Remark, Eq
 from account.serializers import UserSerializer
 
 
@@ -34,13 +34,15 @@ class CreateStartOrderSerializer(serializers.Serializer):
     draft = serializers.BooleanField(default=False)
     appl = serializers.HiddenField(default=serializers.CurrentUserDefault())
     eq = serializers.ListField(child=serializers.CharField(min_length=0, max_length=10))
-    kind = serializers.CharField(min_length=0, max_length=10)
+    kind = serializers.CharField(min_length=0, max_length=30)
+    step = serializers.CharField(min_length=0, max_length=100)
     found_time = serializers.DateTimeField()
     found_step = serializers.CharField(min_length=0, max_length=10, allow_blank=True)
-    step = serializers.ListField(child=serializers.CharField(min_length=0, max_length=5))
+    
     reason = serializers.CharField(min_length=0, max_length=100)
     users = serializers.ListField(child=serializers.CharField(min_length=0, max_length=128))
     charge_users = serializers.ListField(child=serializers.CharField(min_length=0, max_length=128))
+    
     desc = serializers.CharField(min_length=0, max_length=300, allow_blank=True)
     start_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
@@ -59,40 +61,47 @@ class CreateStartOrderSerializer(serializers.Serializer):
         return attrs
 
     def validate_eq(self, value):
-        # # 验证 eq 是否已定义
-        # if attrs.get('eq'):
-        #     for eq in attrs['eq']:
-        #         try:
-        #             Eq.objects.get(name=eq)
-        #         except Eq.DoesNotExist:
-        #             raise serializers.ValidationError(f'{eq} is not defined.')
-        pass
+        # 验证 eq 是否已定义
+        for name in value:
+            try:
+                name = name.upper()
+                Eq.objects.get(name=name)
+            except Eq.DoesNotExist:
+                raise serializers.ValidationError(f'{name} is not defined.')
+        return value
 
+    def validate_users(self, value):
+        # 不验证此用户是不是生产科的了
+        for username in value:
+            try:
+                user = UserModel.objects.get(username=username)
+            except UserModel.DoesNotExist:
+                raise serializers.ValidationError(f'{username} is not existed.')
+        return value
 
-    def validate_step(self, value):
-        # # 验证 step 是否已定义
-        # if attrs.get('step'):
-        #     for step in attrs['step']:
-        #         try:
-        #             Step.objects.get(name=step)
-        #         except Step.DoesNotExist:
-        #             raise serializers.ValidationError(F'{step} is not defined.')
-        #
-        #     # 验证 step 是否存在 eq
-        #     for step in attrs['step']:
-        #         if attrs.get['eq']:
-        #             for eq in attrs['eq']:
-        #                 try:
-        #                     e = Eq.objects.get(name=eq)
-        #                     Step.objects.get(eq=e)
-        #                 except Step.DoesNotExist:
-        #                     raise serializers.ValidationError(f'{step} 不存在 {eq}')
-        pass
-
-        # 验证 users 是否正确
-
+    def validate_charge_users(self, value):
         # 验证 charge_users
+        charge_group = self.get_charge_group()
 
+        for username in value:
+            try:
+                user = UserModel.objects.get(username=username)
+            except UserModel.DoesNotExist:
+                raise serializers.ValidationError(f'{username} is not existed.')
+            if not charge_group.user_set.filter(username=username).exists():
+                raise serializers.ValidationError(f'{username} is not a group member.')
+
+        return value
+
+    def get_charge_group(self):
+        name_list = self.validated_data['eq']
+        name = name_list[0].upper()
+        try:
+            eq = Eq.objects.get(name=name)
+            charge_group = eq.kind.group
+        except:
+            return None
+        return charge_group
 
     def create(self, validated_data):
         order = Order.objects.create()

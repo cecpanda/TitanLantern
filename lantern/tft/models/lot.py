@@ -23,7 +23,6 @@ class Lot(models.Model):
     name = models.CharField('批次', blank=True, null=True, max_length=11)
 
     created = models.DateTimeField('创建时间', auto_now_add=True)
-    modified = models.DateTimeField('修改时间', auto_now=True)
 
     class Meta:
         verbose_name = '批次'
