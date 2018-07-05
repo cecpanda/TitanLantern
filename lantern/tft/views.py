@@ -18,10 +18,20 @@ class CreateStartOrder(CreateModelMixin, GenericAPIView):
     queryset = StartOrder.objects.all()
     serializer_class = CreateStartOrderSerializer
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        self.create(request, *args, **kwargs)
+        return self.create(request, *args, **kwargs)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        order_sn = self.perform_create(serializer)
+        # headers = self.get_success_headers(serializer.data)
+        return Response({'order_sn': order_sn}, status=status.HTTP_201_CREATED)# , headers=headers)
+
+    def perform_create(self, serializer):
+        return serializer.save()
 
 '''
 class OpenOrderViewSet(ListModelMixin,
