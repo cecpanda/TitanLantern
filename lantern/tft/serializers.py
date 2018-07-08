@@ -9,27 +9,6 @@ from account.serializers import UserSerializer
 UserModel = get_user_model()
 
 
-class ReportSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ReportFile
-        fields = ('file',)
-
-
-class RemarkSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Remark
-        fields = ('content',)
-
-
-class OrderSerializer(serializers.ModelSerializer):
-    reports = ReportSerializer(many=True)
-    remarks = RemarkSerializer(many=True)
-    class Meta:
-        model = Order
-        fields = ('sn', 'status', 'reports', 'remarks')
-        read_only_fields = ('sn', 'status')
-
-
 class CreateStartOrderSerializer(serializers.Serializer):
     draft = serializers.BooleanField(default=False)
     appl = serializers.HiddenField(default=serializers.CurrentUserDefault())
@@ -109,6 +88,9 @@ class CreateStartOrderSerializer(serializers.Serializer):
         order = Order.objects.create()
         start_order = StartOrder.objects.create(order=order, **validated_data)
 
+        if not validated_data.get('draft'):
+            order.status = '1'
+
         for eq_name in eq_list:
             eq = Eq.objects.get(name=eq_name.upper())
             start_order.eq.add(eq)
@@ -132,3 +114,65 @@ class CreateStartOrderSerializer(serializers.Serializer):
                 ReportFile.objects.create(order=order, file=file)
 
         return order.sn
+
+    def update(self, instance, validated_data):
+        eq_list = validated_data.pop('eq')
+        users = validated_data.pop('users')
+        charge_users = validated_data.pop('charge_users')
+        lots = validated_data.pop('lots')
+
+        remark = validated_data.pop('remark')
+        files = validated_data.pop('reports')
+
+        instance.draft = validated_data.get('draft', instance.draft)
+        instance.kind = validated_data.get('kind', instance.kind)
+        instance.step = validated_data.get('step', instance.step)
+        instance.found_time = validated_data.get('found_time', instance.found_time)
+        instance.found_step = validated_data.get('found_step', instance.found_step)
+        instance.reason = validated_data.get('reason', instance.reason)
+        instance.desc = validated_data.get('desc', instance.desc)
+        instance.start_time = validated_data.get('start_time', instance.start_time)
+        instance.end_time = validated_data.get('end_time', instance.end_time)
+        instance.lot_num = validated_data.get('lot_num', instance.lot_num)
+        instance.condition = validated_data.get('condition', instance.condition)
+        instance.deal = validated_data.get('deal', instance.deal)
+
+        # 验证 charge_users 是不是相关部门的人
+        charge_group = Eq.objects.get(name=eq_list[0].upper()).kind.group
+        for user_name in charge_users:
+            user = UserModel.objects.get(username=user_name)
+            if not charge_group in user.groups.all():
+                raise serializers.ValidationError('责任工程人员和设备所属部门不符')
+
+        if not validated_data.get('draft'):
+            instance.order.status = '1'
+
+        instance.eq.clear()
+        for eq_name in eq_list:
+            eq = Eq.objects.get(name=eq_name.upper())
+            instance.eq.add(eq)
+
+        instance.users.clear()
+        for user_name in users:
+            user = UserModel.objects.get(username=user_name)
+            instance.users.add(user)
+
+        instance.charge_users.clear()
+        for charge_user_name in charge_users:
+            user = UserModel.objects.get(username=charge_user_name)
+            instance.charge_users.add(user)
+
+        instance.lots.clear()
+        for lot in lots:
+            l = Lot.objects.create(name=lot)
+            instance.lots.add(l)
+
+        if remark:
+            instance.remarks.clear()
+            remark = Remark.objects.create(order=instance, content=remark)
+        if files:
+            instance.reports.clear()
+            for file in files:
+                ReportFile.objects.create(order=instance, file=file)
+
+        return instance.order.sn

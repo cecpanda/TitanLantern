@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
@@ -10,8 +10,7 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from .models import Order, StartOrder
 from .serializers import CreateStartOrderSerializer
-from .permissons import IsOpenOrderUser
-
+from .permissons import IsStartOrderAppl
 
 
 class CreateStartOrder(CreateModelMixin, GenericAPIView):
@@ -32,6 +31,36 @@ class CreateStartOrder(CreateModelMixin, GenericAPIView):
 
     def perform_create(self, serializer):
         return serializer.save()
+
+
+class UpdateStartOrder(UpdateModelMixin, GenericAPIView):
+    # queryset = StartOrder.objects.all()
+    serializer_class = CreateStartOrderSerializer
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated, IsStartOrderAppl]
+    lookup_field = 'sn'
+
+    def get_object(self):
+        # queryset = self.filter_queryset(self.get_queryset())
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        assert lookup_url_kwarg in self.kwargs, (
+                'Expected view %s to be called with a URL keyword argument '
+                'named "%s". Fix your URL conf, or set the `.lookup_field` '
+                'attribute on the view correctly.' %
+                (self.__class__.__name__, lookup_url_kwarg)
+        )
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        obj = get_object_or_404(Order, **filter_kwargs).startorder
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    def post(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        return serializer.save()
+
+
 
 '''
 class OpenOrderViewSet(ListModelMixin,
