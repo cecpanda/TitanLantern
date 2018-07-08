@@ -34,16 +34,16 @@ class CreateStartOrderSerializer(serializers.Serializer):
     draft = serializers.BooleanField(default=False)
     appl = serializers.HiddenField(default=serializers.CurrentUserDefault())
     eq = serializers.ListField(child=serializers.CharField(min_length=0, max_length=10))
-    kind = serializers.CharField(min_length=0, max_length=30)
-    step = serializers.CharField(min_length=0, max_length=100)
+    kind = serializers.CharField(min_length=0, max_length=30, required=False)
+    step = serializers.CharField(min_length=0, max_length=100, required=False)
     found_time = serializers.DateTimeField()
     found_step = serializers.CharField(min_length=0, max_length=10, allow_blank=True)
     
-    reason = serializers.CharField(min_length=0, max_length=100)
+    reason = serializers.CharField(min_length=0, max_length=100, required=False)
     users = serializers.ListField(child=serializers.CharField(min_length=0, max_length=128))
     charge_users = serializers.ListField(child=serializers.CharField(min_length=0, max_length=128))
     
-    desc = serializers.CharField(min_length=0, max_length=300, allow_blank=True)
+    desc = serializers.CharField(min_length=0, max_length=300, allow_blank=True, required=False)
     start_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
     lot_num = serializers.IntegerField()
@@ -61,6 +61,9 @@ class CreateStartOrderSerializer(serializers.Serializer):
         return attrs
 
     def validate_eq(self, value):
+        # eq 不能为空，但 ListField 无法验证
+        if not value:
+            raise serializers.ValidationError('eq must be included.')
         # 验证 eq 是否已定义
         for name in value:
             try:
@@ -79,25 +82,6 @@ class CreateStartOrderSerializer(serializers.Serializer):
                 raise serializers.ValidationError(f'{username} is not existed.')
         return value
 
-    # 因为没法调用 validated_data，所以无法验证组是否为责任工程
-    # 只能放在 保存时验证
-    # def validate_charge_users(self, value):
-    #     # 验证 charge_users
-    #     name_list = self.eq
-    #     name = name_list[0].upper()
-    #     try:
-    #         eq = Eq.objects.get(name=name)
-    #         charge_group = eq.kind.group
-    #
-    #     for username in value:
-    #         try:
-    #             user = UserModel.objects.get(username=username)
-    #         except UserModel.DoesNotExist:
-    #             raise serializers.ValidationError(f'{username} is not existed.')
-    #         if not charge_group.user_set.filter(username=username).exists():
-    #             raise serializers.ValidationError(f'{username} is not a group member.')
-    #
-    #     return value
     def validate_charge_users(self, value):
         for username in value:
             try:
@@ -107,8 +91,6 @@ class CreateStartOrderSerializer(serializers.Serializer):
         return value
 
     def create(self, validated_data):
-        order = Order.objects.create()
-
         eq_list = validated_data.pop('eq')
         users = validated_data.pop('users')
         charge_users = validated_data.pop('charge_users')
@@ -117,9 +99,15 @@ class CreateStartOrderSerializer(serializers.Serializer):
         remark = validated_data.pop('remark')
         files = validated_data.pop('reports')
 
-        print(validated_data)
-        start_order = StartOrder.objects.create(order=order, **validated_data)
+        # 验证 charge_users 是不是相关部门的人
+        charge_group = Eq.objects.get(name=eq_list[0].upper()).kind.group
+        for user_name in charge_users:
+            user = UserModel.objects.get(username=user_name)
+            if not charge_group in user.groups.all():
+                raise serializers.ValidationError('责任工程人员和设备所属部门不符')
 
+        order = Order.objects.create()
+        start_order = StartOrder.objects.create(order=order, **validated_data)
 
         for eq_name in eq_list:
             eq = Eq.objects.get(name=eq_name.upper())
