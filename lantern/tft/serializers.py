@@ -1,4 +1,6 @@
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+
 from rest_framework import serializers
 from drf_writable_nested import WritableNestedModelSerializer
 
@@ -116,6 +118,7 @@ class CreateStartOrderSerializer(serializers.Serializer):
         return order.sn
 
     def update(self, instance, validated_data):
+        # 这几个关系字段有点不太一样，提供就修改
         eq_list = validated_data.pop('eq')
         users = validated_data.pop('users')
         charge_users = validated_data.pop('charge_users')
@@ -146,33 +149,47 @@ class CreateStartOrderSerializer(serializers.Serializer):
 
         if not validated_data.get('draft'):
             instance.order.status = '1'
+            instance.order.save()
 
-        instance.eq.clear()
-        for eq_name in eq_list:
-            eq = Eq.objects.get(name=eq_name.upper())
-            instance.eq.add(eq)
+        if eq_list:
+            instance.eq.clear()
+            for eq_name in eq_list:
+                eq = Eq.objects.get(name=eq_name.upper())
+                instance.eq.add(eq)
 
-        instance.users.clear()
-        for user_name in users:
-            user = UserModel.objects.get(username=user_name)
-            instance.users.add(user)
+        if users:
+            instance.users.clear()
+            for user_name in users:
+                user = UserModel.objects.get(username=user_name)
+                instance.users.add(user)
 
-        instance.charge_users.clear()
-        for charge_user_name in charge_users:
-            user = UserModel.objects.get(username=charge_user_name)
-            instance.charge_users.add(user)
+        if charge_users:
+            instance.charge_users.clear()
+            for charge_user_name in charge_users:
+                user = UserModel.objects.get(username=charge_user_name)
+                instance.charge_users.add(user)
 
-        instance.lots.clear()
-        for lot in lots:
-            l = Lot.objects.create(name=lot)
-            instance.lots.add(l)
+        if lots:
+            instance.lots.clear()
+            for lot in lots:
+                l = Lot.objects.create(name=lot)
+                instance.lots.add(l)
 
         if remark:
-            instance.remarks.clear()
-            remark = Remark.objects.create(order=instance, content=remark)
-        if files:
-            instance.reports.clear()
-            for file in files:
-                ReportFile.objects.create(order=instance, file=file)
+            # instance.order.remarks.clear()
+            # 上面的语法有问题，只有 m2m 正反都有 clear
+            # 不用删除，重新创建
+            remark = Remark.objects.create(order=instance.order, content=remark)
 
-        return instance.order.sn
+        if files:
+            reports = instance.order.reports.all()
+            for report in reports:
+                report.delete()
+            for file in files:
+                ReportFile.objects.create(order=instance.order, file=file)
+
+        try:
+            instance.save()
+            return instance.order.sn
+        except:
+            raise serializers.ValidationError('Update Failed')

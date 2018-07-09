@@ -83,7 +83,7 @@ class StartOrder(models.Model):
     desc = models.TextField('异常描述', max_length=300, blank=True)
     start_time = models.DateTimeField('受害开始时间', blank=True, null=True)
     end_time = models.DateTimeField('受害结束时间', blank=True, null=True)
-    lot_num = models.PositiveIntegerField('受害批次数', blank=True)
+    lot_num = models.PositiveIntegerField('受害批次数', blank=True, null=True)
     lots = models.ManyToManyField(Lot, related_name="+", blank=True, verbose_name='异常批次')
     condition = models.TextField('复机条件', max_length=200, blank=True)
     deal = models.TextField('处理方法', max_length=100, blank=True, default='停机')

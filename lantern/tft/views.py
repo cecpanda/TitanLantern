@@ -6,6 +6,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny, SAFE_METHODS
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.exceptions import APIException
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from .models import Order, StartOrder
@@ -33,13 +34,14 @@ class CreateStartOrder(CreateModelMixin, GenericAPIView):
         return serializer.save()
 
 
-class UpdateStartOrder(UpdateModelMixin, GenericAPIView):
+class UpdateStartOrder(UpdateModelMixin, DestroyModelMixin, GenericAPIView):
     # queryset = StartOrder.objects.all()
     serializer_class = CreateStartOrderSerializer
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated, IsStartOrderAppl]
     lookup_field = 'sn'
 
+    # 只能修改草稿箱中的
     def get_object(self):
         # queryset = self.filter_queryset(self.get_queryset())
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -51,70 +53,47 @@ class UpdateStartOrder(UpdateModelMixin, GenericAPIView):
         )
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
         obj = get_object_or_404(Order, **filter_kwargs).startorder
+
+        if not obj.draft:
+            raise APIException(detail='只能修改和删除草稿箱中的订单', code=400)
+            # return Response({'content', '只能修改和删除草稿箱中的订单'})
+
         self.check_object_permissions(self.request, obj)
         return obj
 
     def post(self, request, *args, **kwargs):
         return self.update(request, *args, **kwargs)
 
-    def perform_update(self, serializer):
-        return serializer.save()
-
-
-
-'''
-class OpenOrderViewSet(ListModelMixin,
-                       CreateModelMixin,
-                       RetrieveModelMixin,
-                       UpdateModelMixin,
-                       viewsets.GenericViewSet):
-    queryset = Order.objects.all()
-    lookup_field = 'sn'
-    serializer_class = OpenOrderSerializer
-    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
-    # permission_classes = [IsAuthenticated]
-
-    def get_permissions(self):
-        # if self.action == 'list' or self.action == 'retrieve':
-            # return [permission() for permission in self.permission_classes]
-        if self.request.method in SAFE_METHODS:
-            return [AllowAny()]
-        elif self.action == 'create':
-            # 任何已登录用户都有开单权限
-            return [IsAuthenticated()]
-        elif self.action == 'update' or self.action == 'partial_update':
-            # 必须开单用户才能修改开单
-            return [IsOpenOrderUser()]
-
-    # 创建开单
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        open_order = self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response({'order_sn': open_order.sn}, status=status.HTTP_201_CREATED, headers=headers)
-
-    # 要重写，因为原来的没有 return
-    def perform_create(self, serializer):
-        return serializer.save()
-
-    # 只能修改草稿箱中的开单
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        if instance.status == '0':
-            return Response({'order_sn': instance.sn, 'msg': '只能修改草稿箱中的'}, status=status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        open_order = self.perform_update(serializer)
+        self.perform_update(serializer)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
-        return Response({'order_sn': open_order.sn})
+        return Response({'order_sn': instance.order.sn})
 
     def perform_update(self, serializer):
         return serializer.save()
-'''
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.order.delete()
+        # 因为级联删除，下面的不需要了
+        # instance.delete()
