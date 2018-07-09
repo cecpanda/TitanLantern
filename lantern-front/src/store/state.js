@@ -11,7 +11,7 @@ const checkLogin = () => {
   if (!token.length) {
     return false
   }
-  return jwtAuthVerify({token: token})
+  return jwtAuthVerify(token)
 }
 
 export default {

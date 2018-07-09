@@ -9,8 +9,8 @@ export const jwtAuth = params => {
 }
 
 // 验证 token 还有效不
-export const jwtAuthVerify = params => {
-  return axios.post(`${host}/jwt-token-verify/`, params, {
+export const jwtAuthVerify = token => {
+  return axios.post(`${host}/jwt-token-verify/`, {token: token}, {
     headers: {
       'Content-Type': 'application/json'
     }

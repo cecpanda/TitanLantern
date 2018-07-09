@@ -1,64 +1,43 @@
 <template>
-  <el-menu
-    :default-active="activeIndex2"
-    class="el-menu-demo"
-    mode="horizontal"
-    @select="handleSelect"
-    background-color="#545c64"
-    text-color="#fff"
-    active-text-color="#ffd04b"
-  >
-    <el-menu-item index="1">首页</el-menu-item>
-    <el-submenu index="2">
-      <template slot="title">TFT</template>
-      <el-menu-item index="2-1">Hold Lot</el-menu-item>
-      <el-menu-item index="2-2">选项2</el-menu-item>
-      <el-submenu index="2-3">
-        <template slot="title">选项3</template>
-        <el-menu-item index="2-3-1">选项1</el-menu-item>
-        <el-menu-item index="2-3-2">选项2</el-menu-item>
-        <el-menu-item index="2-3-3">选项3</el-menu-item>
-      </el-submenu>
-    </el-submenu>
-    <el-submenu index="3">
-      <template slot="title">LCD</template>
-      <el-menu-item index="3-1">选项1</el-menu-item>
-      <el-menu-item index="3-2">选项2</el-menu-item>
-    </el-submenu>
-    <el-menu-item index="4" disabled>SL</el-menu-item>
-    <el-menu-item index="5">
-      <template v-if='isLogged'>
-        <router-link to='' >用户信息</router-link>
-        <router-link to='/logout'>退出</router-link>
-      </template>
-      <router-link to='/login' v-else>登录</router-link>
-    </el-menu-item>
-  </el-menu>
+<el-container>
+  <el-header>
+    <HomeHeader></HomeHeader>
+  </el-header>
+  <el-container>
+    <el-main>
+      Main <br/><br/><br/><br/>
+    </el-main>
+    <el-aside width="200px">Aside</el-aside>
+  </el-container>
+  <el-footer>Footer</el-footer>
+</el-container>
 </template>
 
 <script>
+import HomeHeader from './components/Header'
 export default {
   name: 'Home',
-  data () {
-    return {
-      activeIndex: '1',
-      activeIndex2: '1',
-      isLogged: this.$store.state.isLogged
-    }
-  },
-  computed: {
-  },
-  methods: {
-    handleSelect (key, keyPath) {
-      this.$store.dispatch('setTest', 'hehe')
-    },
-    logOut () {
-      localStorage.removeItem('token')
-      this.$router.push('/')
-    }
+  components: {
+    HomeHeader
   }
 }
 </script>
 
-<style scoped>
+<style lang='stylus' scoped>
+.el-header, .el-footer
+  color: #333
+  text-align: center
+  line-height: 60px
+  position relativce
+
+.el-main
+  background-color: #E9EEF3
+  color: #333
+  text-align: center
+  line-height: 160px
+.el-aside
+  background-color: #D3DCE6
+  color: #333
+  text-align: center
+  line-height: 200px
 </style>
