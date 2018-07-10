@@ -32,7 +32,7 @@ class UserViewSet(ListModelMixin,
     search_fields = ('$username', '$realname')
     ordering_fields = ('username', 'realname')
 
-    @action(methods=['post'], detail=False, url_path='change-password', url_name='change_password')
+    @action(methods=['post'], detail=False, url_path='change-password', url_name='change_password', permission_classes=[IsAuthenticated])
     def change_password(self, request, pk=None):
         # 刚开始用 detail=True, self.get_object() 获得 user，这方法真特么傻
         user = self.request.user
@@ -45,7 +45,7 @@ class UserViewSet(ListModelMixin,
         return Response({'error': 'wrong password'}, status.HTTP_400_BAD_REQUEST)
 
     # 因为 UpdateModelMixin 的 url 不优雅，重新写
-    @action(methods=['put'], detail=False, url_path='change-profile', url_name='change_profile')
+    @action(methods=['put'], detail=False, url_path='change-profile', url_name='change_profile', permission_classes=[IsAuthenticated])
     def change_profile(self, request, pk=None):
         user = self.request.user
         serializer = UserUpdateSerializer(user, data=request.data)

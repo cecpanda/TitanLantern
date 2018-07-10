@@ -11,4 +11,5 @@ app_name = 'tft'
 urlpatterns = [
     path('create/', CreateStartOrder.as_view()),
     path('update/<str:sn>/', UpdateStartOrder.as_view()),
+    # path('startorder/audit/', )
 ]

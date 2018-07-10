@@ -1,10 +1,11 @@
+from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from rest_framework import serializers
 from drf_writable_nested import WritableNestedModelSerializer
 
-from .models import Order, StartOrder, ReportFile, Remark, Eq, Lot
+from .models import Order, StartOrder, ReportFile, Remark, Eq, Lot, StartAudit
 from account.serializers import UserSerializer
 
 
@@ -193,3 +194,40 @@ class CreateStartOrderSerializer(serializers.Serializer):
             return instance.order.sn
         except:
             raise serializers.ValidationError('Update Failed')
+
+
+class StartAuditSerializer(serializers.Serializer):
+    order_sn = serializers.CharField()
+    p_signer = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    # p_time
+    c_signer = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    # c_time
+    recipe_close = serializers.CharField(required=False)
+    recipe_confirm = serializers.CharField(required=False)
+    rejected = serializers.BooleanField(default=False)
+    reason = serializers.CharField(min_length=0, max_length=100, required=False)
+
+    def validate(self, attrs):
+        pass
+
+    def validate_order_sn(self, value):
+        try:
+            Order.objects.get(sn=value)
+        except:
+            raise serializers.ValidationError(f'订单{value}不存在')
+        return value
+
+    def create(self, validated_data):
+        order = Order.objects.get(sn=validated_data['order_sn'])
+        # start_audit =
+        # return start_audit
+
+    def update(self, instance, validated_data):
+        # 生产人员审核
+        instance.p_signer = validated_data.get('p_signer')
+        instance.p_time = timezone.now()
+        instance.recipe_close = validated_data.get('recipe_close')
+        instance.recipe_confirm = validated_data.get('recipe_confirm')
+        instance.rejected = True if validated_data.get('rejected') else False
+        instance.reason = validated_data.get('reason')
+

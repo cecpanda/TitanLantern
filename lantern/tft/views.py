@@ -4,13 +4,13 @@ from rest_framework import status
 from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
 from rest_framework.generics import GenericAPIView
 from rest_framework.viewsets import GenericViewSet
-from rest_framework.permissions import IsAuthenticated, AllowAny, SAFE_METHODS
+from rest_framework.permissions import IsAuthenticated, AllowAny, SAFE_METHODS, DjangoModelPermissions
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import APIException
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from .models import Order, StartOrder
-from .serializers import CreateStartOrderSerializer
+from .models import Order, StartOrder, StartAudit
+from .serializers import CreateStartOrderSerializer, StartAuditSerializer
 from .permissons import IsStartOrderAppl
 
 
@@ -97,3 +97,36 @@ class UpdateStartOrder(UpdateModelMixin, DestroyModelMixin, GenericAPIView):
         instance.order.delete()
         # 因为级联删除，下面的不需要了
         # instance.delete()
+
+
+class AuditStartOrder(CreateModelMixin, UpdateModelMixin, GenericAPIView):
+    queryset = StartAudit.objects.all()
+    serializer_class = StartAuditSerializer
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
+
+    def post(self, request, *args, **kwargs):
+        pass
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
