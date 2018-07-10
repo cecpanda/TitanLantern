@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.utils import timezone
 
 from rest_framework import serializers
@@ -34,7 +35,7 @@ class CreateStartOrderSerializer(serializers.Serializer):
     deal = serializers.CharField(min_length=0, max_length=100)
 
     reports = serializers.ListField(child=serializers.FileField(allow_empty_file=True))
-    remark = serializers.CharField(min_length=0, max_length=300)
+    remark = serializers.CharField(min_length=0, max_length=300, required=False)
 
     def validate(self, attrs):
         if attrs['start_time'] > attrs['end_time']:
@@ -198,17 +199,16 @@ class CreateStartOrderSerializer(serializers.Serializer):
 
 class StartAuditSerializer(serializers.Serializer):
     order_sn = serializers.CharField()
-    p_signer = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    # p_time
-    c_signer = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    # c_time
+
+    signer = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     recipe_close = serializers.CharField(required=False)
     recipe_confirm = serializers.CharField(required=False)
+
     rejected = serializers.BooleanField(default=False)
     reason = serializers.CharField(min_length=0, max_length=100, required=False)
 
-    def validate(self, attrs):
-        pass
+    remark = serializers.CharField(min_length=0, max_length=300, required=False)
 
     def validate_order_sn(self, value):
         try:
@@ -219,15 +219,56 @@ class StartAuditSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         order = Order.objects.get(sn=validated_data['order_sn'])
-        # start_audit =
-        # return start_audit
+        start_audit, created = StartAudit.objects.get_or_create(order=order)
+        # start_audit = StartAudit.objects.create(order=order)
+        return start_audit
 
     def update(self, instance, validated_data):
-        # 生产人员审核
-        instance.p_signer = validated_data.get('p_signer')
-        instance.p_time = timezone.now()
-        instance.recipe_close = validated_data.get('recipe_close')
-        instance.recipe_confirm = validated_data.get('recipe_confirm')
-        instance.rejected = True if validated_data.get('rejected') else False
-        instance.reason = validated_data.get('reason')
+        if instance.rejected:
+            raise serializers.ValidationError('此单已被拒签')
+
+        signer = validated_data.get('signer')
+
+        charge_group = instance.order.startorder.eq.all()[0].kind.group
+        try:
+            prod_group = Group.objects.get(name='生产科')
+        except:
+            raise serializers.ValidationError('生产科不存在')
+
+        if prod_group in signer.groups.all():
+            if instance.p_signer:
+                raise serializers.ValidationError('生产人员已签核')
+            else:
+                instance.p_signer = signer
+                instance.p_time = timezone.now()
+                instance.recipe_close = validated_data.get('recipe_close', instance.recipe_close)
+                instance.recipe_confirm = validated_data.get('recipe_confirm', instance.recipe_confirm)
+        elif signer in charge_group.user_set.all():
+            if instance.c_signer:
+                raise serializers.ValidationError('责任工程人员已签核')
+            else:
+                instance.c_signer = signer
+                instance.c_time = timezone.now()
+        else:
+            raise serializers.ValidationError('审核人不是生产人员、责任工程人员')
+
+        remark = validated_data.get('remark')
+        if remark:
+            remark = Remark.objects.create(order=instance.order, content=remark)
+
+        instance.rejected = validated_data.get('rejected', instance.rejected)
+        instance.reason = validated_data.get('reason', instance.reason)
+
+        if instance.rejected:
+            instance.order.status = '2'
+        elif instance.p_signer and instance.c_signer:
+            instance.order.status = '3'
+        elif instance.p_signer or instance.c_signer:
+            instance.order.status = '1'
+
+        instance.save()
+
+        return instance.order.sn
+
+
 

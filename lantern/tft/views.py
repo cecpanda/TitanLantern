@@ -99,21 +99,23 @@ class UpdateStartOrder(UpdateModelMixin, DestroyModelMixin, GenericAPIView):
         # instance.delete()
 
 
-class AuditStartOrder(CreateModelMixin, UpdateModelMixin, GenericAPIView):
+class AuditStartOrder(UpdateModelMixin, GenericAPIView):
     queryset = StartAudit.objects.all()
     serializer_class = StartAuditSerializer
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
     def post(self, request, *args, **kwargs):
-        pass
+        return self.update(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
 
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer_1 = self.get_serializer(data=request.data)
+        serializer_1.is_valid(raise_exception=True)
+        instance = serializer_1.save()
 
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
@@ -122,7 +124,7 @@ class AuditStartOrder(CreateModelMixin, UpdateModelMixin, GenericAPIView):
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
-        return Response(serializer.data)
+        return Response({'status': 'ok'}, status=status.HTTP_202_ACCEPTED)
 
     def perform_update(self, serializer):
         serializer.save()

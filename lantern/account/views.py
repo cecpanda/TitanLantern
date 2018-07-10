@@ -51,7 +51,7 @@ class UserViewSet(ListModelMixin,
         serializer = UserUpdateSerializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status.HTTP_200_OK)
+        return Response(serializer.data, status.HTTP_201_CREATED)
 
 
 class GroupViewSet(ListModelMixin,
