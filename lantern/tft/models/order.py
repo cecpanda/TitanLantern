@@ -11,9 +11,9 @@ from .lot import Lot
 UserModel = get_user_model()
 
 
-def default_order_sn():
-    now = timezone.localtime()
-    return now.strftime('%y%m%d-%H%M%S-%f')
+# def default_order_sn():
+#     now = timezone.localtime()
+#     return now.strftime('%y%m%d-%H%M%S-%f')
 
 
 class Order(models.Model):
@@ -28,7 +28,8 @@ class Order(models.Model):
         ('7', '完成部分复机'),
         ('8', '完成复机')
     )
-    sn = models.CharField('编号', max_length=25, unique=True, default=default_order_sn)
+    # sn = models.CharField('编号', max_length=25, unique=True, default=default_order_sn)
+    sn = models.CharField('编号', max_length=15, unique=True)
     status = models.CharField('状态', choices=STATUS_CHOICES, max_length=2, default='0')
 
     class Meta:
@@ -63,30 +64,27 @@ class StartOrder(models.Model):
     draft = models.BooleanField('草稿箱', default=False)
     appl = models.ForeignKey(UserModel, related_name='startorders', on_delete=models.PROTECT, verbose_name='申请人')
     created = models.DateTimeField('申请时间', auto_now_add=True)
-
-    # department  开单工程  从 appl 中自取
+    # group  开单工程  从 appl 中自取
     # charge_group  责任工程  从停机设备中获取
-
     eq = models.ManyToManyField(Eq, related_name='startorders', verbose_name='停机设备')
-    kind = models.CharField('停机机种', max_length=30, blank=True, null=True)
-    step = models.CharField('停机站点', max_length=100, blank=True, null=True)
+    kind = models.CharField('停机机种', max_length=30)
+    step = models.CharField('停机站点', max_length=50)
     found_time = models.DateTimeField('发现时间')
-    # 做验证，这个站点下是否有停机设备
-    found_step = models.CharField('发现站点', max_length=10, blank=True, null=True)
-    
-    reason = models.TextField('停机原因', max_length=100, blank=True, null=True)
-    users = models.ManyToManyField(UserModel, related_name='noticed_startorders', blank=True, verbose_name='通知生产人员')
+    found_step = models.CharField('发现站点', max_length=10)
+
+    reason = models.TextField('停机原因', max_length=100)
+    users = models.ManyToManyField(UserModel, related_name='noticed_users', verbose_name='通知生产人员')
     # 做验证，必须停机设备的组下的人员
-    charge_users = models.ManyToManyField(UserModel, related_name='charged_startorders', blank=True, verbose_name='通知制程人员')
-    
-    desc = models.TextField('异常描述', max_length=300, blank=True)
-    start_time = models.DateTimeField('受害开始时间', blank=True, null=True)
-    end_time = models.DateTimeField('受害结束时间', blank=True, null=True)
+    charge_users = models.ManyToManyField(UserModel, related_name='noticed_charge_users', verbose_name='通知制程人员')
+
+    desc = models.TextField('异常描述', max_length=300)
+    # start_time = models.DateTimeField('受害开始时间', blank=True, null=True)
+    # end_time = models.DateTimeField('受害结束时间', blank=True, null=True)
+    duration = models.CharField('受害区间', max_length=50, blank=True, null=True)
     lot_num = models.PositiveIntegerField('受害批次数', blank=True, null=True)
     lots = models.ManyToManyField(Lot, related_name="+", blank=True, verbose_name='异常批次')
-    condition = models.TextField('复机条件', max_length=200, blank=True)
-    deal = models.TextField('处理方法', max_length=100, blank=True, default='停机')
-
+    condition = models.TextField('复机条件', max_length=200)
+    deal = models.TextField('处理方法', max_length=100, default='停机')
 
     class Meta:
         verbose_name = '开单'

@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 
 
 class User(AbstractUser):
@@ -26,3 +26,15 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class GroupSetting(models.Model):
+    group = models.OneToOneField(Group, related_name='settings', on_delete=models.CASCADE, verbose_name='科室')
+    code = models.CharField('代码', max_length=5, unique=True)
+
+    class Meta:
+        verbose_name = '科室代码'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.group.name

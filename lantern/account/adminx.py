@@ -1,7 +1,7 @@
 import xadmin
 from xadmin import views
 
-# from .models import User
+from .models import GroupSetting
 
 
 class BaseSetting(object):
@@ -15,5 +15,10 @@ class GlobalSettings(object):
     menu_style = 'accordion'
 
 
+class GroupSettingAdmin(object):
+    list_display = ['group', 'code']
+
+
 xadmin.site.register(views.BaseAdminView, BaseSetting)
 xadmin.site.register(views.CommAdminView, GlobalSettings)
+xadmin.site.register(GroupSetting, GroupSettingAdmin)
