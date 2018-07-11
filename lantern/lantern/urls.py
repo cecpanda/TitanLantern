@@ -33,9 +33,12 @@ urlpatterns = [
     path('api-auth/',include('rest_framework.urls')),
 
     # jwt
-    path('jwt-auth/', obtain_jwt_token),
-    path('jwt-token-refresh/', refresh_jwt_token),
-    path('jwt-token-verify/', verify_jwt_token),
+    # path('jwt-auth/', obtain_jwt_token),
+    # path('jwt-token-refresh/', refresh_jwt_token),
+    # path('jwt-token-verify/', verify_jwt_token),
+    path('jwt/auth/', obtain_jwt_token),
+    path('jwt/refresh/', refresh_jwt_token),
+    path('jwt/verify/', verify_jwt_token),
 
     # account
     path('account/', include('account.urls', namespace='account')),

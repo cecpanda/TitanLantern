@@ -5,7 +5,7 @@ from .serializers import JwtResponseUserSerializer
 def jwt_response_payload_handler(token, user=None, request=None):
     return {
         'token': token,
-        'username': JwtResponseUserSerializer(user).data['username']
+        'username': JwtResponseUserSerializer(user).data.get('username')
     }
 
 # 用户分页

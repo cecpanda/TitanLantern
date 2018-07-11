@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin
@@ -13,16 +14,18 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from .models import User
 from .serializers import UserSerializer, PasswordSerializer, GroupSerializer, \
-                          GroupUserSerializer, UserUpdateSerializer
+                         GroupUserSerializer, UserUpdateSerializer
 from .utils import UserPagination
 from .filters import UserFilter
 
 
+UserModel = get_user_model()
+
+
 class UserViewSet(ListModelMixin,
                   RetrieveModelMixin,
-                  UpdateModelMixin,
                   viewsets.GenericViewSet):
-    queryset = User.objects.all()
+    queryset = UserModel.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'username'
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
@@ -33,7 +36,7 @@ class UserViewSet(ListModelMixin,
     ordering_fields = ('username', 'realname')
 
     @action(methods=['post'], detail=False, url_path='change-password', url_name='change_password', permission_classes=[IsAuthenticated])
-    def change_password(self, request, pk=None):
+    def change_password(self, request):
         # 刚开始用 detail=True, self.get_object() 获得 user，这方法真特么傻
         user = self.request.user
         serializer = PasswordSerializer(data=request.data)
@@ -44,9 +47,11 @@ class UserViewSet(ListModelMixin,
             return Response({'status': 'ok'}, status.HTTP_202_ACCEPTED)
         return Response({'error': 'wrong password'}, status.HTTP_400_BAD_REQUEST)
 
-    # 因为 UpdateModelMixin 的 url 不优雅，重新写
+
+    # 因为 UpdateModelMixin 的 url 不优雅，重新写，
+    # 而且在此视图里比较难做到谁登录谁修改
     @action(methods=['put'], detail=False, url_path='change-profile', url_name='change_profile', permission_classes=[IsAuthenticated])
-    def change_profile(self, request, pk=None):
+    def change_profile(self, request):
         user = self.request.user
         serializer = UserUpdateSerializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
