@@ -50,25 +50,20 @@ class UserViewSet(ListModelMixin,
     def change_password(self, request):
         # 刚开始用 detail=True, self.get_object() 获得 user，这方法真特么傻
         user = request.user
-        print('============================')
-        print('user:', user)
-        print('reqests:', request)
-        print('data:', request.data)
-        print('============================')
         serializer = self.get_serializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
         if user.check_password(serializer.validated_data.get('old_password')):
             user.set_password(serializer.validated_data.get('new_password'))
             user.save()
             return Response({'status': 'ok'}, status.HTTP_202_ACCEPTED)
-        return Response({'error': 'wrong password'}, status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'wrong password'}, status.HTTP_401_UNAUTHORIZED)
 
     # 因为 UpdateModelMixin 的 url 不优雅，重新写，
     # 而且在此视图里比较难做到谁登录谁修改
     @action(methods=['put'], detail=False, url_path='change-profile',
             url_name='change_profile', permission_classes=[IsAuthenticated])
     def change_profile(self, request):
-        user = self.request.user
+        user = request.user
         serializer = self.get_serializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
