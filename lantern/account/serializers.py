@@ -18,13 +18,17 @@ class GroupSerializer(serializers.ModelSerializer):
         model = Group
         fields = ('id', 'name')
 
+
 class UserOfGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
-        fields = ('username', 'realname', 'email',  'mobile', 'phone', 'avatar', 'gender', 'birthday')
+        fields = ('username', 'realname', 'email',  'mobile',
+                  'phone', 'avatar', 'gender', 'birthday')
+
 
 class GroupUserSerializer(serializers.ModelSerializer):
     user_set = UserOfGroupSerializer(many=True)
+
     class Meta:
         model = Group
         fields = ('id', 'name', 'user_set')
@@ -32,21 +36,23 @@ class GroupUserSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     groups = GroupSerializer(many=True)
+
     class Meta:
         model = UserModel
-        fields = ('username', 'realname', 'email',  'mobile', 'phone', 'avatar',
-                  'gender', 'birthday', 'groups', 'last_login', 'date_joined')
+        fields = ('username', 'realname', 'email',  'mobile', 'phone',
+                  'avatar', 'gender', 'birthday', 'groups', 'last_login',
+                  'date_joined')
         read_only_fields = ('username',)
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
-        fields = ('username', 'realname', 'email',  'mobile', 'phone', 'avatar',
-                  'gender', 'birthday',)
+        fields = ('username', 'realname', 'email',  'mobile', 'phone',
+                  'avatar', 'gender', 'birthday',)
         read_only_fields = ('username',)
 
 
 class PasswordSerializer(serializers.Serializer):
-    old_password =  serializers.CharField(style={'input_type': 'password'})
+    old_password = serializers.CharField(style={'input_type': 'password'})
     new_password = serializers.CharField(style={'input_type': 'password'})

@@ -3,10 +3,9 @@ import os
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 
 from .eq import Eq
-from .lot import LotInfo, Lot
+from .lot import Lot
 
 
 UserModel = get_user_model()

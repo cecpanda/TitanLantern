@@ -8,6 +8,7 @@ class BaseSetting(object):
     enable_themes = True
     use_bootswatch = True
 
+
 class GlobalSettings(object):
     site_title = 'Lantern Backend'
     site_footer = 'cecpanda'

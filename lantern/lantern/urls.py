@@ -19,7 +19,9 @@ from django.urls import path, include
 from django.conf.urls.static import static
 
 from rest_framework.documentation import include_docs_urls
-from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token, verify_jwt_token
+from rest_framework_jwt.views import obtain_jwt_token, \
+                                     refresh_jwt_token, \
+                                     verify_jwt_token
 
 
 import xadmin
@@ -30,12 +32,9 @@ urlpatterns = [
     path('xadmin/', xadmin.site.urls),
 
     path('docs/', include_docs_urls(title='Lantern API')),
-    path('api-auth/',include('rest_framework.urls')),
+    path('api-auth/', include('rest_framework.urls')),
 
     # jwt
-    # path('jwt-auth/', obtain_jwt_token),
-    # path('jwt-token-refresh/', refresh_jwt_token),
-    # path('jwt-token-verify/', verify_jwt_token),
     path('jwt/auth/', obtain_jwt_token),
     path('jwt/refresh/', refresh_jwt_token),
     path('jwt/verify/', verify_jwt_token),
@@ -48,7 +47,7 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    # It is not necessary to add the urlpattern of static, 
+    # It is not necessary to add the urlpattern of static,
     # runerver will do this automatically when DEBUG is set to True.
     # urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
