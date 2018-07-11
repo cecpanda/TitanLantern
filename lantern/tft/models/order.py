@@ -11,9 +11,9 @@ from .lot import Lot
 UserModel = get_user_model()
 
 
-# def default_order_sn():
-#     now = timezone.localtime()
-#     return now.strftime('%y%m%d-%H%M%S-%f')
+def default_order_sn():
+    now = timezone.localtime()
+    return now.strftime('%y%m%d-%H%M%S-%f')
 
 
 class Order(models.Model):
@@ -28,39 +28,9 @@ class Order(models.Model):
         ('7', '完成部分复机'),
         ('8', '完成复机')
     )
+    id = models.CharField('编号', max_length=20, primary_key=True, default=default_order_sn)
     # sn = models.CharField('编号', max_length=25, unique=True, default=default_order_sn)
-    sn = models.CharField('编号', max_length=15, unique=True)
     status = models.CharField('状态', choices=STATUS_CHOICES, max_length=2, default='0')
-
-    class Meta:
-        verbose_name = '订单'
-        verbose_name_plural = verbose_name
-
-    def __str__(self):
-        return self.sn
-
-
-def report_handler(instance, filename):
-    # instance.id 还未存在
-    filename = os.path.split(filename.strip())[-1]
-    # name, suffix = os.path.splitext(filename)
-    return f"reports/{instance.order.sn}/{filename}"
-
-
-class ReportFile(models.Model):
-    order = models.ForeignKey(Order, related_name='reports', on_delete=models.CASCADE, verbose_name='订单')
-    file = models.FileField(upload_to=report_handler, blank=True, null=True, verbose_name='调查报告')
-
-    class Meta:
-        verbose_name = '调查报告'
-        verbose_name_plural = verbose_name
-
-    def __str__(self):
-        return self.order.sn
-
-
-class StartOrder(models.Model):
-    order = models.OneToOneField(Order, related_name='startorder', on_delete=models.CASCADE, verbose_name='订单')
     draft = models.BooleanField('草稿箱', default=False)
     appl = models.ForeignKey(UserModel, related_name='startorders', on_delete=models.PROTECT, verbose_name='申请人')
     created = models.DateTimeField('申请时间', auto_now_add=True)
@@ -78,8 +48,6 @@ class StartOrder(models.Model):
     charge_users = models.ManyToManyField(UserModel, related_name='noticed_charge_users', verbose_name='通知制程人员')
 
     desc = models.TextField('异常描述', max_length=300)
-    # start_time = models.DateTimeField('受害开始时间', blank=True, null=True)
-    # end_time = models.DateTimeField('受害结束时间', blank=True, null=True)
     duration = models.CharField('受害区间', max_length=50, blank=True, null=True)
     lot_num = models.PositiveIntegerField('受害批次数', blank=True, null=True)
     lots = models.ManyToManyField(Lot, related_name="+", blank=True, verbose_name='异常批次')
@@ -91,10 +59,11 @@ class StartOrder(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return self.order.sn
+        return self.id
 
 
-class StartAudit(models.Model):
+
+class Audit(models.Model):
     order = models.OneToOneField(Order, related_name='startaudit', on_delete=models.CASCADE, verbose_name='订单')
     
     p_signer = models.ForeignKey(UserModel, related_name='p_startaudit', blank=True, null=True, on_delete=models.PROTECT, verbose_name='生产签停')
@@ -117,7 +86,7 @@ class StartAudit(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return self.order.sn
+        return self.order.id
 
 
 class RecoverOrder(models.Model):
@@ -138,7 +107,7 @@ class RecoverOrder(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return self.order.sn
+        return self.order.id
 
 
 class RecoverAudit(models.Model):
@@ -162,7 +131,28 @@ class RecoverAudit(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return self.recover_order.order.sn
+        return self.recover_order.order.id
+
+
+
+def report_handler(instance, filename):
+    # instance.id 还未存在
+    filename = os.path.split(filename.strip())[-1]
+    # name, suffix = os.path.splitext(filename)
+    return f"reports/{instance.order.id}/{filename}"
+
+
+
+class Report(models.Model):
+    order = models.ForeignKey(Order, related_name='reports', on_delete=models.CASCADE, verbose_name='订单')
+    file = models.FileField(upload_to=report_handler, blank=True, null=True, verbose_name='调查报告')
+
+    class Meta:
+        verbose_name = '调查报告'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.order.id
 
 
 class Remark(models.Model):
@@ -178,4 +168,4 @@ class Remark(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return self.order.sn
+        return self.order.id

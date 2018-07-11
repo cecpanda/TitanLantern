@@ -1,3 +1,4 @@
+'''
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -269,6 +270,4 @@ class StartAuditSerializer(serializers.Serializer):
         instance.save()
 
         return instance.order.sn
-
-
-
+'''

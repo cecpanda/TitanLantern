@@ -1,3 +1,4 @@
+'''
 from django.shortcuts import render, get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
@@ -132,3 +133,4 @@ class AuditStartOrder(UpdateModelMixin, GenericAPIView):
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return self.update(request, *args, **kwargs)
+'''
