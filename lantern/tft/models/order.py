@@ -3,6 +3,7 @@ import os
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 
 from .eq import Eq
 from .lot import Lot
@@ -31,11 +32,14 @@ class Order(models.Model):
     id = models.CharField('编号', max_length=20, primary_key=True, default=default_order_sn)
     # sn = models.CharField('编号', max_length=25, unique=True, default=default_order_sn)
     status = models.CharField('状态', choices=STATUS_CHOICES, max_length=2, default='0')
-    draft = models.BooleanField('草稿箱', default=False)
     appl = models.ForeignKey(UserModel, related_name='startorders', on_delete=models.PROTECT, verbose_name='申请人')
     created = models.DateTimeField('申请时间', auto_now_add=True)
-    # group  开单工程  从 appl 中自取
+    # 开单工程  从 appl 中自取
+    group = models.ForeignKey(Group, related_name='startorders', on_delete=models.PROTECT,
+                              blank=True, null=True, verbose_name='开单工程')
     # charge_group  责任工程  从停机设备中获取
+    charge_group = models.ForeignKey(Group, related_name='chargeorders', on_delete=models.PROTECT,
+                                     blank=True, null=True, verbose_name='责任工程')
     eq = models.ManyToManyField(Eq, related_name='startorders', verbose_name='停机设备')
     kind = models.CharField('停机机种', max_length=30)
     step = models.CharField('停机站点', max_length=50)
@@ -53,6 +57,8 @@ class Order(models.Model):
     lots = models.ManyToManyField(Lot, related_name="+", blank=True, verbose_name='异常批次')
     condition = models.TextField('复机条件', max_length=200)
     deal = models.TextField('处理方法', max_length=100, default='停机')
+
+    draft = models.BooleanField('草稿箱', default=False)
 
     class Meta:
         verbose_name = '开单'
@@ -156,6 +162,7 @@ class Report(models.Model):
 
 
 class Remark(models.Model):
+    user = models.ForeignKey(UserModel, related_name='remarks', on_delete=models.PROTECT, verbose_name='用户')
     order = models.ForeignKey(Order, related_name='remarks', on_delete=models.CASCADE, verbose_name='订单')
     content = models.TextField('内容', max_length=300)
 

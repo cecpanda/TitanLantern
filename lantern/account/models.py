@@ -36,5 +36,9 @@ class GroupSetting(models.Model):
         verbose_name = '科室代码'
         verbose_name_plural = verbose_name
 
+    def save(self, *args, **kwargs):
+        self.code = self.code.upper()
+        super.save(*args, **kwargs)
+
     def __str__(self):
         return self.group.name

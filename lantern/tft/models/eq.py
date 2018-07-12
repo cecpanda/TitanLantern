@@ -20,7 +20,7 @@ class EqKind(models.Model):
 
 
 class Eq(models.Model):
-    kind = models.ForeignKey(EqKind, related_name='eqs', blank=True, null=True,
+    kind = models.ForeignKey(EqKind, related_name='eqs',
                              on_delete=models.PROTECT, verbose_name='装置类别')
     name = models.CharField('装置名', max_length=8)
 
