@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import logging
+
 from django.db import transaction
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -10,6 +12,9 @@ from rest_framework.validators import UniqueValidator
 from account.serializers import UserOfGroupSerializer, GroupSerializer
 from .models import Eq, Lot, Order,  Report, Remark
 
+
+
+logger = logging.getLogger(__name__)
 
 UserModel = get_user_model()
 
@@ -41,12 +46,12 @@ class StartOrderSerializer(serializers.ModelSerializer):
     # id = serializers.CharField(label='编号', max_length=20,
     #                            validators=[UniqueValidator(queryset=Order.objects.all())])
     appl = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    eq = serializers.ListField(label='停机设备', child=serializers.CharField(max_length=10), min_length=1)
+    eq = serializers.ListField(label='停机设备', child=serializers.CharField(max_length=8), min_length=1)
     users = serializers.ListField(label='通知生产人员', child=serializers.CharField(), min_length=1)
     charge_users = serializers.ListField(label='通知制程人员', child=serializers.CharField(), min_length=1)
     reports = serializers.ListField(label='调查报告', child=serializers.FileField(), required=False)
     remark = serializers.CharField(label='批注', max_length=300, required=False)
-    lots = serializers.ListField(label='异常批次', child=serializers.CharField(max_length=12), required=False)
+    lots = serializers.ListField(label='异常批次', child=serializers.CharField(min_length=8, max_length=11), required=False)
 
     class Meta:
         model = Order
@@ -151,7 +156,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
         return timezone.localtime().strftime('%y%m%d-%H%M%S-%f')
 
     def create(self, validated_data):
-
+        appl = validated_data.get('appl')
         draft = True if validated_data.get('draft') else False
         status = '0' if draft else '1'
 
@@ -159,7 +164,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
             with transaction.atomic():
                 order = Order.objects.create(id=self.get_id(),  # 有默认值
                                              status=status,
-                                             appl=validated_data.get('appl'),
+                                             appl=appl,
                                              group=self.get_group(),  # 从 appl 中获取，可能为空
                                              charge_group=self.get_charge_group(),  #
                                              # eq  # 必选
@@ -180,32 +185,35 @@ class StartOrderSerializer(serializers.ModelSerializer):
                 for name in validated_data.get('eq'):
                     eq = Eq.objects.get(name=name)
                     order.eq.add(eq)
+
                 for username in validated_data.get('users'):
                     user = UserModel.objects.get(username=username)
-                    # ...
+                    order.users.add(user)
+
                 for username in validated_data.get('charge_users'):
                     user = UserModel.objects.get(username=username)
+                    order.charge_users.add(user)
 
+            # lots 可能为空
+            lots = validated_data.get('lots')
+            if lots:
+                for name in validated_data.get('lots'):
+                    lot = Lot.objects.create(name=name)
+                    order.lots.add(lot)
 
-        # lots 可能为空
-        lots = validated_data.get('lots')
-        if lots:
-            for name in validated_data.get('lots'):
-                lot = Lot.objects.create(name=name)
-                # 。。。
+            reports = validated_data.get('reports')
+            if reports:
+                for file in reports:
+                    Report.objects.create(order=order, file=file)
 
+            remark = validated_data.get('remark')
+            if remark:
+                Remark.objects.create(user=appl, order=order, content=remark)
+        except Exception as e:
+            logger.error(e)
+            raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
 
-
-        reports = validated_data.get('reports')
-        if reports:
-            for file in reports:
-                Report.objects.create(order='', file=file)
-
-        remark = validated_data.get('remark')
-        if remark:
-            Remark.objects.create(user=appl, order='', content=remark)
-
-
+        return order
 
 class ReportSerializer(serializers.ModelSerializer):
 

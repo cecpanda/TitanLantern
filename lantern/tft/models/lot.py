@@ -16,7 +16,7 @@ class LotInfo(models.Model):
 
 class Lot(models.Model):
     # 不要 lotinfo 了，直接输入
-    name = models.CharField('批次', blank=True, null=True, max_length=12)
+    name = models.CharField('批次', blank=True, null=True, max_length=11)
     created = models.DateTimeField('创建时间', auto_now_add=True)
 
     class Meta:

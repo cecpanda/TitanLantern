@@ -143,7 +143,7 @@ class RecoverAudit(models.Model):
 
 def report_handler(instance, filename):
     # instance.id 还未存在
-    filename = os.path.split(filename.strip())[-1]
+    # filename = os.path.split(filename.strip())[-1]
     # name, suffix = os.path.splitext(filename)
     return f"reports/{instance.order.id}/{filename}"
 
