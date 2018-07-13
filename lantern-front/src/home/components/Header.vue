@@ -24,24 +24,36 @@
       </el-submenu>
       <el-menu-item index="4">SL</el-menu-item>
       <el-menu-item index="5" disabled>禁止</el-menu-item>
-      <el-menu-item index="6" class='login'>
+      <el-menu-item index="6" class='user'>
+        <User/>
+      </el-menu-item>
+      <el-menu-item index="7" class='login'>
         <Login/>
       </el-menu-item>
     </el-menu>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import Login from './Login'
+import User from './User'
 
 export default {
   name: 'HomeHeader',
   components: {
-    Login
+    Login,
+    User
   },
   data () {
     return {
       activeIndex: '1'
     }
+  },
+  computed: {
+    ...mapGetters({
+      isLogin: 'isLogin',
+      username: 'username'
+    })
   },
   methods: {
     handleSelect (key, keyPath) {

@@ -19,13 +19,15 @@
       <div slot="footer" class="dialog-footer">
         <el-button @click="loginVisible=false">取 消</el-button>
         <el-button @click="resetForm('loginForm')">重置</el-button>
-        <el-button type="primary" @click="submitForm('loginForm')">登录</el-button>
+        <el-button type="primary" :plain="true" @click="submitForm('loginForm')">登录</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
+import { jwtAuth } from '@/api/user'
+
 export default {
   name: 'Login',
   data () {
@@ -65,11 +67,29 @@ export default {
     submitForm (formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          console.log('login')
-          this.loginVisible = false
+          jwtAuth(this.form.username, this.form.password)
+            .then((response) => {
+              console.log(response.data)
+              this.loginVisible = false
+              localStorage.setItem('token', response.data.token)
+              localStorage.setItem('username', response.data.username)
+              this.$store.dispatch('setInfo')
+              this.$router.push({name: 'Home'})
+            })
+            .catch((error) => {
+              console.log(error)
+              this.$message({
+                showClose: true,
+                message: '账号或密码错误',
+                type: 'error'
+              })
+            })
         } else {
-          console.log('error submit!!')
-          return false
+          this.$message({
+            showClose: true,
+            message: '请输入账号密码',
+            type: 'warning'
+          })
         }
       })
     },

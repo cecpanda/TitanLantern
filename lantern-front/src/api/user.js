@@ -4,13 +4,18 @@ import conf from './config'
 let host = conf.host
 
 // 登录
-export const jwtAuth = params => {
-  return axios.post(`${host}/jwt-auth/`, params)
+export const jwtAuth = (username, password) => {
+  return axios.post(`${host}/jwt/auth/`, {
+    username: username,
+    password: password
+  }, {
+    headers: {'Content-Type': 'application/json'}
+  })
 }
 
 // 验证 token 还有效不
-export const jwtAuthVerify = token => {
-  return axios.post(`${host}/jwt-token-verify/`, {token: token}, {
+export const jwtVerify = token => {
+  return axios.post(`${host}/jwt/verify/`, {token: token}, {
     headers: {
       'Content-Type': 'application/json'
     }

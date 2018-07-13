@@ -5,7 +5,8 @@
   </el-header>
   <el-container>
     <el-main>
-      Main <br/><br/><br/><br/>
+      Main <br/>
+      <br/><br/><br/>
     </el-main>
     <el-aside width="200px">Aside</el-aside>
   </el-container>
@@ -14,9 +15,17 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import HomeHeader from './components/Header'
+
 export default {
   name: 'Home',
+  computed: {
+    ...mapGetters({
+      isLogin: 'isLogin',
+      username: 'username'
+    })
+  },
   components: {
     HomeHeader
   }

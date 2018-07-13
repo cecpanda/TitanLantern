@@ -1,8 +1,5 @@
 export default {
-  setLoginStatus (ctx, isLogged) {
-    ctx.commit('setLoginStatus', isLogged)
-  },
-  setTest (state, val) {
-    state.test = val
+  setInfo (ctx) {
+    ctx.commit('setInfo')
   }
 }

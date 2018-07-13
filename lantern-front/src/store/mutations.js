@@ -1,8 +1,6 @@
 export default {
-  setLoginStatus (state, isLogged) {
-    state.isLogged = isLogged
-  },
-  setTest (state, val) {
-    state.test = val
+  setInfo (state) {
+    state.token = localStorage.getItem('token')
+    state.username = localStorage.getItem('username')
   }
 }
