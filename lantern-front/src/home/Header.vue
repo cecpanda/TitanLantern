@@ -5,8 +5,9 @@
       background-color="#545c64"
       text-color="#fff"
       active-text-color="#ffd04b"
+      :router='true'
     >
-      <el-menu-item index="1">首页</el-menu-item>
+      <el-menu-item index="/">首页</el-menu-item>
       <el-submenu index="2">
         <template slot="title">TFT</template>
         <el-menu-item index="2-1">停机单</el-menu-item>
@@ -24,11 +25,14 @@
       </el-submenu>
       <el-menu-item index="4">SL</el-menu-item>
       <el-menu-item index="5" disabled>禁止</el-menu-item>
-      <el-menu-item index="6" class='user'>
-        <User/>
-      </el-menu-item>
-      <el-menu-item index="7" class='login'>
-        <Login/>
+      <el-submenu index="6" class='login' v-if='isLogin && username'>
+        <template slot="title">{{ username }}</template>
+        <el-menu-item index="/user">个人中心</el-menu-item>
+        <el-menu-item index="6-2">设置中心</el-menu-item>
+        <el-menu-item index="6-3" @click='logout'>退出</el-menu-item>
+      </el-submenu>
+      <el-menu-item index="7" class='login' v-else>
+        <Login></Login>
       </el-menu-item>
     </el-menu>
 </template>
@@ -36,13 +40,11 @@
 <script>
 import { mapGetters } from 'vuex'
 import Login from './Login'
-import User from './User'
 
 export default {
   name: 'HomeHeader',
   components: {
-    Login,
-    User
+    Login
   },
   data () {
     return {
@@ -57,6 +59,14 @@ export default {
   },
   methods: {
     handleSelect (key, keyPath) {
+      console.log(key, keyPath)
+    },
+    logout () {
+      localStorage.removeItem('token')
+      localStorage.removeItem('username')
+      // 记得加上啊，更新全局状态
+      this.$store.commit('setInfo')
+      this.$router.push({name: 'Home'})
     }
   }
 }

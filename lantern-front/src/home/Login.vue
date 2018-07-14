@@ -1,5 +1,5 @@
 <template>
-  <div class="login">
+  <div>
     <el-button type="text" @click="loginVisible=true">登录</el-button>
     <el-dialog title="登录" :visible.sync="loginVisible" :width='width'>
       <el-form
@@ -69,11 +69,11 @@ export default {
         if (valid) {
           jwtAuth(this.form.username, this.form.password)
             .then((response) => {
-              console.log(response.data)
               this.loginVisible = false
               localStorage.setItem('token', response.data.token)
               localStorage.setItem('username', response.data.username)
-              this.$store.dispatch('setInfo')
+              // this.$store.dispatch('setInfo')
+              this.$store.commit('setInfo')
               this.$router.push({name: 'Home'})
             })
             .catch((error) => {
@@ -101,7 +101,7 @@ export default {
 </script>
 
 <style lang='stylus' scoped>
-.login
-  position absolute
-  right 20px
+// .login
+//   position absolute
+//   right 20px
 </style>

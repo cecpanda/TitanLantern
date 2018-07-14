@@ -1,4 +1,5 @@
-import axios from 'axios'
+// import axios from 'axios'
+import axios from './http'
 import conf from './config'
 
 let host = conf.host
@@ -20,11 +21,13 @@ export const jwtVerify = token => {
       'Content-Type': 'application/json'
     }
   })
-    .then((response) => {
-      return true
-    })
-    .catch((error) => {
-      console.log(error)
-      return false
-    })
+}
+
+// 获取指定用户资料
+export const getUser = username => {
+  return axios.get(`${host}/account/user/${username}`, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
 }
