@@ -7,13 +7,14 @@
         @open="handleOpen"
         @close="handleClose"
         :collapse="isCollapse"
+        :router='true'
       >
         <el-submenu index="1">
           <template slot="title">
-            <i class='el-icon-news'></i>
+            <i class='el-icon-menu'></i>
             <span slot="title">我的账号</span>
           </template>
-          <el-menu-item index="1-1">修改资料</el-menu-item>
+          <el-menu-item index="/user/edit">修改资料</el-menu-item>
           <el-menu-item index="1-2">修改密码</el-menu-item>
         </el-submenu>
         <el-menu-item index="2">
@@ -43,16 +44,15 @@
       </el-menu>
     </el-aside>
     <el-main>
-      {{ this.profile }}
-      {{ this.profile.username }}
+      <router-view></router-view>
     </el-main>
+    <el-aside>
+      Aside
+    </el-aside>
   </el-container>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-import { getUser } from '@/api/user'
-
 export default {
   name: 'User',
   data () {
@@ -61,37 +61,18 @@ export default {
       profile: {}
     }
   },
-  computed: {
-    ...mapGetters({
-      username: 'username'
-    })
-  },
   methods: {
     handleOpen (key, keyPath) {
       console.log(key, keyPath)
     },
     handleClose (key, keyPath) {
       console.log(key, keyPath)
-    },
-    getUserProfile (username) {
-      getUser(username)
-        .then((response) => {
-          this.profile = response.data
-        })
-        .catch((error) => {
-          console.log(error)
-        })
     }
-  },
-  created () {
-    this.getUserProfile(this.username)
   }
 }
 </script>
 
 <style lang='stylus' scoped>
-.user
-  margin-top 10px
 .el-menu-vertical-demo:not(.el-menu--collapse)
   width: 200px
   min-height: 400px

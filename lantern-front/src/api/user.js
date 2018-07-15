@@ -31,3 +31,8 @@ export const getUser = username => {
     }
   })
 }
+
+// 查询所有组
+export const getAllGroups = () => {
+  return axios.get(`${host}/account/group/`)
+}

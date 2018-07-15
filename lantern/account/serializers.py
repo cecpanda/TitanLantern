@@ -23,7 +23,7 @@ class UserOfGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
         fields = ('username', 'realname', 'email',  'mobile',
-                  'phone', 'avatar', 'gender', 'birthday')
+                  'phone', 'avatar', 'gender')
 
 
 class GroupUserSerializer(serializers.ModelSerializer):
@@ -40,8 +40,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
         fields = ('username', 'realname', 'email',  'mobile', 'phone',
-                  'avatar', 'gender', 'birthday', 'groups', 'last_login',
-                  'date_joined')
+                  'avatar', 'gender',  'groups', 'date_joined')
         read_only_fields = ('username',)
 
 
@@ -49,7 +48,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
         fields = ('username', 'realname', 'email',  'mobile', 'phone',
-                  'avatar', 'gender', 'birthday',)
+                  'avatar', 'gender')
         read_only_fields = ('username',)
 
 
