@@ -22,3 +22,26 @@ export const jwtVerify = token => {
     }
   })
 }
+
+// 获取指定用户资料
+export const getUser = username => {
+  return axios.get(`${host}/account/user/${username}`, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+}
+
+// 查询所有组
+export const getAllGroups = () => {
+  return axios.get(`${host}/account/group/`)
+}
+
+// 修改资料
+export const changeProfile = (params) => {
+  return axios.put(`${host}/account/user/change-profile/`, params, {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+}
