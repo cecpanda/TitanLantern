@@ -1,23 +1,59 @@
-<!DOCTYPE html>
-<html>
-
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Examples</title>
-    <meta name="description" content="">
-    <meta name="keywords" content="">
-    <link href="" rel="stylesheet">
+  <title></title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.bootcss.com/vue/2.3.4/vue.js"></script>
+  <script src="https://cdn.bootcss.com/axios/0.16.2/axios.js"></script>
 </head>
 
 <body>
-    <script type="text/javascript">
-    var a = [{ id: 1, name: 'A' }, { id: 2, name: 'B' }]
-    var b = [{ id: 2, name: 'B' }]
-    for (var value of a) {
-      console.log(value)
+  <form>
+    <input type="text" value="" v-model="name" placeholder="请输入用户名">
+    <input type="text" value="" v-model="age" placeholder="请输入年龄">
+    <input type="file" @change="getFile($event)">
+    <button @click="submitForm($event)">提交</button>
+  </form>
+
+  <script>
+    window.onload = function () {
+      Vue.prototype.$http = axios;
+      new Vue({
+        el: 'form',
+        data: {
+          name: '',
+          age: '',
+          file: ''
+        },
+        methods: {
+          getFile(event) {
+            this.file = event.target.files[0];
+            console.log(this.file);
+          },
+          submitForm(event) {
+            event.preventDefault();
+            let formData = new FormData();
+            formData.append('name', this.name);
+            formData.append('age', this.age);
+            formData.append('file', this.file);
+            console.log(formData)
+            console.log(typeof formData)
+
+            let config = {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+
+            this.$http.post('/upload', formData, config).then(function (res) {
+              if (res.status === 2000) {
+                /*这里做处理*/
+              }
+            })
+          }
+        }
+      })
     }
-    </script>
+  </script>
 </body>
 
 </html>

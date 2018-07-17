@@ -60,13 +60,14 @@ class UserViewSet(ListModelMixin,
 
     # 因为 UpdateModelMixin 的 url 不优雅，重新写，
     # 而且在此视图里比较难做到谁登录谁修改
-    @action(methods=['put'], detail=False, url_path='change-profile',
+    @action(methods=['put', 'post'], detail=False, url_path='change-profile',
             url_name='change_profile', permission_classes=[IsAuthenticated])
     def change_profile(self, request):
         user = request.user
         serializer = self.get_serializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+
         return Response(serializer.data, status.HTTP_201_CREATED)
 
 

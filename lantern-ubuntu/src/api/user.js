@@ -39,9 +39,7 @@ export const getAllGroups = () => {
 
 // 修改资料
 export const changeProfile = (params) => {
-  return axios.put(`${host}/account/user/change-profile/`, params, {
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
+  console.log(typeof params)
+  console.log(params)
+  return axios.put(`${host}/account/user/change-profile/`, params)
 }

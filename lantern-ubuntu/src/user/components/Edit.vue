@@ -6,6 +6,7 @@
         ref="form"
         label-width="150px"
         size='medium'
+        enctyped="multipart/form-data"
       >
         <el-col :span=8>
           <el-form-item label="用户名">
@@ -17,10 +18,10 @@
           <el-form-item label="邮箱">
             <el-input v-model="profile.email"></el-input>
           </el-form-item>
-          <el-form-item label="电话">
+          <el-form-item label="手机">
             <el-input v-model="profile.mobile"></el-input>
           </el-form-item>
-          <el-form-item label="手机">
+          <el-form-item label="电话">
             <el-input v-model="profile.phone"></el-input>
           </el-form-item>
           <el-form-item label="性别">
@@ -42,11 +43,14 @@
           <el-form-item label="头像">
             <el-upload
               class="avatar-uploader"
-              action="https://jsonplaceholder.typicode.com/posts/"
+              action="http://127.0.0.1:8000/account/user/change-profile/"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
               :before-upload="beforeAvatarUpload"
-            >
+              :headers='headers'
+              name="avatar"
+              methods='put'
+             >
               <img
                 v-if="profile.avatar"
                 :src="profile.avatar"
@@ -56,12 +60,6 @@
             </el-upload>
           </el-form-item>
           <el-form-item label="注册日期">
-<!--             <el-date-picker
-              v-model="profile.date_joined"
-              type="datetime"
-              disabled
-            >
-            </el-date-picker> -->
             <el-tag>
               {{ profile.date_joined | formatDate }}
             </el-tag>
@@ -93,7 +91,10 @@ export default {
   data () {
     return {
       profile: {},
-      allGroups: []
+      allGroups: [],
+      headers: {
+        'Authorization': 'JWT ' + this.$store.state.token
+      }
     }
   },
   computed: {
@@ -121,7 +122,10 @@ export default {
     //     })
     // },
     handleAvatarSuccess (res, file) {
-      this.profile.avatar = URL.createObjectURL(file.raw)
+      // this.profile.avatar = URL.createObjectURL(file.raw)
+      // this.profile.avatar = file
+      this.profile.avatar = res.avatar
+      this.$message.success('头像修改成功')
     },
     beforeAvatarUpload (file) {
       const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
@@ -134,16 +138,41 @@ export default {
       }
       return isJPG && isLt2M
     },
+    getFile (e) {
+      this.profile.avatar = e.target.files[0]
+    },
     submitForm (formName) {
+      delete this.profile.avatar
+      console.log(this.profile)
       changeProfile(this.profile)
         .then((res) => {
-          this.profile = res.data
-          this.$message.sucess('修改成功')
+          // this.$message.success('修改成功')
+          this.editSuccess('修改成功')
+          this.$router.push('/user/edit')
         })
         .catch((error) => {
           console.log(error)
-          this.$message.error('修改失败')
+          this.editFailed(error)
         })
+    },
+    editSuccess (msg) {
+      this.$notify({
+        title: '成功',
+        message: msg,
+        type: 'success'
+      })
+    },
+    editFailed (object) {
+      for (let key in object) {
+        if (object.hasOwnProperty(key)) {
+          console.log(key, object[key].join(','))
+          this.$notify({
+            title: key,
+            message: object[key].join(','),
+            type: 'error'
+          })
+        }
+      }
     }
   },
   created () {
