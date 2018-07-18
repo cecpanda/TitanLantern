@@ -53,7 +53,7 @@ INSTALLED_APPS = [
 
     'account.apps.AccountConfig',
     'tft.apps.TftConfig',
-    'action',
+    'action.apps.ActionConfig',
 ]
 
 MIDDLEWARE = [

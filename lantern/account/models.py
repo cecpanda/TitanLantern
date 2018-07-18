@@ -15,10 +15,9 @@ class User(AbstractUser):
     phone = models.CharField('电话', max_length=6, blank=True, null=True)
     avatar = models.ImageField('头像', upload_to='avatars/%Y/%m', blank=True,
                                null=True, default="avatars/default.png")
-
     gender = models.CharField("性别", max_length=1, choices=GENDER_CHOICES,
                               default="M")
-    birthday = models.DateField("出生年月", blank=True, null=True)
+    following = models.ManyToManyField('self', through='Follow', related_name='followers', symmetrical=False)
 
     class Meta:
         verbose_name = _('user')
@@ -26,6 +25,21 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class Follow(models.Model):
+    user_from = models.ForeignKey(User, related_name='rel_from', on_delete=models.CASCADE, verbose_name='用户')
+    user_to = models.ForeignKey(User, related_name='rel_to', on_delete=models.CASCADE, verbose_name='关注')
+    created = models.DateTimeField('关注时间', auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created',)
+        verbose_name = '关注'
+        verbose_name_plural = verbose_name
+        unique_together = ('user_from', 'user_to')
+
+    def __str__(self):
+        return f'{self.user_from.username} 关注了 {self.user_to.username}'
 
 
 class GroupSetting(models.Model):
