@@ -1,6 +1,7 @@
 import os
 
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -29,6 +30,7 @@ class Order(models.Model):
         ('7', '完成部分复机'),
         ('8', '完成复机')
     )
+    # 重写了主键，名字最好还用 id， 因为 action 中使用到 target_id
     id = models.CharField('编号', max_length=20, primary_key=True, default=default_order_sn)
     # sn = models.CharField('编号', max_length=25, unique=True, default=default_order_sn)
     status = models.CharField('状态', choices=STATUS_CHOICES, max_length=2, default='0')
@@ -63,6 +65,9 @@ class Order(models.Model):
     class Meta:
         verbose_name = '开单'
         verbose_name_plural = verbose_name
+
+    def get_absolute_url(self):
+        return reverse('tft:start-detail', args=(self.id,))
 
     def __str__(self):
         return self.id

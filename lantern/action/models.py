@@ -12,13 +12,17 @@ class Action(models.Model):
     verb = models.CharField(max_length=255)
     
     target_ct = models.ForeignKey(ContentType, blank=True, null=True, related_name='target_obj', on_delete=models.SET_NULL)
-    target_id = models.PositiveIntegerField(null=True, blank=True)
+    # target_id = models.PositiveIntegerField(null=True, blank=True)
+    # 因为 Order 重写了主键，在这里使用 TextField 兼容性最强，但性能损失严重
+    target_id = models.CharField(max_length=20, null=True, blank=True)
     target = GenericForeignKey('target_ct', 'target_id')
 
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created']
+        verbose_name = '工作流'
+        verbose_name_plural = verbose_name
 
     def __str__(self):
         return f'{self.user.username} {self.verb} {self.target}'

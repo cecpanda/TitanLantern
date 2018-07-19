@@ -9,8 +9,9 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter, OrderingFilter
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework_extensions.cache.mixins import CacheResponseMixin
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import Follow
 from .serializers import UserSerializer, PasswordSerializer, GroupSerializer, \

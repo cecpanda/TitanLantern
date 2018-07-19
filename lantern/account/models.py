@@ -1,6 +1,8 @@
 from django.db import models
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser, Group
+# from rest_framework.reverse import reverse
 
 
 class User(AbstractUser):
@@ -23,6 +25,9 @@ class User(AbstractUser):
         verbose_name = _('user')
         verbose_name_plural = _('users')
 
+    def get_absolute_url(self):
+        return reverse('account:user-detail', args=[self.username])
+
     def __str__(self):
         return self.username
 
@@ -39,7 +44,7 @@ class Follow(models.Model):
         unique_together = ('user_from', 'user_to')
 
     def __str__(self):
-        return f'{self.user_from.username} 关注了 {self.user_to.username}'
+        return f'{self.user_from.username} 关注 {self.user_to.username}'
 
 
 class GroupSetting(models.Model):

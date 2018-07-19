@@ -2,6 +2,8 @@ import datetime
 
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
+from rest_framework.pagination import PageNumberPagination
+from django_filters import rest_framework as filters
 
 from .models import Action
 
@@ -22,3 +24,18 @@ def create_action(user, verb, target=None):
         return True
         
     return False
+
+
+class ActionPagination(PageNumberPagination):
+    page_size = 30
+    page_size_query_param = 'page-size'
+    page_query_param = "page"
+    max_page_size = 100.
+
+
+class ActionFilter(filters.FilterSet):
+    username = filters.CharFilter(field_name='user__username', lookup_expr='iexact')
+
+    class Meta:
+        model = Action
+        fields = ['username']
