@@ -3,8 +3,6 @@ import xadmin
 from .models import EqKind, Eq, \
                      Lot, \
                      Order, \
-                     Audit, \
-                     RecoverOrder, RecoverAudit, \
                      Report, Remark
 
 
@@ -21,16 +19,16 @@ class OrderAdmin(object):
     list_display = ['id', 'status', 'appl', 'created']
 
 
-class AuditAdmin(object):
-    list_display = ['order', 'p_signer', 'c_signer', 'rejected']
-
-
-class RecoverOrderAdmin(object):
-    list_display = ['order', 'appl', 'partial', 'created']
-
-
-class RecoverAuditAdmin(object):
-    list_display = ['recover_order', 'qc_signer', 'p_signer', 'rejected', 'created']
+# class AuditAdmin(object):
+#     list_display = ['order', 'p_signer', 'c_signer', 'rejected']
+#
+#
+# class RecoverOrderAdmin(object):
+#     list_display = ['order', 'appl', 'partial', 'created']
+#
+#
+# class RecoverAuditAdmin(object):
+#     list_display = ['recover_order', 'qc_signer', 'p_signer', 'rejected', 'created']
 
 
 xadmin.site.register(EqKind, EqKindAdmin)
@@ -39,8 +37,8 @@ xadmin.site.register(Eq, EqAdmin)
 xadmin.site.register(Lot)
 
 xadmin.site.register(Order, OrderAdmin)
-xadmin.site.register(Audit, AuditAdmin)
-xadmin.site.register(RecoverOrder, RecoverOrderAdmin)
-xadmin.site.register(RecoverAudit, RecoverAuditAdmin)
+# xadmin.site.register(Audit, AuditAdmin)
+# xadmin.site.register(RecoverOrder, RecoverOrderAdmin)
+# xadmin.site.register(RecoverAudit, RecoverAuditAdmin)
 xadmin.site.register(Report)
 xadmin.site.register(Remark)

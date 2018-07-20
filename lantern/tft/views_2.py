@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from .models import Order
-from .serializers import StartOrderSerializer, ListStartOrderSerializer
+from .serializers_2 import StartOrderSerializer, ListStartOrderSerializer
 
 
 class StartOrderViewSet(ListModelMixin,

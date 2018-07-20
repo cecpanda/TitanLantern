@@ -20,6 +20,7 @@ from .serializers import UserSerializer, PasswordSerializer, GroupSerializer, \
                          FollowSerializer, ListFollowSerializer
 from .utils import UserPagination
 from .filters import UserFilter
+from action.utils import create_action
 
 
 UserModel = get_user_model()
@@ -133,6 +134,7 @@ class FollowViewSet(CreateModelMixin,
         user_from = request.user
         user_to = UserModel.objects.get(username=serializer.validated_data['user_to'])
         Follow.objects.get_or_create(user_from=user_from, user_to=user_to)
+        create_action(user_from, '关注', user_to)
         headers = self.get_success_headers(serializer.data)
         return Response({'status': 'ok'}, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -145,6 +147,7 @@ class FollowViewSet(CreateModelMixin,
         user_from = request.user
         user_to = UserModel.objects.get(username=serializer.validated_data['user_to'])
         Follow.objects.filter(user_from=user_from, user_to=user_to).delete()
+        create_action(user_from, '取消关注', user_to)
         return Response({'status': 'ok'}, status=status.HTTP_204_NO_CONTENT)
 
     # 获取任意用户的关注、被关注列表

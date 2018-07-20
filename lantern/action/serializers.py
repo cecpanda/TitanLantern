@@ -18,6 +18,7 @@ class ActionSerializer(serializers.ModelSerializer):
         return {'username': obj.user.username}
 
     def get_target(self, obj):
+        # 此处显示用户时，不够优雅，最后要改
         data = {
             'id': obj.target.id,
             # 'url': self.context['request'].META['HTTP_HOST'] + obj.target.get_absolute_url()
