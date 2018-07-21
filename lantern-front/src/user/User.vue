@@ -46,9 +46,9 @@
     <el-main>
       <router-view></router-view>
     </el-main>
-    <el-aside>
+<!--     <el-aside>
       Aside
-    </el-aside>
+    </el-aside> -->
   </el-container>
 </template>
 

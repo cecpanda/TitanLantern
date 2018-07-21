@@ -6,6 +6,7 @@
         ref="form"
         label-width="150px"
         size='medium'
+        enctyped="multipart/form-data"
       >
         <el-col :span=8>
           <el-form-item label="用户名">
@@ -17,10 +18,10 @@
           <el-form-item label="邮箱">
             <el-input v-model="profile.email"></el-input>
           </el-form-item>
-          <el-form-item label="电话">
+          <el-form-item label="手机">
             <el-input v-model="profile.mobile"></el-input>
           </el-form-item>
-          <el-form-item label="手机">
+          <el-form-item label="电话">
             <el-input v-model="profile.phone"></el-input>
           </el-form-item>
           <el-form-item label="性别">
@@ -30,65 +31,76 @@
             </template>
           </el-form-item>
           <el-form-item label="科室">
-            <template>
-              <el-checkbox
-                v-model="group.id"
-                v-for='group of allGroups'
-                :key='group.id'
-                disabled
-              >
-                {{ group.name }}
-              </el-checkbox>
-            </template>
+            <el-tag
+              v-for='group of profile.groups'
+              :key='group.id'
+            >
+              {{ group.name }}
+            </el-tag>
           </el-form-item>
         </el-col>
         <el-col :span=8>
           <el-form-item label="头像">
             <el-upload
               class="avatar-uploader"
-              action="https://jsonplaceholder.typicode.com/posts/"
+              action="http://127.0.0.1:8000/account/user/change-profile/"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
               :before-upload="beforeAvatarUpload"
-            >
-              <img v-if="profile.avatar" :src="profile.avatar" class="avatar">
+              :headers='headers'
+              name="avatar"
+              methods='put'
+             >
+              <img
+                v-if="profile.avatar"
+                :src="profile.avatar"
+                class="avatar"
+              >
               <i v-else class="el-icon-plus avatar-uploader-icon"></i>
             </el-upload>
           </el-form-item>
           <el-form-item label="注册日期">
-            <el-date-picker
-              v-model="profile.date_joined"
-              type="datetime"
-              disabled
+            <el-tag>
+              {{ profile.date_joined | formatDate }}
+            </el-tag>
+          </el-form-item>
+          <el-form-item>
+          </el-form-item>
+          <el-form-item>
+            <el-button
+              type="primary"
+              round
+              @click="submitForm('form')"
             >
-            </el-date-picker>
+              修改
+            </el-button>
           </el-form-item>
         </el-col>
       </el-form>
     </el-row>
-    {{ compGroup }}
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-import { getUser, getAllGroups } from '@/api/user'
+import { getUser, changeProfile } from '@/api/user'
+import { formatDate } from '@/common/js/date.js'
 
 export default {
   name: 'Edit',
   data () {
     return {
       profile: {},
-      allGroups: []
+      allGroups: [],
+      headers: {
+        'Authorization': 'JWT ' + this.$store.state.token
+      }
     }
   },
   computed: {
     ...mapGetters({
       username: 'username'
-    }),
-    compGroup () {
-      
-    }
+    })
   },
   methods: {
     getUserProfile (username) {
@@ -100,34 +112,77 @@ export default {
           console.log(error)
         })
     },
-    getAllGroups () {
-      getAllGroups()
-        .then((response) => {
-          this.allGroups = response.data
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
+    // getAllGroups () {
+    //   getAllGroups()
+    //     .then((response) => {
+    //       this.allGroups = response.data
+    //     })
+    //     .catch((error) => {
+    //       console.log(error)
+    //     })
+    // },
     handleAvatarSuccess (res, file) {
-      this.profile.avatar = URL.createObjectURL(file.raw)
+      // this.profile.avatar = URL.createObjectURL(file.raw)
+      // this.profile.avatar = file
+      this.profile.avatar = res.avatar
+      this.$message.success('头像修改成功')
     },
     beforeAvatarUpload (file) {
-      const isJPG = file.type === 'image/jpeg'
+      const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
       const isLt2M = file.size / 1024 / 1024 < 2
-
       if (!isJPG) {
-        this.$message.error('上传头像图片只能是 JPG 格式!')
+        this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
       }
       if (!isLt2M) {
         this.$message.error('上传头像图片大小不能超过 2MB!')
       }
       return isJPG && isLt2M
+    },
+    getFile (e) {
+      this.profile.avatar = e.target.files[0]
+    },
+    submitForm (formName) {
+      delete this.profile.avatar
+      console.log(this.profile)
+      changeProfile(this.profile)
+        .then((res) => {
+          // this.$message.success('修改成功')
+          this.editSuccess('修改成功')
+          this.$router.push('/user/edit')
+        })
+        .catch((error) => {
+          console.log(error)
+          this.editFailed(error)
+        })
+    },
+    editSuccess (msg) {
+      this.$notify({
+        title: '成功',
+        message: msg,
+        type: 'success'
+      })
+    },
+    editFailed (object) {
+      for (let key in object) {
+        if (object.hasOwnProperty(key)) {
+          console.log(key, object[key].join(','))
+          this.$notify({
+            title: key,
+            message: object[key].join(','),
+            type: 'error'
+          })
+        }
+      }
     }
   },
   created () {
     this.getUserProfile(this.username)
-    this.getAllGroups()
+  },
+  filters: {
+    formatDate (time) {
+      let date = new Date(time)
+      return formatDate(date, 'yyyy-MM-dd hh:mm:ss')
+    }
   }
 }
 </script>
