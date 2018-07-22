@@ -3,6 +3,7 @@
     <img :src="user.avatar">
     <el-tag>用户名：{{ user.username }}</el-tag>
     <el-tag>真名： {{ user.realname }}</el-tag>
+    <br/>
     <el-button
       type="primary"
       round

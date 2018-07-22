@@ -17,18 +17,10 @@
           <el-menu-item index="/user/edit">修改资料</el-menu-item>
           <el-menu-item index="1-2">修改密码</el-menu-item>
         </el-submenu>
-        <el-menu-item index="2">
-          <i class='el-icon-document'></i>
-          <span slot="title">我的订单</span>
+        <el-menu-item index="/user/follow">
+          <i class='el-icon-star-on'></i>
+          <span slot="title">我的关注</span>
         </el-menu-item>
-        <el-submenu index="3">
-          <template slot="title">
-            <i class='el-icon-star-on'></i>
-            <span slot="title">我的关注</span>
-          </template>
-          <el-menu-item index="3-1">关注</el-menu-item>
-          <el-menu-item index="3-2">被关注</el-menu-item>
-        </el-submenu>
         <el-menu-item index="4">
           <i class="el-icon-setting"></i>
           <span slot="title">个人设置</span>

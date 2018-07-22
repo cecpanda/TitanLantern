@@ -6,6 +6,7 @@ import User from '@/user/User'
 import Users from '@/user/Users'
 import Action from '@/user/components/Action'
 import Edit from '@/user/components/Edit'
+import Follow from '@/user/components/Follow'
 
 Vue.use(Router)
 
@@ -29,6 +30,9 @@ export default new Router({
         }, {
           path: 'edit',
           component: Edit
+        }, {
+          path: 'follow',
+          component: Follow
         }
       ]
     }

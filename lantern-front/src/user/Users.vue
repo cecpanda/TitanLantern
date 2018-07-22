@@ -1,24 +1,28 @@
 <template>
-  <div>
-    <el-row>用户总数: {{ count }}</el-row>
-    <el-row :gutter="20">
-      <el-col
-        :span="3"
-        v-for='user in Users'
-        :key='user.username'
-      >
-        <Avatar :user='user'></Avatar>
-      </el-col>
-    </el-row>
-    <el-pagination
-      background
-      @current-change="handleCurrentChange"
-      :current-page.sync="page"
-      :page-size='pageSize'
-      layout="prev, pager, next, jumper"
-      :total="count">
-    </el-pagination>
-  </div>
+  <el-container>
+    <el-main>
+      <el-row :gutter="20">
+        <el-col
+          :span="3"
+          v-for='user in Users'
+          :key='user.username'
+        >
+          <Avatar :user='user'></Avatar>
+        </el-col>
+      </el-row>
+      <el-pagination
+        background
+        @current-change="handleCurrentChange"
+        :current-page.sync="page"
+        :page-size='pageSize'
+        layout="prev, pager, next, jumper"
+        :total="count">
+      </el-pagination>
+    </el-main>
+    <el-aside width='200px'>
+      总计： {{ this.count }}
+    </el-aside>
+  </el-container>
 </template>
 
 <script>
@@ -60,6 +64,8 @@ export default {
 </script>
 
 <style lang='stylus' scoped>
+.el-aside
+  border 1px solid #000
 .el-pagination
   margin 50px auto
 </style>

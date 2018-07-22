@@ -47,6 +47,16 @@ export const unfollow = (username) => {
   })
 }
 
+// 关注列表
+export const following = (username) => {
+  return axios.get(`${host}/account/user/${username}/following/`)
+}
+
+// 被关注列表
+export const followers = (username) => {
+  return axios.get(`${host}/account/user/${username}/followers/`)
+}
+
 // 获取指定用户资料
 export const getUser = username => {
   return axios.get(`${host}/account/user/${username}`, {

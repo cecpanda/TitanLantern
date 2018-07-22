@@ -2,11 +2,12 @@
   <div>
     <h1>我的动态</h1>
     <el-row
-      v-for='action in actions'
+      v-for="action in actions"
       :key='action.id'
     >
-      {{ action.created | formatDate}}
-      {{ action.user.username }} {{ action.verb }}
+      <i class="el-icon-d-caret"></i>
+      {{ action.user.username }}
+      {{ action.verb }}
       {{ action.target.id }}
     </el-row>
     <el-pagination
