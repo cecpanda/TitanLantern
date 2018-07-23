@@ -1,9 +1,7 @@
 import xadmin
 
-from .models import EqKind, Eq, \
-                     Lot, \
-                     Order, \
-                     Report, Remark
+from .models import ID, Order, \
+                    Report, Remark
 
 
 class EqKindAdmin(object):
@@ -31,11 +29,12 @@ class OrderAdmin(object):
 #     list_display = ['recover_order', 'qc_signer', 'p_signer', 'rejected', 'created']
 
 
-xadmin.site.register(EqKind, EqKindAdmin)
-xadmin.site.register(Eq, EqAdmin)
+# xadmin.site.register(EqKind, EqKindAdmin)
+# xadmin.site.register(Eq, EqAdmin)
+#
+# xadmin.site.register(Lot)
 
-xadmin.site.register(Lot)
-
+xadmin.site.register(ID)
 xadmin.site.register(Order, OrderAdmin)
 # xadmin.site.register(Audit, AuditAdmin)
 # xadmin.site.register(RecoverOrder, RecoverOrderAdmin)

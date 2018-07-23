@@ -3,13 +3,20 @@
     <el-main>
       Main <br/><br/><br/><br/>
     </el-main>
-    <el-aside width="200px">Aside</el-aside>
+    <el-aside width="200px">
+      <router-link to='/users'>用户列表</router-link>
+    </el-aside>
   </el-container>
 </template>
 
 <script>
+import HomeHeader from './Header'
+
 export default {
-  name: 'Home'
+  name: 'Home',
+  components: {
+    HomeHeader
+  }
 }
 </script>
 
@@ -24,6 +31,5 @@ export default {
   background-color: #D3DCE6
   color: #333
   text-align: center
-  line-height: 200px
   border 1px solid red
 </style>

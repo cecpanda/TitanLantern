@@ -3,8 +3,10 @@ import Router from 'vue-router'
 import Home from '@/home/Home'
 // import Action from '@/user/Action'
 import User from '@/user/User'
+import Users from '@/user/Users'
 import Action from '@/user/components/Action'
 import Edit from '@/user/components/Edit'
+import Follow from '@/user/components/Follow'
 
 Vue.use(Router)
 
@@ -15,6 +17,10 @@ export default new Router({
       name: 'Home',
       component: Home
     }, {
+      path: '/users',
+      name: 'Users',
+      component: Users
+    }, {
       path: '/user',
       component: User,
       children: [
@@ -24,6 +30,9 @@ export default new Router({
         }, {
           path: 'edit',
           component: Edit
+        }, {
+          path: 'follow',
+          component: Follow
         }
       ]
     }

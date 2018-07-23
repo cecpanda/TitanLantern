@@ -1,19 +1,39 @@
 <template>
   <div>
     <h1>我的动态</h1>
-    {{ this.profile }}
+    <el-row
+      v-for="action in actions"
+      :key='action.id'
+    >
+      <i class="el-icon-d-caret"></i>
+      {{ action.user.username }}
+      {{ action.verb }}
+      {{ action.target.id }}
+    </el-row>
+    <el-pagination
+      background
+      @current-change="handleCurrentChange"
+      :current-page.sync="page"
+      :page-size='pageSize'
+      layout="prev, pager, next, jumper"
+      :total="count">
+    </el-pagination>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-import { getUser } from '@/api/user'
+import { getAction } from '@/api/user'
+import { formatDate } from '@/common/js/date.js'
 
 export default {
   name: 'Action',
   data () {
     return {
-      profile: {}
+      page: 1,
+      pageSize: 10,
+      count: null,
+      actions: []
     }
   },
   computed: {
@@ -22,18 +42,25 @@ export default {
     })
   },
   methods: {
-    getUserProfile (username) {
-      getUser(username)
-        .then((response) => {
-          this.profile = response.data
+    getAction () {
+      getAction(this.page, this.pageSize)
+        .then((res) => {
+          this.count = res.data.count
+          this.actions = res.data.results
         })
-        .catch((error) => {
-          console.log(error)
-        })
+    },
+    handleCurrentChange (val) {
+      this.getAction()
     }
   },
   created () {
-    this.getUserProfile(this.username)
+    this.getAction()
+  },
+  filters: {
+    formatDate (time) {
+      let date = new Date(time)
+      return formatDate(date, 'yyyy-MM-dd hh:mm:ss')
+    }
   }
 }
 </script>

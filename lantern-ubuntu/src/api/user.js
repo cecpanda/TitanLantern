@@ -23,6 +23,40 @@ export const jwtVerify = token => {
   })
 }
 
+// 获取所有用户
+export const getAllUsers = (page, pageSize) => {
+  return axios.get(`${host}/account/user/?page=${page}&page-size=${pageSize}`)
+}
+
+// 获取关注列表
+export const getFollowing = (username) => {
+  return axios.get(`${host}/account/user/${username}/following/`)
+}
+
+// 关注
+export const follow = (username) => {
+  return axios.post(`${host}/account/follow/`, {
+    user_to: username
+  })
+}
+
+// 取消关注
+export const unfollow = (username) => {
+  return axios.post(`${host}/account/follow/unfollow/`, {
+    user_to: username
+  })
+}
+
+// 关注列表
+export const following = (username) => {
+  return axios.get(`${host}/account/user/${username}/following/`)
+}
+
+// 被关注列表
+export const followers = (username) => {
+  return axios.get(`${host}/account/user/${username}/followers/`)
+}
+
 // 获取指定用户资料
 export const getUser = username => {
   return axios.get(`${host}/account/user/${username}`, {
@@ -42,4 +76,9 @@ export const changeProfile = (params) => {
   console.log(typeof params)
   console.log(params)
   return axios.put(`${host}/account/user/change-profile/`, params)
+}
+
+// timeline
+export const getAction = (page, pageSize) => {
+  return axios.get(`${host}/action/?page=${page}&page-size=${pageSize}`)
 }

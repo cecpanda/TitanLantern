@@ -4,11 +4,21 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
-from .eq import Eq
 from .lot import Lot
 
 
 UserModel = get_user_model()
+
+
+class ID(models.Model):
+    created = models.DateTimeField('添加时间', auto_now_add=True)
+
+    class Meta:
+        verbose_name = '流水号'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return f'{self.id}'
 
 
 def default_order_sn():
@@ -33,18 +43,22 @@ class Order(models.Model):
     id = models.CharField('编号', max_length=20, primary_key=True, default=default_order_sn)
     status = models.CharField('状态', choices=STATUS_CHOICES, max_length=2, default='0')
 
-    appl = models.ForeignKey(UserModel, related_name='startorders', on_delete=models.PROTECT, verbose_name='开单人员')
+    user = models.ForeignKey(UserModel, related_name='startorders', on_delete=models.PROTECT, verbose_name='开单人员')
     group = models.ForeignKey(Group, related_name='startorders', on_delete=models.PROTECT,
                               blank=True, null=True, verbose_name='开单工程')
     created = models.DateTimeField('开单时间', auto_now_add=True)
+
+    mod_user = models.ForeignKey(UserModel, related_name='modstartorders', blank=True, null=True,
+                                 on_delete=models.PROTECT, verbose_name='修改人员')
     modified = models.DateTimeField('修改时间', auto_now=True)
 
     found_step = models.CharField('发现站点', max_length=30)
     found_time = models.DateTimeField('发现时间')
     charge_group = models.ForeignKey(Group, related_name='chargeorders', on_delete=models.PROTECT,
                                      blank=True, null=True, verbose_name='责任工程')
-
-    eq = models.ManyToManyField(Eq, related_name='startorders', verbose_name='停机设备')
+    # 设备对应关系都不需要了，鬼鬼，垃圾系统
+    # eq = models.ManyToManyField(Eq, related_name='startorders', verbose_name='停机设备')
+    eq = models.CharField('停机设备', max_length=50)
     kind = models.CharField('停机机种', max_length=30)
     step = models.CharField('停机站点', max_length=50)
 
@@ -60,10 +74,11 @@ class Order(models.Model):
     start_time = models.DateTimeField('受害开始时间', blank=True, null=True)
     end_time = models.DateTimeField('受害结束时间', blank=True, null=True)
     lot_num = models.CharField('受害批次数', max_length=10, blank=True, null=True)
-    lots = models.ManyToManyField(Lot, related_name="+", blank=True, verbose_name='异常批次/基板')
+    # lots = models.ManyToManyField(Lot, related_name="+", blank=True, verbose_name='异常批次/基板')
+    lots = models.TextField('异常批次/基板', max_length=100, blank=True, null=True)
 
     condition = models.TextField('复机条件', max_length=200)
-    defect_type = models.NullBooleanField('不良类型', blank=True, null=True, default=None)
+    defect_type = models.NullBooleanField('绝对不良', blank=True, null=True, default=None)
 
     class Meta:
         verbose_name = '停机单'
@@ -111,7 +126,8 @@ class RecoverOrder(models.Model):
     explain = models.TextField('先行lot结果说明', max_length=200)
 
     partial = models.BooleanField('部分复机', default=False)
-    eq = models.ManyToManyField(Eq, related_name='+', verbose_name='部分复机设备')
+    # eq = models.ManyToManyField(Eq, related_name='+', verbose_name='部分复机设备')
+    eq = models.CharField('停机设备', max_length=50)
     kind = models.CharField('部分复机机种', max_length=30, blank=True, null=True)
     step = models.CharField('部分复机站点', max_length=50, blank=True, null=True)
 
