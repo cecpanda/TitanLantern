@@ -72,6 +72,13 @@ class FollowSerializer(serializers.Serializer):
 
         return value
 
+
+# 判断 follow status，用不到
+class FollowStatusSerializer(serializers.Serializer):
+    user_from = serializers.CharField(label='用户A', required=True)
+    user_to = serializers.CharField(label='用户B', required=True)
+
+
 # 在 Follow 中实现
 class ListFollowSerializer(serializers.Serializer):
     following = UserOfGroupSerializer(many=True)

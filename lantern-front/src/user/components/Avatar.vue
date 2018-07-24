@@ -27,7 +27,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { getFollowing, follow, unfollow } from '@/api/user'
+import { follow, unfollow, followStatus } from '@/api/user'
 
 export default {
   name: 'Avatar',
@@ -43,18 +43,12 @@ export default {
     })
   },
   methods: {
-    getFollowing () {
-      getFollowing(this.username)
+    followStatus () {
+      followStatus(this.username, this.user.username)
         .then((res) => {
-          let following = res.data.following
-          // if (this.user.username in following) {
-          // 上面的这个有点问题
-          if (following.includes(this.user.username)) {
+          if (res.data.status) {
             this.isFollowing = true
           }
-        })
-        .catch((error) => {
-          console.log(error)
         })
     },
     handleFollow () {
@@ -77,13 +71,14 @@ export default {
     }
   },
   mounted () {
-    this.getFollowing()
+    this.followStatus()
   }
 }
 </script>
 
 <style lang='stylus' scoped>
 .avatar
+  margin-top 30px
   img
     display block
     width 100%

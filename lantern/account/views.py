@@ -50,9 +50,11 @@ class UserViewSet(ListModelMixin,
         elif self.action == "change_profile":
             return UserUpdateSerializer
         elif self.action == 'following':
-            return FollowingSerializer
+            # return FollowingSerializer
+            return UserSerializer
         elif self.action == 'followers':
-            return FollowersSerializer
+            # return FollowersSerializer
+            return  UserSerializer
         return self.serializer_class
 
     @action(methods=['post'], detail=False, url_path='change-password',
@@ -77,22 +79,48 @@ class UserViewSet(ListModelMixin,
         serializer = self.get_serializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-
         return Response(serializer.data, status.HTTP_201_CREATED)
 
     # 获取关注列表
     @action(methods=['get'], detail=True, url_path='following', url_name='following')
     def following(self, request, username=None):
         user = self.get_object()
-        serializer = self.get_serializer(user)
+        queryset = self.filter_queryset(user.following.all())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status.HTTP_200_OK)
 
     # 获取被关注列表
     @action(methods=['get'], detail=True, url_path='followers', url_name='followers')
     def followers(self, request, username=None):
         user = self.get_object()
-        serializer = self.get_serializer(user)
+        queryset = self.filter_queryset(user.followers.all())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=False, url_path='follow-status', url_name='follow_status')
+    def follow_status(self, request):
+        username_from = request.query_params.get('user_from')
+        username_to = request.query_params.get('user_to')
+        if not username_from:
+            return Response({'detail': '请传入 user_from 参数'}, status=status.HTTP_400_BAD_REQUEST)
+        if not username_to:
+            return Response({'detail': '请传入 user_to 参数'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user_from = UserModel.objects.get(username=username_from)
+            user_to = UserModel.objects.get(username=username_to)
+        except:
+            return Response({'status': False})
+        if user_to in user_from.following.all():
+            return Response({'status': True})
+        return Response({'status': False})
 
 
 class FollowViewSet(CreateModelMixin,
