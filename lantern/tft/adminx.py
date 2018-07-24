@@ -1,6 +1,7 @@
 import xadmin
 
 from .models import ID, Order, \
+                    Audit, \
                     Report, Remark
 
 
@@ -14,13 +15,13 @@ class EqAdmin(object):
 
 
 class OrderAdmin(object):
-    list_display = ['id', 'status', 'appl', 'created']
+    list_display = ['id', 'status', 'user', 'created']
 
 
-# class AuditAdmin(object):
-#     list_display = ['order', 'p_signer', 'c_signer', 'rejected']
-#
-#
+class AuditAdmin(object):
+    list_display = ['order', 'p_signer', 'c_signer', 'rejected']
+
+
 # class RecoverOrderAdmin(object):
 #     list_display = ['order', 'appl', 'partial', 'created']
 #
@@ -36,7 +37,7 @@ class OrderAdmin(object):
 
 xadmin.site.register(ID)
 xadmin.site.register(Order, OrderAdmin)
-# xadmin.site.register(Audit, AuditAdmin)
+xadmin.site.register(Audit, AuditAdmin)
 # xadmin.site.register(RecoverOrder, RecoverOrderAdmin)
 # xadmin.site.register(RecoverAudit, RecoverAuditAdmin)
 xadmin.site.register(Report)

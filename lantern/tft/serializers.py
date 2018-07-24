@@ -3,7 +3,8 @@ from django.utils import timezone
 from django.contrib.auth.models import Group
 from rest_framework import serializers
 
-from .models import Order, Eq, Lot, ID, Report, Remark
+from .models import Order, Eq, Lot, ID, Report, Remark, Audit, RecoverOrder
+from account.serializers import UserOfGroupSerializer, GroupSerializer
 
 
 class StartOrderSerializer(serializers.ModelSerializer):
@@ -12,6 +13,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
     # charge_group
     # eq = serializers.ListField(label='停机设备', child=serializers.CharField(max_length=8), min_length=1)
     # lots = serializers.ListField(label='异常批次', child=serializers.CharField(max_length=14, min_length=8), required=False)
+    # 下面的这两个字段甚至影响了 retrieveserializer 的 foramt=api 的展示，百思不得其解
     charge_group = serializers.IntegerField(label='责任工程')
     reports = serializers.ListField(label='调查报告', child=serializers.FileField(), required=False)
     remark = serializers.CharField(label='生产批注', max_length=500, required=False)
@@ -152,8 +154,21 @@ class StartOrderSerializer(serializers.ModelSerializer):
         return order.id
 
     def update(self, instance, validated_data):
-        if instance.status != 1 or instance.status != 0:
-            raise serializers.ValidationError('不能修改此订单')
+        if instance.status != '1':
+            raise serializers.ValidationError('只有修改待审核状态的')
+
+        # try:
+        #     # audit = instance.startaudit
+        #     # recover_order = instance.recoverorders
+        #     pass
+        # except:
+        #     pass
+
+        if Audit.objects.filter(order__id=instance.id).exists():
+            raise serializers.ValidationError('已经有审核数据，若要修改请联系管理员删除')
+
+        if RecoverOrder.objects.filter(order__id=instance.id).exists():
+            raise serializers.ValidationError('已经有复机数据，若要修改请联系管理员删除')
 
         user = validated_data.get('user')
 
@@ -162,7 +177,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
                 instance.mod_user = user
                 instance.found_step = validated_data.get('found_step', instance.found_step)
                 instance.found_time = validated_data.get('found_time', instance.found_time)
-                # charge_group 不允许修改
+                # charge_group
                 instance.eq = validated_data.get('eq', instance.eq)
                 instance.kind = validated_data.get('kind', instance.kind)
                 instance.step = validated_data.get('step', instance.step)
@@ -177,8 +192,60 @@ class StartOrderSerializer(serializers.ModelSerializer):
                 instance.condition = validated_data.get('condition', instance.condition)
                 instance.defect_type = validated_data.get('defect_type', instance.defect_type)
 
+                # charge_group
+                instance.charge_group = Group.objects.get(pk=validated_data.get('charge_group'))
+                instance.save()
+
                 # reports
+                instance.reports.all().delete()
+                reports = validated_data.get('reports')
+                if reports:
+                    for file in reports:
+                        Report.objects.create(order=instance, file=file)
                 # remark
+                remark = validated_data.get('remark')
+                if remark:
+                    Remark.objects.create(user=user, order=instance, content=remark)
+
         except Exception as e:
             raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
 
+        return instance.id
+
+
+class ReportSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Report
+        fields = ('file',)
+
+
+class RemarkSerializer(serializers.ModelSerializer):
+    user = UserOfGroupSerializer()
+    class Meta:
+        model = Remark
+        fields = ('user', 'content', 'created')
+
+
+class RetrieveStartOrderSerializer(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()
+    user = UserOfGroupSerializer()
+    group = GroupSerializer()
+    mod_user = UserOfGroupSerializer()
+    charge_group = GroupSerializer()
+    reports = ReportSerializer(many=True)
+    remarks = RemarkSerializer(many=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'status', 'user', 'group', 'created',
+                  'mod_user', 'modified',
+                  'found_step', 'found_time', 'charge_group',
+                  'eq', 'kind', 'step', 'reason',
+                  'users', 'charge_users',
+                  'desc', 'start_time', 'end_time', 'lot_num', 'lots',
+                  'condition', 'defect_type',
+                  'reports', 'remarks']
+
+    def get_status(self, obj):
+        return obj.get_status_display()
