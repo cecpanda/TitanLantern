@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.contrib.auth.models import Group
 from rest_framework import serializers
 
-from .models import Order, Eq, Lot, ID, Report, Remark, Audit, RecoverOrder
+from .models import Order, ID, Report, Remark, Audit, RecoverOrder
 from account.serializers import UserOfGroupSerializer, GroupSerializer
 
 
@@ -62,6 +62,21 @@ class StartOrderSerializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError('责任工程不存在')
         return value
+
+    def validate(self, attrs):
+        '''
+        如果开单工程是 QC，不良类型必选
+        如果没定义 QC，则不验证
+        '''
+        groups = attrs['user'].groups.all()
+        try:
+            qc = Group.objects.get(name='QC')
+        except:
+            return attrs
+        if qc in groups:
+            if attrs.get('defect_type') is None:
+                raise serializers.ValidationError('您在 QC 组下，defect_type 为必选！')
+        return attrs
 
     def get_id(self):
         '''id 生成
@@ -249,3 +264,84 @@ class RetrieveStartOrderSerializer(serializers.ModelSerializer):
 
     def get_status(self, obj):
         return obj.get_status_display()
+
+
+class AuditSerializerBak(serializers.ModelSerializer):
+    '''
+    order 直接传入字符串，validated_data 就可以得到对应的 Order 实例，
+    有自动验证 order
+    '''
+
+    class Meta:
+        model = Audit
+        fields = ('order', 'p_signer', 'p_time', 'c_signer', 'c_time',
+                  'recipe_close', 'recipe_confirm', 'rejected', 'reason', 'created')
+        # read_only_fields = ('order', 'created')
+
+    def validate_order(self, value):
+        print(value)
+
+
+    def create(self, validated_data):
+        order = validated_data.get('order')
+        audit = Audit.objects.get_or_create(order=order)
+        pass
+
+
+class AuditSerializer(serializers.Serializer):
+    order = serializers.CharField(label='订单编号')
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    time = serializers.HiddenField(default=timezone.now)
+    recipe_close = serializers.CharField(label='Recipe关闭人员', max_length=10, required=False)
+    recipe_confirm = serializers.CharField(label='Recipe确认人员', max_length=10, required=False)
+    rejected = serializers.BooleanField(label='是否拒签', default=False)
+    reason = serializers.CharField(label='拒签理由', max_length=100, required=False)
+
+    def validate_order(self, value):
+        try:
+            order = Order.objects.get(id=value)
+        except Exception as e:
+            raise serializers.ValidationError(f'无效的订单{value}')
+        return order
+
+    def validate_user(self, value):
+        if not value.groups.all().exists():
+            raise serializers.ValidationError('您没有加入任何科室，不能进行此操作')
+        return value
+
+    def validate(self, attrs):
+        order = attrs['order']
+        user = attrs['user']
+        group = order.group
+
+        # 开单工程不是 QC -> 生产签核同意 -> 结束
+        if group is None:
+            # 生产签核->只能同意
+            if not user.groups.filter(name='生产科'):
+                raise serializers.ValidationError('开单工程为空，仅生产科可以签核')
+            if attrs.get('rejected'):
+                raise serializers.ValidationError('不能拒签')
+        elif order.group.name != 'QC':
+            # 生产签核->只能同意
+            if not user.groups.filter(name='生产科'):
+                raise serializers.ValidationError('开单工程不是QC，仅生产科可以签核')
+            if attrs.get('rejected'):
+                raise serializers.ValidationError('不能拒签')
+        # 开单工程是 QC
+        else:
+            defect_type = order.defect_type
+            # 是绝对不良
+
+            # 不是绝对不良
+
+        return attrs
+
+    def create(self, validated_data):
+        order = validated_data.get('order')
+
+
+class OrderNextStepSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Order
+        fields = '__all__'

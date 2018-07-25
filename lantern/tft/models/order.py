@@ -101,8 +101,8 @@ class Audit(models.Model):
                                  on_delete=models.PROTECT, verbose_name='责任工程签核')
     c_time = models.DateTimeField('责任工程签核时间', blank=True, null=True)
 
-    recipe_close = models.CharField('Recipe关闭人员', max_length=10)
-    recipe_confirm = models.CharField('Recipe确认人员', max_length=10)
+    recipe_close = models.CharField('Recipe关闭人员', blank=True, null=True, max_length=10)
+    recipe_confirm = models.CharField('Recipe确认人员', blank=True, null=True, max_length=10)
 
     rejected = models.BooleanField('是否拒签', default=False)
     reason = models.TextField('拒签理由', max_length=100, blank=True, null=True)
@@ -191,6 +191,32 @@ class Remark(models.Model):
     class Meta:
         ordering = ['-created']
         verbose_name = '生产批注'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.order.id
+
+
+class Node(models.Model):
+    name = models.CharField('节点名', max_length=10)
+
+    class Meta:
+        verbose_name = '订单节点'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.name
+
+
+class Flow(models.Model):
+    order = models.OneToOneField(Order, related_name='workflow', on_delete=models.CASCADE, verbose_name='订单')
+    pre_node = models.OneToOneField(Node, related_name='+', on_delete=models.CASCADE,
+                                    blank=True, null=True, verbose_name='上一节点')
+    next_node = models.OneToOneField(Node, related_name='+', on_delete=models.CASCADE,
+                                     blank=True, null=True, verbose_name='下一节点')
+
+    class Meta:
+        verbose_name = '工作流'
         verbose_name_plural = verbose_name
 
     def __str__(self):

@@ -4,10 +4,12 @@ from rest_framework.mixins import CreateModelMixin, UpdateModelMixin, RetrieveMo
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from .models import Order
-from .serializers import StartOrderSerializer, RetrieveStartOrderSerializer
+from .models import Order, Audit
+from .serializers import StartOrderSerializer, RetrieveStartOrderSerializer, \
+                         AuditSerializer
 from .utils import IsSameGroup
 
 
@@ -92,3 +94,21 @@ class StartOrderViewSet(CreateModelMixin,
     #     instance = self.get_object()
     #     self.perform_destroy(instance)
     #     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AuditViewSet(CreateModelMixin,
+                   ListModelMixin,
+                   RetrieveModelMixin,
+                   GenericViewSet):
+    queryset = Audit.objects.all()
+    serializer_class = AuditSerializer
+    lookup_field = 'order_id'
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+
+from .serializers import OrderNextStepSerializer
+
+class OrderNextStepViewSet(RetrieveModelMixin, GenericViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderNextStepSerializer

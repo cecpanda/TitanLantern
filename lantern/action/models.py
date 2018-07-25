@@ -21,7 +21,7 @@ class Action(models.Model):
 
     class Meta:
         ordering = ['-created']
-        verbose_name = '工作流'
+        verbose_name = '时间线'
         verbose_name_plural = verbose_name
 
     def __str__(self):

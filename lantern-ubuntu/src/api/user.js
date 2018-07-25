@@ -24,8 +24,17 @@ export const jwtVerify = token => {
 }
 
 // 获取所有用户
+// export const getAllUsers = (page, pageSize) => {
+//   return axios.get(`${host}/account/user/?page=${page}&page-size=${pageSize}`)
+// }
+
 export const getAllUsers = (page, pageSize) => {
-  return axios.get(`${host}/account/user/?page=${page}&page-size=${pageSize}`)
+  return axios.get(`${host}/account/user/`, {
+    params: {
+      page: page,
+      'page-size': pageSize
+    }
+  })
 }
 
 // 获取关注列表
@@ -48,13 +57,33 @@ export const unfollow = (username) => {
 }
 
 // 关注列表
-export const following = (username) => {
-  return axios.get(`${host}/account/user/${username}/following/`)
+export const following = (username, page, pageSize) => {
+  return axios.get(`${host}/account/user/${username}/following/`, {
+    params: {
+      page: page,
+      'page-size': pageSize
+    }
+  })
 }
 
 // 被关注列表
-export const followers = (username) => {
-  return axios.get(`${host}/account/user/${username}/followers/`)
+export const followers = (username, page, pageSize) => {
+  return axios.get(`${host}/account/user/${username}/followers/`, {
+    params: {
+      page: page,
+      'page-size': pageSize
+    }
+  })
+}
+
+// 判断关注状态
+export const followStatus = (userFrom, userTo) => {
+  return axios.get(`${host}/account/user/follow-status/`, {
+    params: {
+      user_from: userFrom,
+      user_to: userTo
+    }
+  })
 }
 
 // 获取指定用户资料

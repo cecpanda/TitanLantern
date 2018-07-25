@@ -2,7 +2,8 @@ import xadmin
 
 from .models import ID, Order, \
                     Audit, \
-                    Report, Remark
+                    Report, Remark, \
+                    Node, Flow
 
 
 class EqKindAdmin(object):
@@ -35,6 +36,11 @@ class AuditAdmin(object):
 #
 # xadmin.site.register(Lot)
 
+
+class FlowAdmin(object):
+    list_display = ['order', 'pre_node', 'next_node']
+
+
 xadmin.site.register(ID)
 xadmin.site.register(Order, OrderAdmin)
 xadmin.site.register(Audit, AuditAdmin)
@@ -42,3 +48,6 @@ xadmin.site.register(Audit, AuditAdmin)
 # xadmin.site.register(RecoverAudit, RecoverAuditAdmin)
 xadmin.site.register(Report)
 xadmin.site.register(Remark)
+
+xadmin.site.register(Node)
+xadmin.site.register(Flow, FlowAdmin)

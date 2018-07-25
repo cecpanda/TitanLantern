@@ -4,7 +4,7 @@
       Main <br/><br/><br/><br/>
     </el-main>
     <el-aside width="200px">
-      <router-link to='/users'>用户列表</router-link>
+      aside
     </el-aside>
   </el-container>
 </template>

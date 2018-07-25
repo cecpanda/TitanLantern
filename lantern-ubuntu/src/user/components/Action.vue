@@ -6,6 +6,7 @@
       :key='action.id'
     >
       <i class="el-icon-d-caret"></i>
+      {{ action.created }}
       {{ action.user.username }}
       {{ action.verb }}
       {{ action.target.id }}
