@@ -110,9 +110,24 @@ class StartOrderSerializer(serializers.ModelSerializer):
     #         raise serializers.ValidationError(f'{first_eq_name}设备未定义')
     #     return eq.kind.group
 
+    def get_status(self):
+        group = self.get_group()  # 开单工程，可能为空
+
+        # 开单工程为空，当作不是 QC 处理
+        if group is None:
+            return '1'
+        # 开单工程不是 QC
+        elif group.name != 'QC':
+            return '1'
+        elif group.name == 'QC' and self.data.get('defect_type'):
+            return '1'  # 和前面的两个 1 有区别
+        elif group.name == 'QC' and not self.data.get('defect_type'):
+            return '2'
+        return '0'
+
     def create(self, validated_data):
         user = validated_data.get('user')
-        status = '1'
+        status = self.get_status()
 
         try:
             with transaction.atomic():

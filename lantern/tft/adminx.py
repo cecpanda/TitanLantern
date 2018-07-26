@@ -2,8 +2,7 @@ import xadmin
 
 from .models import ID, Order, \
                     Audit, \
-                    Report, Remark, \
-                    Node, Flow
+                    Report, Remark
 
 
 class EqKindAdmin(object):
@@ -48,6 +47,3 @@ xadmin.site.register(Audit, AuditAdmin)
 # xadmin.site.register(RecoverAudit, RecoverAuditAdmin)
 xadmin.site.register(Report)
 xadmin.site.register(Remark)
-
-xadmin.site.register(Node)
-xadmin.site.register(Flow, FlowAdmin)

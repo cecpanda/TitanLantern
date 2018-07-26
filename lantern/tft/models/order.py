@@ -29,15 +29,15 @@ def default_order_sn():
 class Order(models.Model):
     STATUS_CHOICES = (
         ('0', '未知'),
-        ('1', '待审核'),
-        ('2', '审核中'),
-        ('3', '停机拒签'),
-        ('4', '停机完成'),
-        ('5', '待 QC 签核复机'),
-        ('6', '驳回复机申请'),
-        ('7', '待生产签核'),
-        ('8', '完成部分复机'),
-        ('9', '完成复机')
+        ('1', '（停机）待生产签核'),
+        ('2', '（停机）待责任工程签核'),
+        ('3', '（停机）拒签'),
+        ('4', '（停机）完成'),
+        ('5', '（复机）待QC签核'),
+        ('6', '（复机）待生产签核'),
+        ('7', '（复机）拒签'),
+        ('8', '（部分复机）完成'),
+        ('9', '（复机）完成')
     )
     # 重写了主键，名字最好还用 id， 因为 action 中使用到 target_id
     id = models.CharField('编号', max_length=20, primary_key=True, default=default_order_sn)
@@ -191,32 +191,6 @@ class Remark(models.Model):
     class Meta:
         ordering = ['-created']
         verbose_name = '生产批注'
-        verbose_name_plural = verbose_name
-
-    def __str__(self):
-        return self.order.id
-
-
-class Node(models.Model):
-    name = models.CharField('节点名', max_length=10)
-
-    class Meta:
-        verbose_name = '订单节点'
-        verbose_name_plural = verbose_name
-
-    def __str__(self):
-        return self.name
-
-
-class Flow(models.Model):
-    order = models.OneToOneField(Order, related_name='workflow', on_delete=models.CASCADE, verbose_name='订单')
-    pre_node = models.OneToOneField(Node, related_name='+', on_delete=models.CASCADE,
-                                    blank=True, null=True, verbose_name='上一节点')
-    next_node = models.OneToOneField(Node, related_name='+', on_delete=models.CASCADE,
-                                     blank=True, null=True, verbose_name='下一节点')
-
-    class Meta:
-        verbose_name = '工作流'
         verbose_name_plural = verbose_name
 
     def __str__(self):
