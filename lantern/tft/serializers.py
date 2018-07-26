@@ -20,7 +20,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ('id', 'status', 'user',
+        fields = ('id', 'status', 'next', 'user',
                   'found_step', 'found_time', 'charge_group',
                   'eq', 'kind', 'step', 'reason',
                   'users', 'charge_users',
@@ -119,9 +119,9 @@ class StartOrderSerializer(serializers.ModelSerializer):
         # 开单工程不是 QC
         elif group.name != 'QC':
             return '1'
-        elif group.name == 'QC' and self.data.get('defect_type'):
+        elif group.name == 'QC' and self.validated_data.get('defect_type'):
             return '1'  # 和前面的两个 1 有区别
-        elif group.name == 'QC' and not self.data.get('defect_type'):
+        elif group.name == 'QC' and not self.validated_data.get('defect_type'):
             return '2'
         return '0'
 
@@ -133,6 +133,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
             with transaction.atomic():
                 order = Order.objects.create(id=self.get_id(),
                                              status=status,
+                                             next= validated_data.get('next'),
                                              user=user,
                                              group=self.get_group(),  # 有可能为空
                                              found_step=validated_data.get('found_step'),
@@ -184,13 +185,9 @@ class StartOrderSerializer(serializers.ModelSerializer):
         return order.id
 
     def update(self, instance, validated_data):
-        if instance.status != '1':
-            raise serializers.ValidationError('只有修改待审核状态的')
-
         # try:
-        #     # audit = instance.startaudit
-        #     # recover_order = instance.recoverorders
-        #     pass
+        #     audit = instance.startaudit
+        #     recover_order = instance.recoverorders
         # except:
         #     pass
 
@@ -201,9 +198,12 @@ class StartOrderSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('已经有复机数据，若要修改请联系管理员删除')
 
         user = validated_data.get('user')
+        status = self.get_status()
 
         try:
             with transaction.atomic():
+                instance.status = status
+                next = validated_data.get('next')
                 instance.mod_user = user
                 instance.found_step = validated_data.get('found_step', instance.found_step)
                 instance.found_time = validated_data.get('found_time', instance.found_time)
@@ -268,7 +268,7 @@ class RetrieveStartOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['id', 'status', 'user', 'group', 'created',
+        fields = ['id', 'status', 'next', 'user', 'group', 'created',
                   'mod_user', 'modified',
                   'found_step', 'found_time', 'charge_group',
                   'eq', 'kind', 'step', 'reason',
@@ -286,7 +286,6 @@ class AuditSerializerBak(serializers.ModelSerializer):
     order 直接传入字符串，validated_data 就可以得到对应的 Order 实例，
     有自动验证 order
     '''
-
     class Meta:
         model = Audit
         fields = ('order', 'p_signer', 'p_time', 'c_signer', 'c_time',
@@ -299,18 +298,19 @@ class AuditSerializerBak(serializers.ModelSerializer):
 
     def create(self, validated_data):
         order = validated_data.get('order')
-        audit = Audit.objects.get_or_create(order=order)
-        pass
 
 
-class AuditSerializer(serializers.Serializer):
+class ProductAuditSerializer(serializers.Serializer):
     order = serializers.CharField(label='订单编号')
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     time = serializers.HiddenField(default=timezone.now)
-    recipe_close = serializers.CharField(label='Recipe关闭人员', max_length=10, required=False)
-    recipe_confirm = serializers.CharField(label='Recipe确认人员', max_length=10, required=False)
-    rejected = serializers.BooleanField(label='是否拒签', default=False)
-    reason = serializers.CharField(label='拒签理由', max_length=100, required=False)
+
+    recipe_close = serializers.CharField(label='Recipe关闭人员', max_length=10)
+    recipe_confirm = serializers.CharField(label='Recipe确认人员', max_length=10)
+
+    remark = serializers.CharField(label='生产批注', max_length=500, required=False)
+
+    next = serializers.CharField(label='下一步', max_length=2, required=False)
 
     def validate_order(self, value):
         try:
@@ -320,43 +320,162 @@ class AuditSerializer(serializers.Serializer):
         return order
 
     def validate_user(self, value):
-        if not value.groups.all().exists():
-            raise serializers.ValidationError('您没有加入任何科室，不能进行此操作')
+        # if not value.groups.all().exists():
+        #     raise serializers.ValidationError('您没有加入任何科室，不能进行此操作')
+        if not value.groups.filter(name='生产科').exists():
+            raise serializers.ValidationError('您不是生产科成员，不能进行此操作')
         return value
 
     def validate(self, attrs):
-        order = attrs['order']
-        user = attrs['user']
-        group = order.group
-
-        # 开单工程不是 QC -> 生产签核同意 -> 结束
-        if group is None:
-            # 生产签核->只能同意
-            if not user.groups.filter(name='生产科'):
-                raise serializers.ValidationError('开单工程为空，仅生产科可以签核')
-            if attrs.get('rejected'):
-                raise serializers.ValidationError('不能拒签')
-        elif order.group.name != 'QC':
-            # 生产签核->只能同意
-            if not user.groups.filter(name='生产科'):
-                raise serializers.ValidationError('开单工程不是QC，仅生产科可以签核')
-            if attrs.get('rejected'):
-                raise serializers.ValidationError('不能拒签')
-        # 开单工程是 QC
-        else:
-            defect_type = order.defect_type
-            # 是绝对不良
-
-            # 不是绝对不良
-
+        order = attrs.get('order')
+        if order.status != '1':
+            raise serializers.ValidationError('此单还不到生产签核的步骤')
         return attrs
+
+    def get_status(self, order, audit):
+        if not order.group:
+            if audit.p_signer:
+                return '4'
+            return '1'
+        elif order.group.name != 'QC':
+            if audit.p_signer:
+                return '4'
+            return '1'
+        elif order.group.name == 'QC':
+            if order.defect_type:
+                if not audit.p_signer:
+                    return '1'
+                if audit.p_signer and not audit.c_signer:
+                    return '2'
+                if audit.p_signer and audit.c_signer:
+                    if audit.rejected:
+                        return '3'
+                    return '4'
+            else:
+                if not audit.c_signer:
+                    return '2'
+                if audit.c_signer and not audit.rejected:
+                    if not audit.p_signer:
+                        return '1'
+                    else:
+                        return '4'
+                if audit.c_signer and audit.rejected:
+                    return '3'
+        return '0'
 
     def create(self, validated_data):
         order = validated_data.get('order')
+        user = validated_data.get('user')
+        try:
+            with transaction.atomic():
+                audit, created = Audit.objects.get_or_create(order=order)
+                audit.p_signer = user
+                audit.p_time = validated_data.get('time')
+                audit.recipe_close = validated_data.get('recipe_close')
+                audit.recipe_confirm = validated_data.get('recipe_confirm')
+                audit.save()
+
+                order.status = self.get_status(order, audit)
+                order.next = validated_data.get('next')
+                order.save()
+
+                remark = validated_data.get('remark')
+                if remark:
+                    Remark.objects.create(user=user, order=order, content=remark)
+
+        except Exception as e:
+            raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
+
+        return {'id': order.id, 'status': order.get_status_display()}
 
 
-class OrderNextStepSerializer(serializers.ModelSerializer):
+class ChargeAuditSerializer(serializers.Serializer):
+    order = serializers.CharField(label='订单编号')
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    time = serializers.HiddenField(default=timezone.now)
 
-    class Meta:
-        model = Order
-        fields = '__all__'
+    rejected = serializers.BooleanField(label='是否拒签', default=False)
+    reason = serializers.CharField(label='拒签理由', max_length=100, required=False)
+
+    next = serializers.CharField(label='下一步', max_length=2, required=False)
+
+    def validate_order(self, value):
+        try:
+            order = Order.objects.get(id=value)
+        except Exception as e:
+            raise serializers.ValidationError(f'无效的订单{value}')
+        return order
+
+    def validate_user(self, value):
+        # 放在 validate 中了
+        return value
+
+    def validate(self, attrs):
+        order = attrs.get('order')
+        user = attrs.get('user')
+
+        if order.group is None:
+            pass
+        else:
+            if order.group not in user.groups.all():
+                raise serializers.ValidationError('您不属于开单工程的成员，无权进行此操作')
+
+        if order.status != '2':
+            raise serializers.ValidationError('此单还不到责任工程签核的步骤')
+
+        if attrs.get('rejected'):
+            if not attrs.get('reason'):
+                raise serializers.ValidationError('拒签就请填写理由')
+        return attrs
+
+    def get_status(self, order, audit):
+        if not order.group:
+            if audit.p_signer:
+                return '4'
+            return '1'
+        elif order.group.name != 'QC':
+            if audit.p_signer:
+                return '4'
+            return '1'
+        elif order.group.name == 'QC':
+            if order.defect_type:
+                if not audit.p_signer:
+                    return '1'
+                if audit.p_signer and not audit.c_signer:
+                    return '2'
+                if audit.p_signer and audit.c_signer:
+                    if audit.rejected:
+                        return '3'
+                    return '4'
+            else:
+                if not audit.c_signer:
+                    return '2'
+                if audit.c_signer and not audit.rejected:
+                    if not audit.p_signer:
+                        return '1'
+                    else:
+                        return '4'
+                if audit.c_signer and audit.rejected:
+                    return '3'
+        return '0'
+
+    def create(self, validated_data):
+        order = validated_data.get('order')
+        user = validated_data.get('user')
+        try:
+            with transaction.atomic():
+                audit, created = Audit.objects.get_or_create(order=order)
+                audit.c_signer = user
+                audit.c_time = validated_data.get('time')
+                audit.rejected = True if validated_data.get('rejected') else False
+                audit.reason = validated_data.get('reason')
+                audit.save()
+
+                order.status = self.get_status(order, audit)
+                order.next = validated_data.get('next')
+                order.save()
+
+        except Exception as e:
+            raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
+
+        return {'id': order.id, 'status': order.get_status_display()}

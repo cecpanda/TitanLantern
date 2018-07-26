@@ -26,7 +26,10 @@
       <el-menu-item index="4">SL</el-menu-item>
       <el-menu-item index="5" disabled>禁止</el-menu-item>
       <el-submenu index="6" class='login' v-if='isLogin && username'>
-        <template slot="title">{{ username }}</template>
+        <template slot="title">
+          <img :src="user.avatar" /> &nbsp;
+          {{ username }}
+        </template>
         <el-menu-item index="/user">个人中心</el-menu-item>
         <el-menu-item index="6-2">设置中心</el-menu-item>
         <el-menu-item index="6-3" @click='logout'>退出</el-menu-item>
@@ -38,6 +41,7 @@
 </template>
 
 <script>
+import { getUser } from '@/api/user'
 import { mapGetters } from 'vuex'
 import Login from './Login'
 
@@ -48,7 +52,8 @@ export default {
   },
   data () {
     return {
-      activeIndex: '1'
+      activeIndex: '1',
+      user: {}
     }
   },
   computed: {
@@ -61,6 +66,15 @@ export default {
     handleSelect (key, keyPath) {
       console.log(key, keyPath)
     },
+    getUser () {
+      getUser(this.username)
+        .then((res) => {
+          this.user = res.data
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
     logout () {
       localStorage.removeItem('token')
       localStorage.removeItem('username')
@@ -68,6 +82,9 @@ export default {
       this.$store.commit('setInfo')
       this.$router.push({name: 'Home'})
     }
+  },
+  mounted () {
+    this.getUser()
   }
 }
 </script>
@@ -76,4 +93,7 @@ export default {
 .login
   position absolute
   right 20px
+  img
+    width 35px
+    height 35px
 </style>

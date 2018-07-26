@@ -42,6 +42,7 @@ class Order(models.Model):
     # 重写了主键，名字最好还用 id， 因为 action 中使用到 target_id
     id = models.CharField('编号', max_length=20, primary_key=True, default=default_order_sn)
     status = models.CharField('状态', choices=STATUS_CHOICES, max_length=2, default='0')
+    next = models.CharField('下一步', choices=STATUS_CHOICES, max_length=2, blank=True, null=True, default='0')
 
     user = models.ForeignKey(UserModel, related_name='startorders', on_delete=models.PROTECT, verbose_name='开单人员')
     group = models.ForeignKey(Group, related_name='startorders', on_delete=models.PROTECT,
@@ -96,14 +97,12 @@ class Audit(models.Model):
     p_signer = models.ForeignKey(UserModel, related_name='p_startaudit', blank=True, null=True,
                                  on_delete=models.PROTECT, verbose_name='生产领班签核')
     p_time = models.DateTimeField('生产签核时间', blank=True, null=True)
+    recipe_close = models.CharField('Recipe关闭人员', blank=True, null=True, max_length=10)
+    recipe_confirm = models.CharField('Recipe确认人员', blank=True, null=True, max_length=10)
 
     c_signer = models.ForeignKey(UserModel, related_name='c_startaudits', blank=True, null=True,
                                  on_delete=models.PROTECT, verbose_name='责任工程签核')
     c_time = models.DateTimeField('责任工程签核时间', blank=True, null=True)
-
-    recipe_close = models.CharField('Recipe关闭人员', blank=True, null=True, max_length=10)
-    recipe_confirm = models.CharField('Recipe确认人员', blank=True, null=True, max_length=10)
-
     rejected = models.BooleanField('是否拒签', default=False)
     reason = models.TextField('拒签理由', max_length=100, blank=True, null=True)
 

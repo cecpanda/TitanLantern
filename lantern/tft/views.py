@@ -9,7 +9,8 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from .models import Order, Audit
 from .serializers import StartOrderSerializer, RetrieveStartOrderSerializer, \
-                         AuditSerializer
+                         ProductAuditSerializer, ChargeAuditSerializer
+
 from .utils import IsSameGroup
 
 
@@ -96,19 +97,36 @@ class StartOrderViewSet(CreateModelMixin,
     #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class AuditViewSet(CreateModelMixin,
-                   ListModelMixin,
-                   RetrieveModelMixin,
-                   GenericViewSet):
+class AuditViewSet(GenericViewSet):
     queryset = Audit.objects.all()
-    serializer_class = AuditSerializer
+    # serializer_class = ProductAuditSerializer
     lookup_field = 'order_id'
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
+    def get_serializer_class(self):
+        if self.action == 'product':
+            return ProductAuditSerializer
+        elif self.action == 'charge':
+            return ChargeAuditSerializer
+        return self.serializer_class
 
-from .serializers import OrderNextStepSerializer
+    @action(methods=['post'], detail=False, url_path='product', url_name='product')
+    def product(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        res = serializer.save()
+        return Response(res)
 
-class OrderNextStepViewSet(RetrieveModelMixin, GenericViewSet):
-    queryset = Order.objects.all()
-    serializer_class = OrderNextStepSerializer
+    @action(methods=['post'], detail=False, url_path='charge', url_name='charge')
+    def charge(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        res = serializer.save()
+        return Response(res)
+
+
+class OrderViewSet(ListModelMixin,
+                   RetrieveModelMixin,
+                   GenericViewSet):
+    pass

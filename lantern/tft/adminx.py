@@ -15,7 +15,7 @@ class EqAdmin(object):
 
 
 class OrderAdmin(object):
-    list_display = ['id', 'status', 'user', 'created']
+    list_display = ['id', 'status', 'next', 'user', 'defect_type', 'created']
 
 
 class AuditAdmin(object):

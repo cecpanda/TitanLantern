@@ -6,6 +6,7 @@ import User from '@/user/User'
 import Action from '@/user/components/Action'
 import Edit from '@/user/components/Edit'
 import Follow from '@/user/components/Follow'
+import ChangePassword from '@/user/components/ChangePassword'
 
 Vue.use(Router)
 
@@ -28,6 +29,9 @@ export default new Router({
         }, {
           path: 'follow',
           component: Follow
+        }, {
+          path: 'change-password',
+          component: ChangePassword
         }
       ]
     }
