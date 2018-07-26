@@ -63,6 +63,7 @@ export default {
   },
   methods: {
     handleClick (tab, event) {
+      this.page = 1
       if (tab.name === 'following') {
         this.handleFollowing()
       }

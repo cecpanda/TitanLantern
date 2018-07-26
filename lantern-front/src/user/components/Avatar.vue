@@ -13,6 +13,7 @@
     >
       取消关注
     </el-button>
+    <template v-else-if='user.username===username'></template>
     <el-button
       type="primary"
       round

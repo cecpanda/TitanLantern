@@ -6,6 +6,7 @@
       :key='action.id'
     >
       <i class="el-icon-d-caret"></i>
+      {{ action.created | formatDate }}
       {{ action.user.username }}
       {{ action.verb }}
       {{ action.target.id }}
@@ -66,5 +67,6 @@ export default {
 </script>
 
 <style lang='stylus' scoped>
-
+.el-pagination
+  margin-top 50px
 </style>

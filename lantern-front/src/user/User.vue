@@ -15,7 +15,7 @@
             <span slot="title">我的账号</span>
           </template>
           <el-menu-item index="/user/edit">修改资料</el-menu-item>
-          <el-menu-item index="1-2">修改密码</el-menu-item>
+          <el-menu-item index="/user/change-password">修改密码</el-menu-item>
         </el-submenu>
         <el-menu-item index="/user/follow">
           <i class='el-icon-star-on'></i>

@@ -102,9 +102,15 @@ export const getAllGroups = () => {
 
 // 修改资料
 export const changeProfile = (params) => {
-  console.log(typeof params)
-  console.log(params)
   return axios.put(`${host}/account/user/change-profile/`, params)
+}
+
+// 修改密码
+export const changePassword = (oldPassword, newPassword) => {
+  return axios.post(`${host}/account/user/change-password/`, {
+    old_password: oldPassword,
+    new_password: newPassword
+  })
 }
 
 // timeline
