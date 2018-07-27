@@ -2,7 +2,7 @@
   <el-container>
     <el-aside width="">
       <el-menu
-        default-active="1-4-1"
+        default-active="1"
         class="el-menu-vertical-demo"
         @open="handleOpen"
         @close="handleClose"
@@ -21,7 +21,7 @@
           <i class='el-icon-star-on'></i>
           <span slot="title">我的关注</span>
         </el-menu-item>
-        <el-menu-item index="4">
+        <el-menu-item index="4" disabled>
           <i class="el-icon-setting"></i>
           <span slot="title">个人设置</span>
         </el-menu-item>
