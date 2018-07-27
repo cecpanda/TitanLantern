@@ -10,7 +10,7 @@
       <el-menu-item index="/">首页</el-menu-item>
       <el-submenu index="2">
         <template slot="title">TFT</template>
-        <el-menu-item index="2-1">停机单</el-menu-item>
+        <el-menu-item index="/tft/order">停机单</el-menu-item>
       </el-submenu>
       <el-submenu index="3">
         <template slot="title">LCD</template>
