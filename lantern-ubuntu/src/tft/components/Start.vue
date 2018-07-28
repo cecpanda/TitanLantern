@@ -35,7 +35,8 @@
             <el-date-picker
               v-model="order.found_time"
               type="datetime"
-              placeholder="选择日期时间">
+              placeholder="选择日期时间"
+            >
             </el-date-picker>
           </el-form-item>
         </el-col>
@@ -140,12 +141,16 @@
             <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.condition">
             </el-input>
           </el-form-item>
+          <el-form-item label="批注" prop='remark'>
+            <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.remark">
+            </el-input>
+          </el-form-item>
         </el-col>
         <el-col :span='8'>
-          <el-form-item label="受害批次数">
+          <el-form-item label="受害批次数" prop='lot_num'>
             <el-input v-model="order.lot_num"></el-input>
           </el-form-item>
-          <el-form-item label="异常批次/基板">
+          <el-form-item label="异常批次/基板" prop='lots'>
             <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.lots">
             </el-input>
           </el-form-item>
@@ -166,17 +171,25 @@
             <el-upload
               multiple
               action=''
-              :on-preview="handlePreview"
-              :on-remove="handleRemove"
+              :on-change='handleChange'
               :limit="3"
               :on-exceed="handleExceed"
               :before-upload="beforeUpload"
-              :file-list="order.reports"
+              :http-request='upload'
             >
               <el-button size="small" type="primary">点击上传</el-button>
             </el-upload>
           </el-form-item>
+          <!-- <input type="file" @change="getFile($event)"> -->
         </el-col>
+      </el-row>
+      <el-row>
+        <el-form-item>
+          <el-button @click="resetForm('form')">重置</el-button>
+          <el-button type="primary" round @click="submitForm('form')">
+            立即创建
+          </el-button>
+        </el-form-item>
       </el-row>
     </el-form>
   </div>
@@ -185,6 +198,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import { getUser, getAllGroups } from '@/api/user'
+import { startOrder } from '@/api/tft'
 import { formatDate } from '@/common/js/date.js'
 
 export default {
@@ -209,6 +223,7 @@ export default {
         lot_num: '',
         lots: '',
         condition: '',
+        remark: '',
         defect_type: '',
         reports: []
       },
@@ -218,7 +233,7 @@ export default {
           { min: 1, max: 5, message: '长度在 1 到 30 个字符', trigger: 'blur' }
         ],
         found_time: [
-          { type: 'date', required: true, message: '请选择时间', trigger: 'blur' }
+          { required: true, message: '请选择时间', trigger: 'blur' }
         ],
         charge_group: [
           { required: true, message: '请输入责任工程', trigger: 'change' }
@@ -251,9 +266,18 @@ export default {
           { required: true, message: '请输入异常描述', trigger: 'blur' },
           { min: 1, max: 300, message: '长度在 1 到 300 个字符', trigger: 'blur' }
         ],
+        lot_num: [
+          { min: 0, max: 10, message: '长度不能超过 10 个字符', trigger: 'blur' }
+        ],
+        lots: [
+          { min: 0, max: 100, message: '长度不能超过 100 个字符', trigger: 'blur' }
+        ],
         condition: [
           { required: true, message: '请输入复机条件', trigger: 'blur' },
           { min: 1, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
+        ],
+        remark: [
+          { min: 0, max: 300, message: '长度不能超过 300 个字符', trigger: 'blur' }
         ]
       },
       date: new Date()
@@ -283,23 +307,55 @@ export default {
           console.log(error)
         })
     },
-    handleRemove (file, fileList) {
-      console.log(file, fileList)
-    },
-    handlePreview (file) {
-      console.log(file)
-    },
     handleExceed (files, fileList) {
       this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
     },
+    handleChange (file, files) {
+      console.log(file)
+      console.log(files)
+      this.order.reports = []
+      files.forEach((file) => {
+        this.order.reports.push(file.raw)
+      })
+      // 上传文件必须是 FormData，内容是 file.raw
+      // var formdata = new FormData()
+      // formdata.append('avatar', file.raw)
+      // formdata.append('realname', 'woca')
+      // testAvatar(formdata)
+    },
     beforeUpload (file) {
-      console.log(file.type, file.size)
-      // const isJpgPng = file.type === 'image/jpeg' || file.type === 'image/png'
+      const isJpgPng = file.type === 'image/jpeg' || file.type === 'image/png'
       const isLt10M = file.size / 1024 / 1024 < 10
+      if (!isJpgPng) {
+        this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+      }
       if (!isLt10M) {
         this.$message.error('上传文件大小不能超过 10MB!')
       }
-      return isLt10M
+      return isLt10M && isJpgPng
+    },
+    getFile (e) {
+      let file = e.target.files[0]
+      console.log(file)
+      console.log(typeof file)
+    },
+    upload (item) {
+    },
+    submitForm (formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          startOrder(this.order)
+            .then((res) => {
+              console.log(res)
+            })
+            .catch((error) => {
+              console.log(error)
+            })
+        }
+      })
+    },
+    resetForm (formName) {
+      this.$refs[formName].resetFields()
     }
   },
   filters: {
