@@ -23,16 +23,17 @@ class ActionSerializer(serializers.ModelSerializer):
 
     def get_target(self, obj):
         # 此处显示用户时，不够优雅，最后要改
-        if isinstance(obj.target, UserModel):
-            data = {
-                'id': obj.target.username,
-                'url': self.context['request'].build_absolute_uri(obj.target.get_absolute_url())
-            }
-        else:
-            data = {
-                'id': obj.target.id,
-                # 'url': self.context['request'].META['HTTP_HOST'] + obj.target.get_absolute_url()
-                # 'url': self.context['request'].get_host()
-                'url': self.context['request'].build_absolute_uri(obj.target.get_absolute_url())
-            }
-        return data
+        # if isinstance(obj.target, UserModel):
+        #     data = {
+        #         'id': obj.target.username,
+        #         'url': self.context['request'].build_absolute_uri(obj.target.get_absolute_url())
+        #     }
+        # else:
+        #     data = {
+        #         'id': obj.target.id if obj.target else None,
+        #         # 'url': self.context['request'].META['HTTP_HOST'] + obj.target.get_absolute_url()
+        #         # 'url': self.context['request'].get_host()
+        #         'url': self.context['request'].build_absolute_uri(obj.target.get_absolute_url())
+        #     }
+        # return data
+        return

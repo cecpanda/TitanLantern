@@ -166,7 +166,7 @@
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span='16'>
+        <el-col :span='8'>
           <el-form-item label="调查报告">
             <el-upload
               multiple
@@ -346,10 +346,18 @@ export default {
         if (valid) {
           startOrder(this.order)
             .then((res) => {
-              console.log(res)
+              this.$notify({
+                title: '成功',
+                message: res.data,
+                type: 'success'
+              })
             })
             .catch((error) => {
-              console.log(error)
+              this.$notify({
+                title: '错误',
+                message: error,
+                type: 'error'
+              })
             })
         }
       })

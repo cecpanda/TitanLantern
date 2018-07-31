@@ -85,14 +85,17 @@ class StartOrderSerializer(serializers.ModelSerializer):
         从 4000 开始
         '''
         group = self.get_group()
-        id = ID.objects.create().id
-        if not group:
-            try:
-                code = group.settings.code
-            except Exception:
-                return f'TEA-000-{id}'
-            return f'TEA-{code}-{id}'
-        return f'TEA-000-{id}'
+
+
+        while True:
+            id = ID.objects.create().id
+            if not Order.objects.filter(id__icontains=id).exists():
+                break
+        try:
+            code = group.settings.code
+        except Exception:
+            return f'TEA-000-{id}'
+        return f'TEA-{code}-{id}'
 
     def get_group(self):
         # 根据 appl 得到 开单工程 group

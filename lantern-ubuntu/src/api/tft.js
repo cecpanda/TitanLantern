@@ -63,7 +63,6 @@ export const startOrder = (order) => {
         //   }
         // }
         // return ret
-        console.log(data)
         let fd = new FormData()
         for (let key in data) {
           if (data.hasOwnProperty(key)) {

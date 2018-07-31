@@ -84,6 +84,7 @@ class Order(models.Model):
     class Meta:
         verbose_name = '停机单'
         verbose_name_plural = verbose_name
+        ordering = ('-created', )
 
     # def get_absolute_url(self):
     #     return reverse('tft:start-detail', args=(self.id,))
