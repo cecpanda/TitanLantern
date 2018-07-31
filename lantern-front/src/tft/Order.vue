@@ -18,6 +18,12 @@
             我要开单
           </span>
         </el-menu-item>
+        <el-menu-item index="/tft/order/mystart">
+          <i class='el-icon-edit'></i>
+          <span slot="title">
+            我的开单
+          </span>
+        </el-menu-item>
         <el-menu-item index="/tft/order/audit">
           <i class='el-icon-star-on'></i>
           <span slot="title">

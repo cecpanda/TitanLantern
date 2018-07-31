@@ -36,4 +36,4 @@ class ActionSerializer(serializers.ModelSerializer):
         #         'url': self.context['request'].build_absolute_uri(obj.target.get_absolute_url())
         #     }
         # return data
-        return
+        return obj.target.__str__()

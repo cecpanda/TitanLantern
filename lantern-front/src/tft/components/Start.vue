@@ -166,14 +166,13 @@
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span='16'>
+        <el-col :span='8'>
           <el-form-item label="调查报告">
             <el-upload
               multiple
               action=''
               :on-change='handleChange'
               :limit="3"
-              :auto-upload='false'
               :on-exceed="handleExceed"
               :before-upload="beforeUpload"
               :http-request='upload'
@@ -181,6 +180,7 @@
               <el-button size="small" type="primary">点击上传</el-button>
             </el-upload>
           </el-form-item>
+          <!-- <input type="file" @change="getFile($event)"> -->
         </el-col>
       </el-row>
       <el-row>
@@ -315,18 +315,29 @@ export default {
       console.log(files)
       this.order.reports = []
       files.forEach((file) => {
-        this.order.reports.push({reports: file.raw})
+        this.order.reports.push(file.raw)
       })
-      console.log(this.order.reports)
+      // 上传文件必须是 FormData，内容是 file.raw
+      // var formdata = new FormData()
+      // formdata.append('avatar', file.raw)
+      // formdata.append('realname', 'woca')
+      // testAvatar(formdata)
     },
     beforeUpload (file) {
-      console.log(file.type, file.size)
-      // const isJpgPng = file.type === 'image/jpeg' || file.type === 'image/png'
+      const isJpgPng = file.type === 'image/jpeg' || file.type === 'image/png'
       const isLt10M = file.size / 1024 / 1024 < 10
+      if (!isJpgPng) {
+        this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+      }
       if (!isLt10M) {
         this.$message.error('上传文件大小不能超过 10MB!')
       }
-      return isLt10M
+      return isLt10M && isJpgPng
+    },
+    getFile (e) {
+      let file = e.target.files[0]
+      console.log(file)
+      console.log(typeof file)
     },
     upload (item) {
     },
@@ -335,10 +346,18 @@ export default {
         if (valid) {
           startOrder(this.order)
             .then((res) => {
-              console.log(res)
+              this.$notify({
+                title: '成功',
+                message: res.data,
+                type: 'success'
+              })
             })
             .catch((error) => {
-              console.log(error)
+              this.$notify({
+                title: '错误',
+                message: error,
+                type: 'error'
+              })
             })
         }
       })
