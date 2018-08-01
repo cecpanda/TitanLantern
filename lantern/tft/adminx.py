@@ -1,7 +1,7 @@
 import xadmin
 
-from .models import ID, Order, \
-                    Audit, \
+from .models import ID, Order, Audit, \
+                    RecoverOrder, RecoverAudit, \
                     Report, Remark
 
 
@@ -23,12 +23,12 @@ class AuditAdmin(object):
     list_display = ['order', 'p_signer', 'c_signer', 'rejected']
 
 
-# class RecoverOrderAdmin(object):
-#     list_display = ['order', 'appl', 'partial', 'created']
-#
-#
-# class RecoverAuditAdmin(object):
-#     list_display = ['recover_order', 'qc_signer', 'p_signer', 'rejected', 'created']
+class RecoverOrderAdmin(object):
+    list_display = ['order', 'user', 'partial', 'created']
+
+
+class RecoverAuditAdmin(object):
+    list_display = ['recover_order', 'qc_signer', 'p_signer', 'rejected']
 
 
 # xadmin.site.register(EqKind, EqKindAdmin)
@@ -44,7 +44,7 @@ class FlowAdmin(object):
 xadmin.site.register(ID)
 xadmin.site.register(Order, OrderAdmin)
 xadmin.site.register(Audit, AuditAdmin)
-# xadmin.site.register(RecoverOrder, RecoverOrderAdmin)
-# xadmin.site.register(RecoverAudit, RecoverAuditAdmin)
+xadmin.site.register(RecoverOrder, RecoverOrderAdmin)
+xadmin.site.register(RecoverAudit, RecoverAuditAdmin)
 xadmin.site.register(Report)
 xadmin.site.register(Remark)

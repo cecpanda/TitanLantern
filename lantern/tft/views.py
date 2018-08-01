@@ -7,9 +7,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
-from .models import Order, Audit
+from action.utils import create_action
+from .models import Order, Audit, RecoverOrder, RecoverAudit
 from .serializers import StartOrderSerializer, RetrieveStartOrderSerializer, \
-                         ProductAuditSerializer, ChargeAuditSerializer
+                         ProductAuditSerializer, ChargeAuditSerializer, \
+                         RecoverOrderSerializer, RecoverAuditSerializer
 
 from .utils import IsSameGroup
 
@@ -70,9 +72,10 @@ class StartOrderViewSet(CreateModelMixin,
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        id = self.perform_create(serializer)
+        order = self.perform_create(serializer)
+        create_action(request.user, '开单', order)
         # headers = self.get_success_headers(serializer.data)
-        return Response({'id': id}, status=status.HTTP_201_CREATED)
+        return Response({'id': order.id}, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
         return serializer.save()
@@ -83,6 +86,7 @@ class StartOrderViewSet(CreateModelMixin,
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        create_action(request.user, '修改', instance)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
@@ -115,15 +119,50 @@ class AuditViewSet(GenericViewSet):
     def product(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        res = serializer.save()
-        return Response(res)
+        order = serializer.save()
+        create_action(request.user, '审核', order)
+        return Response({'id': order.id, 'status': order.get_status_display()})
 
     @action(methods=['post'], detail=False, url_path='charge', url_name='charge')
     def charge(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        res = serializer.save()
-        return Response(res)
+        order = serializer.save()
+        create_action(request.user, '审核', order)
+        return Response({'id': order.id, 'status': order.get_status_display()})
+
+
+class RecoverOrderViewSet(CreateModelMixin, GenericViewSet):
+    queryset = RecoverOrder.objects.all()
+    serializer_class = RecoverOrderSerializer
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        recover_order = self.perform_create(serializer)
+        order = recover_order.order
+        # status
+        order.status = serializer.get_status(recover_order)
+        order.save()
+
+        # 这个地方有问题，两分钟内重复操作不记录
+        create_action(request.user, '申请复机', order)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response({'id': order.id, 'sn': recover_order.id, 'status': order.get_status_display()}, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        return serializer.save()
+
+
+class RecoverAuditViewSet(CreateModelMixin, GenericViewSet):
+    queryset = RecoverAudit.objects.all()
+    serializer_class = RecoverAuditSerializer
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
 
 
 class OrderViewSet(ListModelMixin,

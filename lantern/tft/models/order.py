@@ -55,8 +55,10 @@ class Order(models.Model):
 
     found_step = models.CharField('发现站点', max_length=30)
     found_time = models.DateTimeField('发现时间')
+    # charge_group = models.ForeignKey(Group, related_name='chargeorders', on_delete=models.PROTECT,
+    #                                  blank=True, null=True, verbose_name='责任工程')
     charge_group = models.ForeignKey(Group, related_name='chargeorders', on_delete=models.PROTECT,
-                                     blank=True, null=True, verbose_name='责任工程')
+                                     verbose_name='责任工程')
     # 设备对应关系都不需要了，鬼鬼，垃圾系统
     # eq = models.ManyToManyField(Eq, related_name='startorders', verbose_name='停机设备')
     eq = models.CharField('停机设备', max_length=50)
@@ -119,7 +121,7 @@ class Audit(models.Model):
 
 class RecoverOrder(models.Model):
     order = models.ForeignKey(Order, related_name='recoverorders', on_delete=models.CASCADE, verbose_name='订单')
-    appl = models.ForeignKey(UserModel, related_name='recoverorders', on_delete=models.PROTECT, verbose_name='申请人')
+    user = models.ForeignKey(UserModel, related_name='recoverorders', on_delete=models.PROTECT, verbose_name='申请人')
     created = models.DateTimeField('申请时间', auto_now_add=True)
 
     solution = models.TextField('责任单位对策说明', max_length=200)
@@ -127,7 +129,7 @@ class RecoverOrder(models.Model):
 
     partial = models.BooleanField('部分复机', default=False)
     # eq = models.ManyToManyField(Eq, related_name='+', verbose_name='部分复机设备')
-    eq = models.CharField('停机设备', max_length=50)
+    eq = models.CharField('部分复机设备', max_length=50, blank=True, null=True)
     kind = models.CharField('部分复机机种', max_length=30, blank=True, null=True)
     step = models.CharField('部分复机站点', max_length=50, blank=True, null=True)
 

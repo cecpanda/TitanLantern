@@ -1,9 +1,10 @@
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth.models import Group
 from rest_framework import serializers
 
-from .models import Order, ID, Report, Remark, Audit, RecoverOrder
+from .models import Order, ID, Report, Remark, Audit, RecoverOrder, RecoverAudit
 from account.serializers import UserOfGroupSerializer, GroupSerializer
 
 
@@ -141,7 +142,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
                                              group=self.get_group(),  # 有可能为空
                                              found_step=validated_data.get('found_step'),
                                              found_time=validated_data.get('found_time'),
-                                             # charge_group
+                                             charge_group=Group.objects.get(pk=validated_data.get('charge_group')),
                                              eq = validated_data.get('eq'),
                                              kind=validated_data.get('kind'),
                                              step=validated_data.get('step'),
@@ -168,8 +169,8 @@ class StartOrderSerializer(serializers.ModelSerializer):
                 #         order.lots.add(lot)
 
                 # charge_group
-                order.charge_group = Group.objects.get(pk=validated_data.get('charge_group'))
-                order.save()
+                # order.charge_group = Group.objects.get(pk=validated_data.get('charge_group'))
+                # order.save()
 
                 # reports
                 reports = validated_data.get('reports')
@@ -185,7 +186,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
 
-        return order.id
+        return order
 
     def update(self, instance, validated_data):
         # try:
@@ -243,7 +244,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
 
-        return instance.id
+        return instance
 
 
 class ReportSerializer(serializers.ModelSerializer):
@@ -320,6 +321,8 @@ class ProductAuditSerializer(serializers.Serializer):
             order = Order.objects.get(id=value)
         except Exception as e:
             raise serializers.ValidationError(f'无效的订单{value}')
+        if order.status != '1':
+            raise serializers.ValidationError(f'此单当前的状态是{order.get_status_display()}，不是生产签核')
         return order
 
     def validate_user(self, value):
@@ -329,11 +332,13 @@ class ProductAuditSerializer(serializers.Serializer):
             raise serializers.ValidationError('您不是生产科成员，不能进行此操作')
         return value
 
-    def validate(self, attrs):
-        order = attrs.get('order')
-        if order.status != '1':
-            raise serializers.ValidationError('此单还不到生产签核的步骤')
-        return attrs
+    # def validate(self, attrs):
+    #     order = attrs.get('order')
+    #     if order.status != '1':
+    #         raise serializers.ValidationError(f'此单当前的状态是{order.get_status_display()}，还不到生产签核的步骤')
+    #     if not attrs.get('user').groups.filter(name='生产科').exists():
+    #         raise serializers.ValidationError('您不是生产科成员，不能进行此操作')
+    #     return attrs
 
     def get_status(self, order, audit):
         if not order.group:
@@ -389,7 +394,8 @@ class ProductAuditSerializer(serializers.Serializer):
         except Exception as e:
             raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
 
-        return {'id': order.id, 'status': order.get_status_display()}
+        # return {'id': order.id, 'status': order.get_status_display()}
+        return order
 
 
 class ChargeAuditSerializer(serializers.Serializer):
@@ -407,6 +413,8 @@ class ChargeAuditSerializer(serializers.Serializer):
             order = Order.objects.get(id=value)
         except Exception as e:
             raise serializers.ValidationError(f'无效的订单{value}')
+        if order.status != '2':
+            raise serializers.ValidationError(f'此单当前的状态是{order.get_status_display()}，不是责任工程签核')
         return order
 
     def validate_user(self, value):
@@ -417,14 +425,11 @@ class ChargeAuditSerializer(serializers.Serializer):
         order = attrs.get('order')
         user = attrs.get('user')
 
-        if order.group is None:
+        if order.charge_group is None:
             pass
         else:
-            if order.group not in user.groups.all():
-                raise serializers.ValidationError('您不属于开单工程的成员，无权进行此操作')
-
-        if order.status != '2':
-            raise serializers.ValidationError('此单还不到责任工程签核的步骤')
+            if order.charge_group not in user.groups.all():
+                raise serializers.ValidationError('您不属于责任工程的成员，无权进行此操作')
 
         if attrs.get('rejected'):
             if not attrs.get('reason'):
@@ -481,4 +486,83 @@ class ChargeAuditSerializer(serializers.Serializer):
         except Exception as e:
             raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
 
-        return {'id': order.id, 'status': order.get_status_display()}
+        # return {'id': order.id, 'status': order.get_status_display()}
+        return order
+
+
+class RecoverOrderSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = RecoverOrder
+        fields = ('id', 'order', 'user', 'solution', 'explain',
+                  'partial', 'eq', 'kind', 'step')
+
+    def get_status(self, recover_order):
+        # 应该重写 create 方法，改变 status
+        # 最后还是决定放在 view 中了
+        order = recover_order.order
+        if order.group is None:
+            return '6'
+        elif order.group.name != 'QC':
+            return '6'
+        elif order.group.name == 'QC':
+            return '5'
+        return '0'
+
+    def validate(self, attrs):
+        '''
+        开单工程为空：
+            任何人都可以申请复机
+        开单工程是 QC
+            责任工程和 QC 可以申请复机
+        开单工程不是 QC
+        '''
+        order = attrs.get('order')
+        user = attrs.get('user')
+        if not order.group:
+            # 谁都可以申请开单
+            pass
+        elif order.group.name == 'QC':
+            if not user.groups.filter(Q(name=order.charge_group.name) | Q(name='QC')).exists():
+                raise serializers.ValidationError('开单工程是 QC，只有责任工程和 QC 才能申请复机')
+        else:
+            if not user.groups.filter(name=order.charge_group.name).exists():
+                raise serializers.ValidationError('开单工程不是是 QC，只有责任工程才能申请复机')
+
+        partial = attrs.get('partial', False)
+        # 部分复机
+        if partial:
+            if not attrs.get('eq') or not attrs.get('kind') or not attrs.get('step'):
+                raise serializers.ValidationError('部分复机必须填写复机设备、机种、站点')
+        # 全部复机
+        elif not partial:
+            if attrs.get('eq') or attrs.get('kind') or attrs.get('step'):
+                raise serializers.ValidationError('全部复机不需要复机设备、机种、站点')
+
+        return attrs
+
+
+class RecoverAuditSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = RecoverAudit
+        fields = ('id', 'recover_order', 'qc_signer', 'p_signer', 'rejected')
+    # order = serializers.CharField(label='订单编号')
+    # user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    # time = serializers.HiddenField(default=timezone.now)
+    #
+    # rejected = serializers.BooleanField(label='是否拒签', default=False)
+    # reason = serializers.CharField(label='拒签理由', max_length=100, required=False)
+    #
+    # def validate_order(self, value):
+    #     try:
+    #         order = Order.objects.get(id=value)
+    #     except Exception as e:
+    #         raise serializers.ValidationError(f'无效的订单{value}')
+    #     # if order.status != '2':
+    #     #     raise serializers.ValidationError(f'此单当前的状态是{order.get_status_display()}，不是责任工程签核')
+    #     return order
+    #
+    # def validate(self, attrs):
+
