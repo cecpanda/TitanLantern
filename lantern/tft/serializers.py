@@ -510,6 +510,10 @@ class RecoverOrderSerializer(serializers.ModelSerializer):
             return '5'
         return '0'
 
+    def validate_order(self, order):
+        if order.status != '4' or order.status != '7' or order.status != '8':
+            raise serializers.ValidationError(f'{order.get_status_display()}不允许复机申请')
+
     def validate(self, attrs):
         '''
         开单工程为空：
@@ -543,26 +547,107 @@ class RecoverOrderSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class RecoverAuditSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = RecoverAudit
-        fields = ('id', 'recover_order', 'qc_signer', 'p_signer', 'rejected')
+class QcRecoverAuditSerializer(serializers.Serializer):
+    id = serializers.IntegerField(label='复机单ID')
     # order = serializers.CharField(label='订单编号')
-    # user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    # time = serializers.HiddenField(default=timezone.now)
-    #
-    # rejected = serializers.BooleanField(label='是否拒签', default=False)
-    # reason = serializers.CharField(label='拒签理由', max_length=100, required=False)
-    #
-    # def validate_order(self, value):
-    #     try:
-    #         order = Order.objects.get(id=value)
-    #     except Exception as e:
-    #         raise serializers.ValidationError(f'无效的订单{value}')
-    #     # if order.status != '2':
-    #     #     raise serializers.ValidationError(f'此单当前的状态是{order.get_status_display()}，不是责任工程签核')
-    #     return order
-    #
-    # def validate(self, attrs):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    time = serializers.HiddenField(default=timezone.now)
 
+    rejected = serializers.BooleanField(label='是否拒签', default=False)
+    reason = serializers.CharField(label='拒签理由', max_length=100, required=False)
+
+    def get_status(self, recover_audit):
+        if recover_audit.qc_signer and not recover_audit.p_signer:
+            if recover_audit.rejected:
+                return '7'
+            else:
+                return '6'
+        if recover_audit.p_signer and not recover_audit.partial:
+            return '9'
+        if recover_audit.p_signer and recover_audit.partial:
+            return '8'
+        return '0'
+
+    def validate_id(self, value):
+        try:
+            recover_order = RecoverOrder.objects.get(id=value)
+        except Exception as e:
+            raise serializers.ValidationError(f'无效的复机单{value}')
+        # if order.status != '2':
+        #     raise serializers.ValidationError(f'此单当前的状态是{order.get_status_display()}，不是责任工程签核')
+        if recover_order.order.status != '5':
+            raise serializers.ValidationError(f'此单当前的状态是{recover_order.order.get_status_display()}，不是生产签核')
+        return recover_order
+
+    def validate_user(self, value):
+        if not value.groups.filter(name='QC').exists():
+            raise serializers.ValidationError('您不是 QC 成员，无法进行此操作')
+        return value
+
+    def validate(self, attrs):
+        if attrs.get('rejected'):
+            if not attrs.get('reason'):
+                return serializers.ValidationError('拒签要有理由')
+        return attrs
+
+    def create(self, validated_data):
+        recover_order = validated_data.get('id')
+        user = validated_data.get('user')
+        try:
+            with transaction.atomic():
+                recover_audit, created = RecoverAudit.objects.get_or_create(recover_order=recover_order)
+                recover_audit.qc_signer = user
+                recover_audit.qc_time = validated_data.get('time')
+                recover_audit.rejected = True if validated_data.get('rejected') else False
+                recover_audit.save()
+        except Exception as e:
+            raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
+
+        return recover_audit
+
+
+class ProductRecoverAuditSerializer(serializers.Serializer):
+    id = serializers.IntegerField(label='复机单ID')
+    # order = serializers.CharField(label='订单编号')
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    time = serializers.HiddenField(default=timezone.now)
+
+    def get_status(self, recover_audit):
+        if recover_audit.qc_signer and not recover_audit.p_signer:
+            if recover_audit.rejected:
+                return '7'
+            else:
+                return '6'
+        if recover_audit.p_signer and not recover_audit.partial:
+            return '9'
+        if recover_audit.p_signer and recover_audit.partial:
+            return '8'
+        return '0'
+
+    def validate_id(self, value):
+        try:
+            recover_order = RecoverOrder.objects.get(id=value)
+        except Exception as e:
+            raise serializers.ValidationError(f'无效的复机单{value}')
+        if recover_order.order.status != '6':
+            raise serializers.ValidationError(f'此单当前的状态是{recover_order.order.get_status_display()}，不是QC签核')
+        return recover_order
+
+    def validate_user(self, value):
+        if not value.groups.filter(name='生产科').exists():
+            raise serializers.ValidationError('您不是生产科成员，无法进行此操作')
+        return value
+
+    def create(self, validated_data):
+        recover_order = validated_data.get('id')
+        user = validated_data.get('user')
+        try:
+            with transaction.atomic():
+                recover_audit, created = RecoverAudit.objects.get_or_create(recover_order=recover_order)
+                recover_audit.p_signer = user
+                recover_audit.p_time = validated_data.get('time')
+                recover_audit.save()
+        except Exception as e:
+            raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
+
+        return recover_audit

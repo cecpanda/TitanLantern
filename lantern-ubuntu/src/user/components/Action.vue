@@ -9,7 +9,7 @@
       {{ action.created | formatDate }}
       {{ action.user.username }}
       {{ action.verb }}
-      {{ action.target.id }}
+      {{ action.target }}
     </el-row>
     <el-pagination
       background

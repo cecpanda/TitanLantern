@@ -11,7 +11,8 @@ from action.utils import create_action
 from .models import Order, Audit, RecoverOrder, RecoverAudit
 from .serializers import StartOrderSerializer, RetrieveStartOrderSerializer, \
                          ProductAuditSerializer, ChargeAuditSerializer, \
-                         RecoverOrderSerializer, RecoverAuditSerializer
+                         RecoverOrderSerializer, \
+                         QcRecoverAuditSerializer, ProductRecoverAuditSerializer
 
 from .utils import IsSameGroup
 
@@ -152,7 +153,7 @@ class RecoverOrderViewSet(CreateModelMixin, GenericViewSet):
         create_action(request.user, '申请复机', order)
 
         headers = self.get_success_headers(serializer.data)
-        return Response({'id': order.id, 'sn': recover_order.id, 'status': order.get_status_display()}, status=status.HTTP_201_CREATED, headers=headers)
+        return Response({'id': recover_order.id, 'order_id': order.id, 'status': order.get_status_display()}, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
         return serializer.save()
@@ -160,7 +161,7 @@ class RecoverOrderViewSet(CreateModelMixin, GenericViewSet):
 
 class RecoverAuditViewSet(CreateModelMixin, GenericViewSet):
     queryset = RecoverAudit.objects.all()
-    serializer_class = RecoverAuditSerializer
+    # serializer_class = RecoverAuditSerializer
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
