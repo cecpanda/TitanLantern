@@ -159,11 +159,48 @@ class RecoverOrderViewSet(CreateModelMixin, GenericViewSet):
         return serializer.save()
 
 
-class RecoverAuditViewSet(CreateModelMixin, GenericViewSet):
+class RecoverAuditViewSet(GenericViewSet):
     queryset = RecoverAudit.objects.all()
-    # serializer_class = RecoverAuditSerializer
+    serializer_class = QcRecoverAuditSerializer
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == 'qc':
+            return QcRecoverAuditSerializer
+        elif self.action == 'product':
+            return ProductRecoverAuditSerializer
+        return self.serializer_class
+
+    @action(methods=['post'], detail=False, url_path='qc', url_name='qc')
+    def qc(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        recover_audit = serializer.save()
+        recover_order = recover_audit.recover_order
+        recover_order.order.status = serializer.get_status(recover_audit)
+        recover_order.order.save()
+        create_action(request.user, '审核', recover_order.order)
+
+        return Response({'id': recover_order.id,
+                         'order_id': recover_order.order.id,
+                         'status': recover_order.order.get_status_display()},
+                        status=status.HTTP_200_OK)
+
+    @action(methods=['post'], detail=False, url_path='product', url_name='product')
+    def product(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        recover_audit = serializer.save()
+        recover_order = recover_audit.recover_order
+        recover_order.order.status = serializer.get_status(recover_audit)
+        recover_order.order.save()
+        create_action(request.user, '审核', recover_order.order)
+
+        return Response({'id': recover_order.id,
+                         'order_id': recover_order.order.id,
+                         'status': recover_order.order.get_status_display()},
+                        status=status.HTTP_200_OK)
 
 
 class OrderViewSet(ListModelMixin,

@@ -61,3 +61,10 @@ class GroupSetting(models.Model):
 
     def __str__(self):
         return self.group.name
+
+Group.add_to_class('department', models.ForeignKey('self',
+                                                   related_name='groups',
+                                                   blank=True,
+                                                   null=True,
+                                                   on_delete=models.PROTECT,
+                                                   verbose_name='部门'))

@@ -511,8 +511,9 @@ class RecoverOrderSerializer(serializers.ModelSerializer):
         return '0'
 
     def validate_order(self, order):
-        if order.status != '4' or order.status != '7' or order.status != '8':
-            raise serializers.ValidationError(f'{order.get_status_display()}不允许复机申请')
+        if order.status != '4' and order.status != '7' and order.status != '8':
+            raise serializers.ValidationError(f'{order.get_status_display()}, 不允许复机申请')
+        return order
 
     def validate(self, attrs):
         '''
@@ -525,8 +526,8 @@ class RecoverOrderSerializer(serializers.ModelSerializer):
         order = attrs.get('order')
         user = attrs.get('user')
         if not order.group:
-            # 谁都可以申请开单
-            pass
+            if not user.groups.filter(name=order.charge_group.name).exists():
+                raise serializers.ValidationError('开单工程不是是 QC，只有责任工程才能申请复机')
         elif order.group.name == 'QC':
             if not user.groups.filter(Q(name=order.charge_group.name) | Q(name='QC')).exists():
                 raise serializers.ValidationError('开单工程是 QC，只有责任工程和 QC 才能申请复机')
@@ -562,9 +563,9 @@ class QcRecoverAuditSerializer(serializers.Serializer):
                 return '7'
             else:
                 return '6'
-        if recover_audit.p_signer and not recover_audit.partial:
+        if recover_audit.p_signer and not recover_audit.recover_order.partial:
             return '9'
-        if recover_audit.p_signer and recover_audit.partial:
+        if recover_audit.p_signer and recover_audit.recover_order.partial:
             return '8'
         return '0'
 
@@ -587,7 +588,7 @@ class QcRecoverAuditSerializer(serializers.Serializer):
     def validate(self, attrs):
         if attrs.get('rejected'):
             if not attrs.get('reason'):
-                return serializers.ValidationError('拒签要有理由')
+                raise serializers.ValidationError('拒签要有理由')
         return attrs
 
     def create(self, validated_data):
@@ -618,9 +619,9 @@ class ProductRecoverAuditSerializer(serializers.Serializer):
                 return '7'
             else:
                 return '6'
-        if recover_audit.p_signer and not recover_audit.partial:
+        if recover_audit.p_signer and not recover_audit.recover_order.partial:
             return '9'
-        if recover_audit.p_signer and recover_audit.partial:
+        if recover_audit.p_signer and recover_audit.recover_order.partial:
             return '8'
         return '0'
 
@@ -637,6 +638,7 @@ class ProductRecoverAuditSerializer(serializers.Serializer):
         if not value.groups.filter(name='生产科').exists():
             raise serializers.ValidationError('您不是生产科成员，无法进行此操作')
         return value
+
 
     def create(self, validated_data):
         recover_order = validated_data.get('id')
