@@ -1,11 +1,15 @@
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth.models import Group
+from rest_framework import status
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
 from .models import Order, ID, Report, Remark, Audit, RecoverOrder, RecoverAudit
 from account.serializers import UserOfGroupSerializer, GroupSerializer
+from account.models import GroupSetting
 
 
 class StartOrderSerializer(serializers.ModelSerializer):
@@ -62,7 +66,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
             group = Group.objects.get(pk=value)
         except Exception as e:
             raise serializers.ValidationError('责任工程不存在')
-        return value
+        return group
 
     def validate(self, attrs):
         '''
@@ -71,9 +75,11 @@ class StartOrderSerializer(serializers.ModelSerializer):
         '''
         groups = attrs['user'].groups.all()
         try:
-            qc = Group.objects.get(name='QC')
+            # qc = Group.objects.get(name='QC')
+            qc_code = settings.GROUP_CODE['TFT'].get('QC')
+            qc = GroupSetting.objects.get(code=qc_code).group
         except:
-            return attrs
+            raise serializers.ValidationError('请联系管理员，确定 QC 组')
         if qc in groups:
             if attrs.get('defect_type') is None:
                 raise serializers.ValidationError('您在 QC 组下，defect_type 为必选！')
@@ -86,7 +92,6 @@ class StartOrderSerializer(serializers.ModelSerializer):
         从 4000 开始
         '''
         group = self.get_group()
-
 
         while True:
             id = ID.objects.create().id
@@ -117,15 +122,19 @@ class StartOrderSerializer(serializers.ModelSerializer):
     def get_status(self):
         group = self.get_group()  # 开单工程，可能为空
 
+        qc_code = settings.GROUP_CODE['TFT'].get('QC')
+        qc = GroupSetting.objects.get(code=qc_code).group
+
         # 开单工程为空，当作不是 QC 处理
         if group is None:
             return '1'
         # 开单工程不是 QC
-        elif group.name != 'QC':
+        # elif group.name != 'QC':
+        elif group.name != qc.name:
             return '1'
-        elif group.name == 'QC' and self.validated_data.get('defect_type'):
+        elif group.name == qc.name and self.validated_data.get('defect_type'):
             return '1'  # 和前面的两个 1 有区别
-        elif group.name == 'QC' and not self.validated_data.get('defect_type'):
+        elif group.name == qc.name and not self.validated_data.get('defect_type'):
             return '2'
         return '0'
 
@@ -142,7 +151,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
                                              group=self.get_group(),  # 有可能为空
                                              found_step=validated_data.get('found_step'),
                                              found_time=validated_data.get('found_time'),
-                                             charge_group=Group.objects.get(pk=validated_data.get('charge_group')),
+                                             charge_group=validated_data.get('charge_group'),
                                              eq = validated_data.get('eq'),
                                              kind=validated_data.get('kind'),
                                              step=validated_data.get('step'),
@@ -227,7 +236,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
                 instance.defect_type = validated_data.get('defect_type', instance.defect_type)
 
                 # charge_group
-                instance.charge_group = Group.objects.get(pk=validated_data.get('charge_group'))
+                instance.charge_group = validated_data.get('charge_group')
                 instance.save()
 
                 # reports
@@ -322,15 +331,15 @@ class ProductAuditSerializer(serializers.Serializer):
         except Exception as e:
             raise serializers.ValidationError(f'无效的订单{value}')
         if order.status != '1':
-            raise serializers.ValidationError(f'此单当前的状态是{order.get_status_display()}，不是生产签核')
+            # raise serializers.ValidationError(f'此单当前的状态是{order.get_status_display()}，不是生产签核')
+            raise PermissionDenied(f'此单当前的状态是{order.get_status_display()}，不是生产签核')
         return order
 
-    def validate_user(self, value):
-        # if not value.groups.all().exists():
-        #     raise serializers.ValidationError('您没有加入任何科室，不能进行此操作')
-        if not value.groups.filter(name='生产科').exists():
-            raise serializers.ValidationError('您不是生产科成员，不能进行此操作')
-        return value
+    # 放在权限中
+    # def validate_user(self, value):
+    #     if not value.groups.filter(name='生产科').exists():
+    #         raise serializers.ValidationError('您不是生产科成员，不能进行此操作')
+    #     return value
 
     # def validate(self, attrs):
     #     order = attrs.get('order')
@@ -341,15 +350,18 @@ class ProductAuditSerializer(serializers.Serializer):
     #     return attrs
 
     def get_status(self, order, audit):
+        qc_code = settings.GROUP_CODE['TFT'].get('QC')
+        qc = GroupSetting.objects.get(code=qc_code).group
+
         if not order.group:
             if audit.p_signer:
                 return '4'
             return '1'
-        elif order.group.name != 'QC':
+        elif order.group.name != qc.name:
             if audit.p_signer:
                 return '4'
             return '1'
-        elif order.group.name == 'QC':
+        elif order.group.name == qc.name:
             if order.defect_type:
                 if not audit.p_signer:
                     return '1'
@@ -414,7 +426,8 @@ class ChargeAuditSerializer(serializers.Serializer):
         except Exception as e:
             raise serializers.ValidationError(f'无效的订单{value}')
         if order.status != '2':
-            raise serializers.ValidationError(f'此单当前的状态是{order.get_status_display()}，不是责任工程签核')
+            # raise serializers.ValidationError(f'此单当前的状态是{order.get_status_display()}，不是责任工程签核')
+            raise PermissionDenied(f'此单当前的状态是{order.get_status_display()}，不是责任工程签核')
         return order
 
     def validate_user(self, value):
@@ -429,7 +442,8 @@ class ChargeAuditSerializer(serializers.Serializer):
             pass
         else:
             if order.charge_group not in user.groups.all():
-                raise serializers.ValidationError('您不属于责任工程的成员，无权进行此操作')
+                # raise serializers.ValidationError('您不属于责任工程的成员，无权进行此操作')
+                raise PermissionDenied('您不属于责任工程的成员，无权进行此操作')
 
         if attrs.get('rejected'):
             if not attrs.get('reason'):
@@ -437,15 +451,18 @@ class ChargeAuditSerializer(serializers.Serializer):
         return attrs
 
     def get_status(self, order, audit):
+        qc_code = settings.GROUP_CODE['TFT'].get('QC')
+        qc = GroupSetting.objects.get(code=qc_code).group
+
         if not order.group:
             if audit.p_signer:
                 return '4'
             return '1'
-        elif order.group.name != 'QC':
+        elif order.group.name != qc.name:
             if audit.p_signer:
                 return '4'
             return '1'
-        elif order.group.name == 'QC':
+        elif order.group.name == qc.name:
             if order.defect_type:
                 if not audit.p_signer:
                     return '1'
@@ -495,24 +512,29 @@ class RecoverOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RecoverOrder
-        fields = ('id', 'order', 'user', 'solution', 'explain',
+        fields = ('order', 'user', 'solution', 'explain',
                   'partial', 'eq', 'kind', 'step')
 
     def get_status(self, recover_order):
         # 应该重写 create 方法，改变 status
         # 最后还是决定放在 view 中了
         order = recover_order.order
+
+        qc_code = settings.GROUP_CODE['TFT'].get('QC')
+        qc = GroupSetting.objects.get(code=qc_code).group
+
         if order.group is None:
             return '6'
-        elif order.group.name != 'QC':
+        elif order.group.name != qc.name:
             return '6'
-        elif order.group.name == 'QC':
+        elif order.group.name == qc.name:
             return '5'
         return '0'
 
     def validate_order(self, order):
         if order.status != '4' and order.status != '7' and order.status != '8':
-            raise serializers.ValidationError(f'{order.get_status_display()}, 不允许复机申请')
+            # raise serializers.ValidationError(f'{order.get_status_display()}, 不允许复机申请')
+            raise PermissionDenied(f'{order.get_status_display()}, 不允许复机申请')
         return order
 
     def validate(self, attrs):
@@ -525,15 +547,22 @@ class RecoverOrderSerializer(serializers.ModelSerializer):
         '''
         order = attrs.get('order')
         user = attrs.get('user')
+
+        qc_code = settings.GROUP_CODE['TFT'].get('QC')
+        qc = GroupSetting.objects.get(code=qc_code).group
+
         if not order.group:
             if not user.groups.filter(name=order.charge_group.name).exists():
-                raise serializers.ValidationError('开单工程不是是 QC，只有责任工程才能申请复机')
-        elif order.group.name == 'QC':
-            if not user.groups.filter(Q(name=order.charge_group.name) | Q(name='QC')).exists():
-                raise serializers.ValidationError('开单工程是 QC，只有责任工程和 QC 才能申请复机')
+                # raise serializers.ValidationError('开单工程不是是 QC，只有责任工程才能申请复机')
+                raise PermissionDenied(f'开单工程不是 QC，只有责任工程才能申请复机')
+        elif order.group.name == qc.name:
+            if not user.groups.filter(Q(name=order.charge_group.name) | Q(name=qc.name)).exists():
+                # raise serializers.ValidationError('开单工程是 QC，只有责任工程和 QC 才能申请复机')
+                raise PermissionDenied('开单工程是 QC，只有责任工程和 QC 才能申请复机')
         else:
             if not user.groups.filter(name=order.charge_group.name).exists():
-                raise serializers.ValidationError('开单工程不是是 QC，只有责任工程才能申请复机')
+                # raise serializers.ValidationError('开单工程不是 QC，只有责任工程才能申请复机')
+                raise PermissionDenied(f'开单工程不是 QC，只有责任工程才能申请复机')
 
         partial = attrs.get('partial', False)
         # 部分复机

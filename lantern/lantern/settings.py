@@ -212,3 +212,21 @@ SIMDITOR_CONFIGS = {
         'imagePath': '/static/simditor/images/emoji/'
     }
 }
+
+# Group Code
+# 为方便扩展，必须和数据库中定义的yizhi，大小写敏感
+GROUP_CODE = {
+    'TFT': {
+        'MFG': 'A1M',
+        'PVD': 'A2P',
+        'CVD': 'A2C',
+        'PHO': 'A3E',
+        'DRY': 'A4D',
+        'WET': 'A4W',
+        'TEST': 'A5I',
+        'QC': 'A6I'
+    },
+    'LCD': {
+        'PI': ''
+    }
+}

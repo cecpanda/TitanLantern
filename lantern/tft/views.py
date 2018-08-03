@@ -3,7 +3,9 @@ from rest_framework import status
 from rest_framework.mixins import CreateModelMixin, UpdateModelMixin, RetrieveModelMixin, ListModelMixin, DestroyModelMixin
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, \
+                                       DjangoModelPermissions, \
+                                       DjangoModelPermissionsOrAnonReadOnly
 from rest_framework.decorators import action
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
@@ -14,13 +16,13 @@ from .serializers import StartOrderSerializer, RetrieveStartOrderSerializer, \
                          RecoverOrderSerializer, \
                          QcRecoverAuditSerializer, ProductRecoverAuditSerializer
 
-from .utils import IsSameGroup
+from .utils import IsSameGroup, IsSameGroupRecoverOrder, IsMFGUser
 
 
 class StartOrderViewSet(CreateModelMixin,
                         UpdateModelMixin,
-                        RetrieveModelMixin,
-                        ListModelMixin,
+                        # RetrieveModelMixin,
+                        # ListModelMixin,
                         # DestroyModelMixin,
                         GenericViewSet):
     '''
@@ -61,13 +63,13 @@ class StartOrderViewSet(CreateModelMixin,
 
     def get_permissions(self):
         if self.action == 'create':
-            return [IsAuthenticated()]
+            return [IsAuthenticated(), DjangoModelPermissions()]
         elif self.action == 'update':
-            return [IsAuthenticated(), IsSameGroup()]
-        elif self.action == 'retrieve':
-            return [IsAuthenticated()]
+            return [IsAuthenticated(), IsSameGroup(), DjangoModelPermissions()]
+        # elif self.action == 'retrieve':
+        #     return [DjangoModelPermissionsOrAnonReadOnly()]
         elif self.action == 'destroy':
-            return [IsAuthenticated(), IsSameGroup()]
+            return [IsAuthenticated(), IsSameGroup(), DjangoModelPermissions()]
         return [permission() for permission in self.permission_classes]
 
     def create(self, request, *args, **kwargs):
@@ -76,7 +78,8 @@ class StartOrderViewSet(CreateModelMixin,
         order = self.perform_create(serializer)
         create_action(request.user, '开单', order)
         # headers = self.get_success_headers(serializer.data)
-        return Response({'id': order.id}, status=status.HTTP_201_CREATED)
+        return Response({'id': order.id, 'status_code': order.status, 'status': order.get_status_display()},
+                        status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
         return serializer.save()
@@ -94,7 +97,7 @@ class StartOrderViewSet(CreateModelMixin,
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
-        return Response({'id': instance.id})
+        return Response({'id': instance.id, 'status_code': instance.status, 'status': instance.get_status_display()})
 
     # def destroy(self, request, *args, **kwargs):
     #     instance = self.get_object()
@@ -107,7 +110,7 @@ class AuditViewSet(GenericViewSet):
     # serializer_class = ProductAuditSerializer
     lookup_field = 'order_id'
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions()]
 
     def get_serializer_class(self):
         if self.action == 'product':
@@ -116,28 +119,40 @@ class AuditViewSet(GenericViewSet):
             return ChargeAuditSerializer
         return self.serializer_class
 
-    @action(methods=['post'], detail=False, url_path='product', url_name='product')
+    def get_permissions(self):
+        if self.action == 'product':
+            return [IsAuthenticated(), DjangoModelPermissions(), IsMFGUser()]
+        return [permission() for permission in self.permission_classes]
+
+    @action(methods=['post', 'put'], detail=False, url_path='product', url_name='product')
     def product(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
         create_action(request.user, '审核', order)
-        return Response({'id': order.id, 'status': order.get_status_display()})
+        return Response({'id': order.id, 'status_code': order.status, 'status': order.get_status_display()})
 
-    @action(methods=['post'], detail=False, url_path='charge', url_name='charge')
+    @action(methods=['post', 'put'], detail=False, url_path='charge', url_name='charge')
     def charge(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
         create_action(request.user, '审核', order)
-        return Response({'id': order.id, 'status': order.get_status_display()})
+        return Response({'id': order.id, 'status_code': order.status, 'status': order.get_status_display()})
 
 
-class RecoverOrderViewSet(CreateModelMixin, GenericViewSet):
+class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
     queryset = RecoverOrder.objects.all()
     serializer_class = RecoverOrderSerializer
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [IsAuthenticated(), DjangoModelPermissions()]
+        elif self.action == 'update':
+            return [IsAuthenticated(), IsSameGroupRecoverOrder()]
+        return [permission() for permission in self.permission_classes]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -153,10 +168,33 @@ class RecoverOrderViewSet(CreateModelMixin, GenericViewSet):
         create_action(request.user, '申请复机', order)
 
         headers = self.get_success_headers(serializer.data)
-        return Response({'id': recover_order.id, 'order_id': order.id, 'status': order.get_status_display()}, status=status.HTTP_201_CREATED, headers=headers)
+        return Response({'id': recover_order.id,
+                         'order_id': order.id,
+                         'status_code': order.status,
+                         'status': order.get_status_display()},
+                        status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
         return serializer.save()
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response({'id': instance.id,
+                         'status_code': instance.status,
+                         'status': instance.get_status_display()})
+
+
+
 
 
 class RecoverAuditViewSet(GenericViewSet):

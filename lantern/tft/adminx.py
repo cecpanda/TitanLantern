@@ -24,7 +24,7 @@ class AuditAdmin(object):
 
 
 class RecoverOrderAdmin(object):
-    list_display = ['order', 'user', 'partial', 'created']
+    list_display = ['id', 'order', 'user', 'partial', 'created']
 
 
 class RecoverAuditAdmin(object):

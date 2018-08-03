@@ -17,13 +17,15 @@ class GlobalSettings(object):
 
 class GroupSettingAdmin(object):
     list_display = ['group', 'code']
+    search_fields = ['group__name', 'code']
 
 
 class FollowAdmin(object):
     list_display = ['user_from', 'user_to', 'created']
+    list_filter = ['user_from', 'user_to']
 
 
 xadmin.site.register(views.BaseAdminView, BaseSetting)
 xadmin.site.register(views.CommAdminView, GlobalSettings)
-xadmin.site.register(GroupSetting, GroupSettingAdmin)
 xadmin.site.register(Follow, FollowAdmin)
+xadmin.site.register(GroupSetting, GroupSettingAdmin)

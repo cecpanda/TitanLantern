@@ -124,6 +124,10 @@ class RecoverOrder(models.Model):
     user = models.ForeignKey(UserModel, related_name='recoverorders', on_delete=models.PROTECT, verbose_name='申请人')
     created = models.DateTimeField('申请时间', auto_now_add=True)
 
+    mod_user = models.ForeignKey(UserModel, related_name='modrecoverorders', blank=True, null=True,
+                                 on_delete=models.PROTECT, verbose_name='修改人员')
+    modified = models.DateTimeField('修改时间', auto_now=True)
+
     solution = models.TextField('责任单位对策说明', max_length=200)
     explain = models.TextField('先行lot结果说明', max_length=200)
 
