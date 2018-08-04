@@ -16,7 +16,7 @@ from .serializers import StartOrderSerializer, RetrieveStartOrderSerializer, \
                          RecoverOrderSerializer, UpdateRecoverOrderSerializer, \
                          QcRecoverAuditSerializer, ProductRecoverAuditSerializer
 
-from .utils import IsSameGroup, IsSameGroupRecoverOrder, IsMFGUser
+from .utils import IsSameGroup, RecoverOrderIsSameGroup, IsMFGUser
 
 
 class StartOrderViewSet(CreateModelMixin,
@@ -158,7 +158,7 @@ class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
         if self.action == 'create':
             return [IsAuthenticated(), DjangoModelPermissions()]
         elif self.action == 'update':
-            return [IsAuthenticated(), DjangoModelPermissions()]
+            return [IsAuthenticated(), DjangoModelPermissions(), RecoverOrderIsSameGroup()]
         return [permission() for permission in self.permission_classes]
 
     def create(self, request, *args, **kwargs):
@@ -211,7 +211,7 @@ class RecoverAuditViewSet(GenericViewSet):
     queryset = RecoverAudit.objects.all()
     serializer_class = QcRecoverAuditSerializer
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
     def get_serializer_class(self):
         if self.action == 'qc':

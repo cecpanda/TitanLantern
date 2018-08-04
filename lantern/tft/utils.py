@@ -37,13 +37,15 @@ class IsSameGroup(BasePermission):
         return False
 
 
-class IsSameGroupRecoverOrder(BasePermission):
+class RecoverOrderIsSameGroup(BasePermission):
     def has_permission(self, request, view):
         return True
 
     def has_object_permission(self, request, view, obj):
         if request.user:
-            if request.user == obj.user:
+            user_groups = obj.user.groups.all()
+            mod_user_groups = request.user.groups.all()
+            if set(user_groups) & set(mod_user_groups):
                 return True
         return False
 

@@ -666,7 +666,7 @@ class RecoverOrderSerializer(serializers.ModelSerializer):
         return '0'
 
     def validate_order(self, order):
-        if order.status == '1' or order.status == '2' or order.status == '3':
+        if order.status == '1' or order.status == '2' or order.status == '3' or order.status == '9':
             # raise serializers.ValidationError(f'{order.get_status_display()}, 不允许复机申请')
             raise PermissionDenied(f'{order.get_status_display()}, 不允许复机申请')
         return order
@@ -744,6 +744,9 @@ class UpdateRecoverOrderSerializer(serializers.ModelSerializer):
             责任工程和 QC 可以申请复机
         开单工程不是 QC
         '''
+        if RecoverAudit.objects.filter(recover_order__id=self.instance.id).exists():
+            raise serializers.ValidationError('已经有审核数据，不可修改')
+
         order = self.instance.order
         mod_user = attrs.get('mod_user')
 
@@ -811,7 +814,11 @@ class QcRecoverAuditSerializer(serializers.Serializer):
         return recover_order
 
     def validate_user(self, value):
-        if not value.groups.filter(name='QC').exists():
+
+        qc_code = settings.GROUP_CODE['TFT'].get('QC')
+        qc = GroupSetting.objects.get(code=qc_code).group
+
+        if not value.groups.filter(name=qc.name).exists():
             raise serializers.ValidationError('您不是 QC 成员，无法进行此操作')
         return value
 
@@ -865,7 +872,14 @@ class ProductRecoverAuditSerializer(serializers.Serializer):
         return recover_order
 
     def validate_user(self, value):
-        if not value.groups.filter(name='生产科').exists():
+
+        mfg_code = settings.GROUP_CODE['TFT'].get('MFG')
+        try:
+            mfg = GroupSetting.objects.get(code=mfg_code).group
+        except:
+            raise serializers.ValidationError('wei 定义 生产可')
+
+        if not value.groups.filter(name=mfg.name).exists():
             raise serializers.ValidationError('您不是生产科成员，无法进行此操作')
         return value
 
