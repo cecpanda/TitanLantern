@@ -507,6 +507,140 @@ class ChargeAuditSerializer(serializers.Serializer):
         return order
 
 
+# class RecoverOrderSerializer(serializers.Serializer):
+#     order = serializers.CharField(label='订单')
+#     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+#     time = serializers.HiddenField(default=timezone.now)
+#
+#     solution = serializers.CharField(label='责任单位对策说明', max_length=200)
+#     explain = serializers.CharField(label='先行lot结果说明', max_length=200)
+#
+#     partial = serializers.BooleanField(label='部分复机', default=False)
+#     eq = serializers.CharField(label='部分复机设备', max_length=50, required=False)
+#     kind = serializers.CharField(label='部分复机机种', max_length=20, required=False)
+#     step = serializers.CharField(label='部分复机站点', max_length=50, required=False)
+#
+#     next = serializers.CharField(label='下一步', max_length=2, required=False)
+#
+#     def get_status(self, recover_order):
+#         # 应该重写 create 方法，改变 status
+#         # 最后还是决定放在 view 中了
+#         order = recover_order.order
+#
+#         qc_code = settings.GROUP_CODE['TFT'].get('QC')
+#         qc = GroupSetting.objects.get(code=qc_code).group
+#
+#         if order.group is None:
+#             return '6'
+#         elif order.group.name != qc.name:
+#             return '6'
+#         elif order.group.name == qc.name:
+#             return '5'
+#         return '0'
+#
+#     def validate_order(self, value):
+#         try:
+#             order = Order.objects.get(id=value)
+#         except Exception as e:
+#             raise serializers.ValidationError(f'无效的订单编号{value}')
+#         # 修改也会验证，放进 creae中
+#         # if order.status != '4' and order.status != '7' and order.status != '8':
+#         #     # raise serializers.ValidationError(f'{order.get_status_display()}, 不允许复机申请')
+#         #     raise PermissionDenied(f'{order.get_status_display()}, 不允许复机申请')
+#         return order
+#
+#     def validate(self, attrs):
+#         '''
+#         开单工程为空：
+#             任何人都可以申请复机
+#         开单工程是 QC
+#             责任工程和 QC 可以申请复机
+#         开单工程不是 QC
+#         '''
+#         order = attrs.get('order')
+#         user = attrs.get('user')
+#
+#         qc_code = settings.GROUP_CODE['TFT'].get('QC')
+#         qc = GroupSetting.objects.get(code=qc_code).group
+#
+#         if not order.group:
+#             if not user.groups.filter(name=order.charge_group.name).exists():
+#                 # raise serializers.ValidationError('开单工程不是是 QC，只有责任工程才能申请复机')
+#                 raise PermissionDenied(f'开单工程不是 QC，只有责任工程才能申请复机')
+#         elif order.group.name == qc.name:
+#             if not user.groups.filter(Q(name=order.charge_group.name) | Q(name=qc.name)).exists():
+#                 # raise serializers.ValidationError('开单工程是 QC，只有责任工程和 QC 才能申请复机')
+#                 raise PermissionDenied('开单工程是 QC，只有责任工程和 QC 才能申请复机')
+#         else:
+#             if not user.groups.filter(name=order.charge_group.name).exists():
+#                 # raise serializers.ValidationError('开单工程不是 QC，只有责任工程才能申请复机')
+#                 raise PermissionDenied(f'开单工程不是 QC，只有责任工程才能申请复机')
+#
+#         partial = attrs.get('partial', False)
+#         # 部分复机
+#         if partial:
+#             if not attrs.get('eq') or not attrs.get('kind') or not attrs.get('step'):
+#                 raise serializers.ValidationError('部分复机必须填写复机设备、机种、站点')
+#         # 全部复机
+#         elif not partial:
+#             if attrs.get('eq') or attrs.get('kind') or attrs.get('step'):
+#                 raise serializers.ValidationError('全部复机不需要复机设备、机种、站点')
+#
+#         return attrs
+#
+#     def create(self, validated_data):
+#         order = validated_data.get('order')
+#         user = validated_data.get('user')
+#
+#         if order.status != '4' and order.status != '7' and order.status != '8':
+#             # raise serializers.ValidationError(f'{order.get_status_display()}, 不允许复机申请')
+#             raise PermissionDenied(f'{order.get_status_display()}, 不允许复机申请')
+#
+#         try:
+#             with transaction.atomic():
+#                 recover_order = RecoverOrder.objects.create(order=order,
+#                                                             user=user,
+#                                                             solution=validated_data.get('solution'),
+#                                                             explain=validated_data.get('explain'),
+#                                                             partial=validated_data.get('partial'),
+#                                                             eq=validated_data.get('eq'),
+#                                                             kind=validated_data.get('kind'),
+#                                                             step=validated_data.get('step'))
+#                 order.status = self.get_status(recover_order)
+#                 order.next = validated_data.get('next')
+#                 order.save()
+#         except Exception as e:
+#             raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
+#
+#         return recover_order
+#
+#     def update(self, instance, validated_data):
+#         order = validated_data.get('order')
+#         user = validated_data.get('user')
+#
+#         if RecoverAudit.objects.filter(order__id=instance.id).exists():
+#             raise serializers.ValidationError('已经有审核数据，不可修改')
+#
+#         try:
+#             with transaction.atomic():
+#                 instance.mod_user = user
+#                 instance.solution = validated_data.get('solution')
+#                 instance.explain = validated_data.get('explain')
+#                 instance.partial = validated_data.get('partial')
+#                 instance.eq = validated_data.get('eq')
+#                 instance.kind = validated_data.get('kind')
+#                 instance.step = validated_data.get('step')
+#                 instance.save()
+#
+#                 instance.order.status = self.get_status(instance)
+#                 instance.order.save()
+#
+#         except Exception as e:
+#             raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
+#
+#         return instance
+
+
 class RecoverOrderSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
@@ -532,7 +666,7 @@ class RecoverOrderSerializer(serializers.ModelSerializer):
         return '0'
 
     def validate_order(self, order):
-        if order.status != '4' and order.status != '7' and order.status != '8':
+        if order.status == '1' or order.status == '2' or order.status == '3':
             # raise serializers.ValidationError(f'{order.get_status_display()}, 不允许复机申请')
             raise PermissionDenied(f'{order.get_status_display()}, 不允许复机申请')
         return order
@@ -575,6 +709,73 @@ class RecoverOrderSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('全部复机不需要复机设备、机种、站点')
 
         return attrs
+
+
+
+class UpdateRecoverOrderSerializer(serializers.ModelSerializer):
+    mod_user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = RecoverOrder
+        fields = ('id', 'mod_user', 'solution', 'explain',
+                  'partial', 'eq', 'kind', 'step')
+
+    def get_status(self, recover_order):
+        # 应该重写 create 方法，改变 status
+        # 最后还是决定放在 view 中了
+        order = recover_order.order
+
+        qc_code = settings.GROUP_CODE['TFT'].get('QC')
+        qc = GroupSetting.objects.get(code=qc_code).group
+
+        if order.group is None:
+            return '6'
+        elif order.group.name != qc.name:
+            return '6'
+        elif order.group.name == qc.name:
+            return '5'
+        return '0'
+
+    def validate(self, attrs):
+        '''
+        开单工程为空：
+            任何人都可以申请复机
+        开单工程是 QC
+            责任工程和 QC 可以申请复机
+        开单工程不是 QC
+        '''
+        order = self.instance.order
+        mod_user = attrs.get('mod_user')
+
+        qc_code = settings.GROUP_CODE['TFT'].get('QC')
+        qc = GroupSetting.objects.get(code=qc_code).group
+
+        if not order.group:
+            if not mod_user.groups.filter(name=order.charge_group.name).exists():
+                # raise serializers.ValidationError('开单工程不是是 QC，只有责任工程才能申请复机')
+                raise PermissionDenied(f'开单工程不是 QC，只有责任工程才能申请复机')
+        elif order.group.name == qc.name:
+            if not mod_user.groups.filter(Q(name=order.charge_group.name) | Q(name=qc.name)).exists():
+                # raise serializers.ValidationError('开单工程是 QC，只有责任工程和 QC 才能申请复机')
+                raise PermissionDenied('开单工程是 QC，只有责任工程和 QC 才能申请复机')
+        else:
+            if not mod_user.groups.filter(name=order.charge_group.name).exists():
+                # raise serializers.ValidationError('开单工程不是 QC，只有责任工程才能申请复机')
+                raise PermissionDenied(f'开单工程不是 QC，只有责任工程才能申请复机')
+
+        partial = attrs.get('partial', False)
+        # 部分复机
+        if partial:
+            if not attrs.get('eq') or not attrs.get('kind') or not attrs.get('step'):
+                raise serializers.ValidationError('部分复机必须填写复机设备、机种、站点')
+        # 全部复机
+        elif not partial:
+            if attrs.get('eq') or attrs.get('kind') or attrs.get('step'):
+                raise serializers.ValidationError('全部复机不需要复机设备、机种、站点')
+
+        return attrs
+
+
 
 
 class QcRecoverAuditSerializer(serializers.Serializer):

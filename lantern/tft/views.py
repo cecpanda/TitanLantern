@@ -13,7 +13,7 @@ from action.utils import create_action
 from .models import Order, Audit, RecoverOrder, RecoverAudit
 from .serializers import StartOrderSerializer, RetrieveStartOrderSerializer, \
                          ProductAuditSerializer, ChargeAuditSerializer, \
-                         RecoverOrderSerializer, \
+                         RecoverOrderSerializer, UpdateRecoverOrderSerializer, \
                          QcRecoverAuditSerializer, ProductRecoverAuditSerializer
 
 from .utils import IsSameGroup, IsSameGroupRecoverOrder, IsMFGUser
@@ -147,11 +147,18 @@ class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return RecoverOrderSerializer
+        if self.action == 'update':
+            return UpdateRecoverOrderSerializer
+        return self.serializer_class
+
     def get_permissions(self):
         if self.action == 'create':
             return [IsAuthenticated(), DjangoModelPermissions()]
         elif self.action == 'update':
-            return [IsAuthenticated(), IsSameGroupRecoverOrder()]
+            return [IsAuthenticated(), DjangoModelPermissions()]
         return [permission() for permission in self.permission_classes]
 
     def create(self, request, *args, **kwargs):
@@ -184,16 +191,19 @@ class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
+        order = instance.order
+        order.status = serializer.get_status(instance)
+        order.save()
+
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # forcibly invalidate the prefetch cache on the instance.
             instance._prefetched_objects_cache = {}
 
         return Response({'id': instance.id,
-                         'status_code': instance.status,
-                         'status': instance.get_status_display()})
-
-
+                         'order_id': order.id,
+                         'status_code': order.status,
+                         'status': order.get_status_display()})
 
 
 
