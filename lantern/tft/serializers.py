@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from rest_framework import status
 from rest_framework import serializers
@@ -10,6 +11,9 @@ from rest_framework.exceptions import PermissionDenied
 from .models import Order, ID, Report, Remark, Audit, RecoverOrder, RecoverAudit
 from account.serializers import UserOfGroupSerializer, GroupSerializer
 from account.models import GroupSetting
+
+
+UserModel = get_user_model()
 
 
 class StartOrderSerializer(serializers.ModelSerializer):
@@ -897,3 +901,68 @@ class ProductRecoverAuditSerializer(serializers.Serializer):
             raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
 
         return recover_audit
+
+
+# Remark create retrieve
+
+class CreateRemarkSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = Remark
+        fields = ('user', 'order', 'content')
+
+
+# Order Serializer
+class UserOrderSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserModel
+        fields = ('username', 'realname')
+
+class AuditSerializer(serializers.ModelSerializer):
+    p_signer = UserOrderSerializer()
+    c_signer = UserOrderSerializer()
+
+    class Meta:
+        model = Audit
+        fields = ('p_signer', 'p_time', 'recipe_close', 'recipe_confirm',
+                  'c_signer', 'c_time', 'rejected', 'reason', 'created')
+
+
+class QueryRecoverAuditSerializer(serializers.ModelSerializer):
+    qc_signer = UserOrderSerializer()
+    p_signer = UserOrderSerializer()
+
+    class Meta:
+        model = RecoverAudit
+        fields = ('qc_signer', 'qc_time', 'p_signer', 'p_time', 'rejected', 'reason')
+
+class QueryRecoverOrderSerializer(serializers.ModelSerializer):
+    audit = QueryRecoverAuditSerializer()
+
+    class Meta:
+        model = RecoverOrder
+        fields = ('id', 'user', 'created', 'mod_user', 'modified',
+                  'solution', 'explain', 'partial', 'eq', 'kind', 'step', 'audit')
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()
+    user = UserOrderSerializer()
+    group = GroupSerializer()
+    charge_group = GroupSerializer()
+    startaudit = AuditSerializer()
+    recoverorders = QueryRecoverOrderSerializer(many=True)
+    reports = ReportSerializer(many=True)
+    remarks = RemarkSerializer(many=True)
+
+    class Meta:
+        model = Order
+        fields = ('id', 'status', 'next', 'user', 'group', 'created', 'mod_user', 'modified',
+                  'found_step', 'found_time', 'charge_group', 'eq', 'kind', 'step', 'reason',
+                  'users', 'charge_users', 'desc', 'start_time', 'end_time', 'lot_num', 'lots',
+                  'condition', 'defect_type',
+                  'startaudit', 'recoverorders', 'reports', 'remarks')
+    def get_status(self, obj):
+        return {'code': obj.status, 'desc': obj.get_status_display()}

@@ -8,15 +8,19 @@ from rest_framework.permissions import IsAuthenticated, \
                                        DjangoModelPermissionsOrAnonReadOnly
 from rest_framework.decorators import action
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
 
 from action.utils import create_action
-from .models import Order, Audit, RecoverOrder, RecoverAudit
+from .models import Order, Audit, RecoverOrder, RecoverAudit, Remark
 from .serializers import StartOrderSerializer, RetrieveStartOrderSerializer, \
                          ProductAuditSerializer, ChargeAuditSerializer, \
                          RecoverOrderSerializer, UpdateRecoverOrderSerializer, \
-                         QcRecoverAuditSerializer, ProductRecoverAuditSerializer
+                         QcRecoverAuditSerializer, ProductRecoverAuditSerializer, \
+                         RemarkSerializer, CreateRemarkSerializer, \
+                         OrderSerializer
 
-from .utils import IsSameGroup, RecoverOrderIsSameGroup, IsMFGUser
+from .utils import IsSameGroup, RecoverOrderIsSameGroup, IsMFGUser, OrderPagination, OrderFilter
 
 
 class StartOrderViewSet(CreateModelMixin,
@@ -76,7 +80,7 @@ class StartOrderViewSet(CreateModelMixin,
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = self.perform_create(serializer)
-        create_action(request.user, '开单', order)
+        create_action(request.user, '开停机单', order, limit=False)
         # headers = self.get_success_headers(serializer.data)
         return Response({'id': order.id, 'status_code': order.status, 'status': order.get_status_display()},
                         status=status.HTTP_201_CREATED)
@@ -90,7 +94,7 @@ class StartOrderViewSet(CreateModelMixin,
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        create_action(request.user, '修改', instance)
+        create_action(request.user, '修改', instance, limit=False)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
@@ -129,7 +133,7 @@ class AuditViewSet(GenericViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
-        create_action(request.user, '审核', order)
+        create_action(request.user, '审核', order, limit=False)
         return Response({'id': order.id, 'status_code': order.status, 'status': order.get_status_display()})
 
     @action(methods=['post', 'put'], detail=False, url_path='charge', url_name='charge')
@@ -137,7 +141,7 @@ class AuditViewSet(GenericViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         order = serializer.save()
-        create_action(request.user, '审核', order)
+        create_action(request.user, '审核', order, limit=False)
         return Response({'id': order.id, 'status_code': order.status, 'status': order.get_status_display()})
 
 
@@ -172,7 +176,7 @@ class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
         order.save()
 
         # 这个地方有问题，两分钟内重复操作不记录
-        create_action(request.user, '申请复机', order)
+        create_action(request.user, '申请复机', order, limit=False)
 
         headers = self.get_success_headers(serializer.data)
         return Response({'id': recover_order.id,
@@ -194,6 +198,8 @@ class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
         order = instance.order
         order.status = serializer.get_status(instance)
         order.save()
+
+        create_action(request.user, '修改复机', order, limit=False)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
@@ -228,7 +234,7 @@ class RecoverAuditViewSet(GenericViewSet):
         recover_order = recover_audit.recover_order
         recover_order.order.status = serializer.get_status(recover_audit)
         recover_order.order.save()
-        create_action(request.user, '审核', recover_order.order)
+        create_action(request.user, '审核', recover_order.order, limit=False)
 
         return Response({'id': recover_order.id,
                          'order_id': recover_order.order.id,
@@ -243,7 +249,7 @@ class RecoverAuditViewSet(GenericViewSet):
         recover_order = recover_audit.recover_order
         recover_order.order.status = serializer.get_status(recover_audit)
         recover_order.order.save()
-        create_action(request.user, '审核', recover_order.order)
+        create_action(request.user, '审核', recover_order.order, limit=False)
 
         return Response({'id': recover_order.id,
                          'order_id': recover_order.order.id,
@@ -251,7 +257,46 @@ class RecoverAuditViewSet(GenericViewSet):
                         status=status.HTTP_200_OK)
 
 
+class RemarkViewSet(CreateModelMixin,
+                    ListModelMixin,
+                    GenericViewSet):
+    queryset = Remark.objects.all()
+    serializer_class = RemarkSerializer
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CreateRemarkSerializer
+        if self.action == 'list':
+            return RemarkSerializer
+        return self.serializer_class
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [IsAuthenticated(), DjangoModelPermissions()]
+        return [permission() for permission in self.permission_classes]
+
+    def list(self, request, *args, **kwargs):
+        order_id = request.query_params.get('order')
+        if not order_id:
+            return Response({'detail': '请传入 order 参数'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            order = Order.objects.get(id=order_id)
+        except Exception as e:
+            return Response({'detail': '未找到 order'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer(order.remarks.all(), many=True)
+        return Response(serializer.data)
+
+
 class OrderViewSet(ListModelMixin,
                    RetrieveModelMixin,
                    GenericViewSet):
-    pass
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
+    pagination_class = OrderPagination
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filter_class = OrderFilter
+    search_fields = ('$user__username', '$user__realname')
+    ordering_fields = ('created',)

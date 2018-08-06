@@ -2,16 +2,17 @@ import xadmin
 
 from .models import ID, Order, Audit, \
                     RecoverOrder, RecoverAudit, \
-                    Report, Remark
+                    Report, Remark, \
+                    Shortcut, ShortcutContent
 
-
-class EqKindAdmin(object):
-    list_display = ['name', 'group']
-    # list_filter = []
-    # search_fields = []
-
-class EqAdmin(object):
-    list_display = ['name', 'kind']
+#
+# class EqKindAdmin(object):
+#     list_display = ['name', 'group']
+#     # list_filter = []
+#     # search_fields = []
+#
+# class EqAdmin(object):
+#     list_display = ['name', 'kind']
 
 
 class OrderAdmin(object):
@@ -36,9 +37,13 @@ class RecoverAuditAdmin(object):
 #
 # xadmin.site.register(Lot)
 
+class ShortcutAdmin(object):
+    list_display = ('name', )
 
-class FlowAdmin(object):
-    list_display = ['order', 'pre_node', 'next_node']
+
+
+class ShortcutContentAdmin(object):
+    list_display = ('name', 'content')
 
 
 xadmin.site.register(ID)
@@ -48,3 +53,5 @@ xadmin.site.register(RecoverOrder, RecoverOrderAdmin)
 xadmin.site.register(RecoverAudit, RecoverAuditAdmin)
 xadmin.site.register(Report)
 xadmin.site.register(Remark)
+# xadmin.site.register(Shortcut, ShortcutAdmin)
+xadmin.site.register(ShortcutContent, ShortcutContentAdmin)

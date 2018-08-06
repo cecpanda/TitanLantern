@@ -8,7 +8,12 @@ from django_filters import rest_framework as filters
 from .models import Action
 
 
-def create_action(user, verb, target=None):
+def create_action(user, verb, target=None, limit=True):
+    if not limit:
+        action = Action(user=user, verb=verb, target=target)
+        action.save()
+        return True
+
     # Check for any similar action made in the last minute
     now = timezone.now()
     last_minute = now - datetime.timedelta(seconds=60)
@@ -30,7 +35,7 @@ class ActionPagination(PageNumberPagination):
     page_size = 30
     page_size_query_param = 'page-size'
     page_query_param = "page"
-    max_page_size = 100.
+    max_page_size = 100
 
 
 class ActionFilter(filters.FilterSet):
