@@ -46,7 +46,7 @@ export default {
       }
     }
     return {
-      loginVisible: false,
+      loginVisible: true,
       width: '33%',
       labelWidth: '15%',
       form: {

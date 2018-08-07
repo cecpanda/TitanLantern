@@ -141,10 +141,10 @@
             <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.condition">
             </el-input>
           </el-form-item>
-          <el-form-item label="批注" prop='remark'>
+          <!-- <el-form-item label="批注" prop='remark'>
             <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.remark">
             </el-input>
-          </el-form-item>
+          </el-form-item> -->
         </el-col>
         <el-col :span='8'>
           <el-form-item label="受害批次数" prop='lot_num'>
@@ -223,7 +223,7 @@ export default {
         lot_num: '',
         lots: '',
         condition: '',
-        remark: '',
+        // remark: '',
         defect_type: '',
         reports: []
       },
@@ -275,10 +275,10 @@ export default {
         condition: [
           { required: true, message: '请输入复机条件', trigger: 'blur' },
           { min: 1, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
-        ],
-        remark: [
-          { min: 0, max: 300, message: '长度不能超过 300 个字符', trigger: 'blur' }
         ]
+        // remark: [
+        //   { min: 0, max: 300, message: '长度不能超过 300 个字符', trigger: 'blur' }
+        // ]
       },
       date: new Date()
     }

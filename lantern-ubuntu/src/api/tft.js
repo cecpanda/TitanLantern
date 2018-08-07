@@ -85,3 +85,15 @@ export const startOrder = (order) => {
     // }
   })
 }
+
+// query orders
+
+export const getUserStartOrders = (page, pageSize, username) => {
+  return axios.get(`${host}/tft/order/query/`, {
+    params: {
+      page: page,
+      'page-size': pageSize,
+      username: username
+    }
+  })
+}

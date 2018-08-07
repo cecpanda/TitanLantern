@@ -40,11 +40,6 @@ class UserViewSet(ListModelMixin,
     ordering_fields = ('username', 'realname')
 
     def get_serializer_class(self):
-        assert self.serializer_class is not None, (
-            "'%s' should either include a `serializer_class` attribute, "
-            "or override the `get_serializer_class()` method."
-            % self.__class__.__name__
-        )
         if self.action == 'change_password':
             return PasswordSerializer
         elif self.action == "change_profile":

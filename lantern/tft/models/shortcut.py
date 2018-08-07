@@ -14,7 +14,7 @@ class Shortcut(models.Model):
 
 class ShortcutContent(models.Model):
     name = models.ForeignKey(Shortcut, related_name='contents', on_delete=models.CASCADE, verbose_name='标题')
-    content = models.CharField('内容', max_length=30)
+    content = models.CharField('内容', max_length=50)
 
     class Meta:
         verbose_name = '快捷内容'

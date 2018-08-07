@@ -12,13 +12,13 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
 from action.utils import create_action
-from .models import Order, Audit, RecoverOrder, RecoverAudit, Remark
+from .models import Order, Audit, RecoverOrder, RecoverAudit, Remark, Shortcut
 from .serializers import StartOrderSerializer, RetrieveStartOrderSerializer, \
                          ProductAuditSerializer, ChargeAuditSerializer, \
                          RecoverOrderSerializer, UpdateRecoverOrderSerializer, \
                          QcRecoverAuditSerializer, ProductRecoverAuditSerializer, \
                          RemarkSerializer, CreateRemarkSerializer, \
-                         OrderSerializer
+                         OrderSerializer, ShortcutSerializer
 
 from .utils import IsSameGroup, RecoverOrderIsSameGroup, IsMFGUser, OrderPagination, OrderFilter
 
@@ -287,6 +287,11 @@ class RemarkViewSet(CreateModelMixin,
 
         serializer = self.get_serializer(order.remarks.all(), many=True)
         return Response(serializer.data)
+
+
+class ShortcutViewSet(ListModelMixin, GenericViewSet):
+    queryset = Shortcut.objects.all()
+    serializer_class = ShortcutSerializer
 
 
 class OrderViewSet(ListModelMixin,

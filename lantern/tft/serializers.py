@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
-from .models import Order, ID, Report, Remark, Audit, RecoverOrder, RecoverAudit
+from .models import Order, ID, Report, Remark, Audit, RecoverOrder, RecoverAudit, Shortcut, ShortcutContent
 from account.serializers import UserOfGroupSerializer, GroupSerializer
 from account.models import GroupSetting
 
@@ -25,7 +25,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
     # 下面的这两个字段甚至影响了 retrieveserializer 的 foramt=api 的展示，百思不得其解
     charge_group = serializers.IntegerField(label='责任工程')
     reports = serializers.ListField(label='调查报告', child=serializers.FileField(), required=False)
-    remark = serializers.CharField(label='生产批注', max_length=500, required=False)
+    # remark = serializers.CharField(label='生产批注', max_length=500, required=False)
 
     class Meta:
         model = Order
@@ -35,7 +35,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
                   'users', 'charge_users',
                   'desc', 'start_time', 'end_time', 'lot_num', 'lots',
                   'condition', 'defect_type',
-                  'reports', 'remark')
+                  'reports')#, 'remark')
         read_only_fields = ('id', 'status')
 
     # 改成字符串了
@@ -191,10 +191,10 @@ class StartOrderSerializer(serializers.ModelSerializer):
                     for file in reports:
                         Report.objects.create(order=order, file=file)
 
-                # remark
-                remark = validated_data.get('remark')
-                if remark:
-                    Remark.objects.create(user=user, order=order, content=remark)
+                # # remark
+                # remark = validated_data.get('remark')
+                # if remark:
+                #     Remark.objects.create(user=user, order=order, content=remark)
 
         except Exception as e:
             raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
@@ -249,10 +249,10 @@ class StartOrderSerializer(serializers.ModelSerializer):
                 if reports:
                     for file in reports:
                         Report.objects.create(order=instance, file=file)
-                # remark
-                remark = validated_data.get('remark')
-                if remark:
-                    Remark.objects.create(user=user, order=instance, content=remark)
+                # # remark
+                # remark = validated_data.get('remark')
+                # if remark:
+                #     Remark.objects.create(user=user, order=instance, content=remark)
 
         except Exception as e:
             raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
@@ -911,6 +911,25 @@ class CreateRemarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Remark
         fields = ('user', 'order', 'content')
+
+
+# Shortcut list
+
+class ShortcutContentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ShortcutContent
+        fields = ('content',)
+
+
+class ShortcutSerializer(serializers.ModelSerializer):
+    contents = serializers.SerializerMethodField()
+    class Meta:
+        model = Shortcut
+        fields = ('name', 'contents')
+
+    def get_contents(self, obj):
+        return [i.content for i in obj.contents.all()]
 
 
 # Order Serializer
