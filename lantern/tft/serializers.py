@@ -1,3 +1,5 @@
+import pathlib
+
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
@@ -261,10 +263,14 @@ class StartOrderSerializer(serializers.ModelSerializer):
 
 
 class ReportSerializer(serializers.ModelSerializer):
+    # file = serializers.SerializerMethodField()
 
     class Meta:
         model = Report
         fields = ('file',)
+
+    def get_file(self, obj):
+        return self.context['request'].build_absolute_uri(obj.file.url)
 
 
 class RemarkSerializer(serializers.ModelSerializer):
@@ -973,7 +979,8 @@ class OrderSerializer(serializers.ModelSerializer):
     charge_group = GroupSerializer()
     startaudit = AuditSerializer()
     recoverorders = QueryRecoverOrderSerializer(many=True)
-    reports = ReportSerializer(many=True)
+    # reports = ReportSerializer(many=True)
+    reports = serializers.SerializerMethodField()
     remarks = RemarkSerializer(many=True)
 
     class Meta:
@@ -985,3 +992,8 @@ class OrderSerializer(serializers.ModelSerializer):
                   'startaudit', 'recoverorders', 'reports', 'remarks')
     def get_status(self, obj):
         return {'code': obj.status, 'desc': obj.get_status_display()}
+
+    def get_reports(self, obj):
+        return {
+            pathlib.PurePath(report.file.name).name: self.context['request'].build_absolute_uri(report.file.url) for report in obj.reports.all()
+        }

@@ -1,10 +1,10 @@
 <template>
   <div>
     <template>
-      <el-table :data="orders" style="width: 100%" :border='true'>
+      <el-table :data="orders" style="width: 100%" border stripe @row-dblclick='rowdbClick'>
         <el-table-column type="expand">
           <template slot-scope="props">
-            <el-form label-position="left" inline class="demo-table-expand">
+            <el-form label-position="left" inline class="table-expand">
               <el-form-item label="编号">
                 <span>{{ props.row.id }}</span>
               </el-form-item>
@@ -78,10 +78,13 @@
                 <span>{{ props.row.defect_type }}</span>
               </el-form-item>
               <el-form-item label="调查报告">
-                <span>{{ props.row.reports }}</span>
+                <span v-for='(value, key) of props.row.reports' :key='key'>
+                  <a :href='value'>{{ key }}</a> <br>
+                </span>
               </el-form-item>
               <el-form-item label="最新批注">
-                <span>{{ props.row.remarks[0].content }}</span>
+                <span v-if='props.row.remarks.length'>{{ props.row.remarks[0].content }}</span>
+                <span v-else></span>
               </el-form-item>
             </el-form>
           </template>
@@ -127,7 +130,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import { formatDate } from '@/common/js/date.js'
-import { getUserStartOrders } from '@/api/tft'
+import { getUserOrders } from '@/api/tft'
 
 export default {
   name: 'MyStart',
@@ -146,7 +149,7 @@ export default {
   },
   methods: {
     getOrders () {
-      getUserStartOrders(this.page, this.pageSize, this.username)
+      getUserOrders(this.page, this.pageSize, this.username)
         .then((res) => {
           this.count = res.data.count
           this.orders = res.data.results
@@ -161,6 +164,9 @@ export default {
     formatDate (row, column, time, index) {
       let date = new Date(time)
       return formatDate(date, 'yyyy-MM-dd hh:mm:ss')
+    },
+    rowdbClick (row, event) {
+      this.$router.push({path: `/tft/order/detail/${row.id}`})
     }
   },
   filters: {
@@ -176,15 +182,15 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-.el-table-column
-  border 1px solid #ccc
-.demo-table-expand
+.table-expand
   font-size: 0
-.demo-table-expand label
+.table-expand label
   width 90px
-  color #99a9bf
-.demo-table-expand .el-form-item
+  color #5AA1EB
+.table-expand .el-form-item
   margin-right: 0
   margin-bottom: 0
   width: 25%
+  span
+    color #5AA1EB
 </style>

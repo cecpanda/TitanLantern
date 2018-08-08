@@ -13,6 +13,7 @@ import Summary from '@/tft/components/Summary'
 import StartOrder from '@/tft/components/Start'
 import MyStart from '@/tft/components/MyStart'
 import AuditOrder from '@/tft/components/Audit'
+import Detail from '@/tft/components/Detail'
 // import { jwtVerify } from '@/api/user'
 
 Vue.use(Router)
@@ -70,6 +71,10 @@ const router = new Router({
         }, {
           path: 'audit',
           component: AuditOrder
+        }, {
+          path: 'detail/:id',
+          component: Detail,
+          props: true
         }
       ]
     }

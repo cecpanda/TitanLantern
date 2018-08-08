@@ -351,6 +351,7 @@ export default {
                 message: res.data,
                 type: 'success'
               })
+              this.$router.push({path: '/tft/order/mystart'})
             })
             .catch((error) => {
               this.$notify({
