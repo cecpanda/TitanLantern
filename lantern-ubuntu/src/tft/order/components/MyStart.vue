@@ -188,9 +188,13 @@ export default {
   width 90px
   color #5AA1EB
 .table-expand .el-form-item
-  margin-right: 0
+  margin-right: 10px
   margin-bottom: 0
-  width: 25%
+  width: 23%
+  overflow hidden
+  text-overflow ellipsis
+  white-space nowrap
+  word-break keep-all
   span
-    color #5AA1EB
+    color #5AA1E2
 </style>

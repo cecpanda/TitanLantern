@@ -34,9 +34,9 @@
         </el-menu-item>
         <el-menu-item index="/tft/order">
           <i class='el-icon-document'></i>
-          <span slot="title">图标统计</span>
+          <span slot="title">summary</span>
         </el-menu-item>
-        <el-menu-item index="4">
+        <el-menu-item index="/tft/order/query">
           <i class='el-icon-document'></i>
           <span slot="title">报表查询</span>
         </el-menu-item>
@@ -58,11 +58,14 @@ export default {
   name: 'Order',
   data () {
     return {
-      isCollapse: false
+      isCollapse: false,
+      defaultActive: '',
+      activeMenu: ''
     }
   },
   methods: {
     handleSelect (index, indexPath) {
+      console.log(index, indexPath)
     },
     handleOpen (key, keyPath) {
       console.log(key, keyPath)
@@ -75,6 +78,8 @@ export default {
 </script>
 
 <style lang='stylus' scoped>
+.active-menu
+  font-size 0.9rem
 .el-main
 .el-aside
   border 1px solid #283D52

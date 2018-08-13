@@ -25,7 +25,7 @@
       </el-submenu>
       <el-menu-item index="4">SL</el-menu-item>
       <el-menu-item index="5" disabled>禁止</el-menu-item>
-      <!-- <el-submenu index="6" class='login' v-if='isLogin && username'>
+      <el-submenu index="6" class='login' v-if='isLogin && username'>
         <template slot="title">
           <img :src="user.avatar" /> &nbsp;
           {{ username }}
@@ -36,7 +36,7 @@
       </el-submenu>
       <el-menu-item index="7" class='login' v-else>
         <Login></Login>
-      </el-menu-item> -->
+      </el-menu-item>
     </el-menu>
 </template>
 
