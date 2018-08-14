@@ -14,6 +14,7 @@ import StartOrder from '@/tft/order/components/Start'
 import MyStart from '@/tft/order/components/MyStart'
 import AuditOrder from '@/tft/order/components/Audit'
 import Detail from '@/tft/order/components/Detail'
+import Query from '@/tft/order/components/Query'
 // import { jwtVerify } from '@/api/user'
 
 Vue.use(Router)
@@ -75,6 +76,9 @@ const router = new Router({
           path: 'detail/:id',
           component: Detail,
           props: true
+        }, {
+          path: 'query',
+          component: Query
         }
       ]
     }

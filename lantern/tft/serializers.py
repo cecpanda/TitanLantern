@@ -975,6 +975,7 @@ class QueryRecoverOrderSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     user = UserOrderSerializer()
+    mod_user = UserOrderSerializer()
     group = GroupSerializer()
     charge_group = GroupSerializer()
     startaudit = AuditSerializer()

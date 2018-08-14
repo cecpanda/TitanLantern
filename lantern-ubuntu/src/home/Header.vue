@@ -85,6 +85,9 @@ export default {
   },
   mounted () {
     this.getUser()
+  },
+  beforeUpdate () {
+    this.getUser()
   }
 }
 </script>
