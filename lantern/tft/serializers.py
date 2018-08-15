@@ -965,6 +965,8 @@ class QueryRecoverAuditSerializer(serializers.ModelSerializer):
 
 class QueryRecoverOrderSerializer(serializers.ModelSerializer):
     audit = QueryRecoverAuditSerializer()
+    user = UserOrderSerializer()
+    mod_user = UserOrderSerializer()
 
     class Meta:
         model = RecoverOrder
