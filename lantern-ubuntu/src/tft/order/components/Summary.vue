@@ -1,15 +1,13 @@
 <template>
-  <div>
-    Summary
-  </div>
+  <div>Summary</div>
 </template>
 
 <script>
 export default {
-  name: 'StartOrder'
+  name: 'Summary'
 }
 </script>
 
-<style lang="stylus" scoped>
+<style lang='stylus' scoped>
 
 </style>

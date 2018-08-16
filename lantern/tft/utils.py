@@ -19,10 +19,12 @@ class OrderPagination(PageNumberPagination):
 class OrderFilter(filters.FilterSet):
     username = filters.CharFilter(field_name='user__username', lookup_expr='iexact')
     realname = filters.CharFilter(field_name='user__realname', lookup_expr='iexact')
+    group = filters.CharFilter(field_name='group__name', lookup_expr='iexact')
+    charge_group = filters.CharFilter(field_name='charge_group__name', lookup_expr='iexact')
 
     class Meta:
         model = Order
-        fields = ('username', 'realname')
+        fields = ('username', 'realname', 'group', 'charge_group')
 
 
 
