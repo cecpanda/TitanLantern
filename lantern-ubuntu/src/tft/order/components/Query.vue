@@ -1,6 +1,36 @@
 <template>
   <div class='table'>
     <h1>报表查询</h1>
+    <el-row class='search'>
+      <el-col :span='12' :offset='12'>
+        <el-input v-model='search' placeholder="请输入内容" @keyup.enter.native='searching'>
+          <el-select v-model="select" slot="prepend" placeholder="请选择">
+            <el-option
+              v-for='(option, index) in selectOptions'
+              :label="option.label"
+              :value="option.value"
+              :key='index'
+            ></el-option>
+          </el-select>
+          <el-button
+            slot="append"
+            icon="el-icon-search"
+            @click='searching'
+          ></el-button>
+          <el-button
+            slot="append"
+            icon="el-icon-message"
+            @click="openSearchMsg"
+          ></el-button>
+        </el-input>
+      </el-col>
+    </el-row>
+    <el-row v-if='searchFlag && searchText' class='searchConent'>
+      <el-col :span='12' :offset='12'>
+        搜索内容: {{ this.searchText }} <br>
+        发现数量: {{ this.count }}
+      </el-col>
+    </el-row>
     <el-table
       :data="orders"
       style="width: 100%"
@@ -35,6 +65,7 @@
         min-width='100'
         :filters='chargeGroupFilters'
         :filter-method='filterChargeGroup'
+        column-key='charge_group'
       ></el-table-column>
       <el-table-column prop="eq" label="停机设备" min-width='100'></el-table-column>
       <el-table-column prop="kind" label="停机机种" min-width='100'></el-table-column>
@@ -47,7 +78,7 @@
       @current-change="handleCurrentChange"
       :current-page.sync="page"
       :page-size='pageSize'
-      layout="prev, pager, next, jumper"
+      layout="total, prev, pager, next, jumper"
       :total="count"
     >
     </el-pagination>
@@ -63,13 +94,28 @@ export default {
   data () {
     return {
       page: 1,
-      pageSize: 10,
+      pageSize: 3,
       count: null,
-      orders: []
+      orders: [],
+      selectOptions: [
+        {label: '所有', value: 'all'},
+        {label: '工号', value: 'username'},
+        {label: '真名', value: 'realname'},
+        {label: '开单工程', value: 'group'},
+        {label: '责任工程', value: 'charge_group'}
+      ],
+      search: '',
+      select: 'all',
+      searchFlag: false,
+      searchText: '', // 上次搜索的内容，直接使用 search 会出现动态效果
+      ordering: '',
+      filters: {}
     }
   },
   computed: {
     groupFilters () {
+      // 在分页下得到不想要的结果
+      // 只能过滤本页，切换页后，过滤状态保留
       let filters = []
       let values = new Set()
       this.orders.forEach((order) => {
@@ -94,7 +140,7 @@ export default {
   },
   methods: {
     getOrders () {
-      getOrders(this.page, this.pageSize)
+      getOrders({page: this.page, 'page-size': this.pageSize})
         .then((res) => {
           this.count = res.data.count
           this.orders = res.data.results
@@ -103,8 +149,21 @@ export default {
           console.log(error)
         })
     },
-    handleCurrentChange (val) {
-      this.getOrders()
+    openSearchMsg () {
+      this.$notify({
+        title: '检索说明',
+        type: 'info',
+        customClass: 'search-msg',
+        dangerouslyUseHTMLString: true,
+        message: `<strong>搜索</strong>：所有数据 <br>
+                  <strong>所有</strong>：工号、真名的模糊匹配 <br>
+                  <strong>其他</strong>：忽略大小写的精确匹配 <br><br>
+                  <strong>过滤</strong>：当前表格中的所有页数据<br><br>
+                  <strong>排序</strong>：当前表格中的所有页数据 <br>
+                  `,
+        position: 'top-left',
+        offset: 150
+      })
     },
     formatDate (row, column, time, index) {
       let date = new Date(time)
@@ -143,29 +202,76 @@ export default {
     },
     cellMouseLeave (row, column, cell, event) {
     },
+    searching () {
+      // 搜索后，从第一页开始显示
+      this.page = 1
+      let params = {page: this.page, 'page-size': this.pageSize}
+      if (this.select === 'username') {
+        params.username = this.search
+      } else if (this.select === 'realname') {
+        params.realname = this.search
+      } else if (this.select === 'group') {
+        params.group = this.search
+      } else if (this.select === 'charge_group') {
+        params.charge_group = this.search
+      } else {
+        params.search = this.search
+      }
+      getOrders(params)
+        .then((res) => {
+          // searchFlag
+          this.searchFlag = true
+          this.searchText = this.search
+          this.count = res.data.count
+          this.orders = res.data.results
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    handleCurrentChange (val) {
+      let params = {page: this.page, 'page-size': this.pageSize}
+      if (this.searchFlag && this.searchText) {
+        params.search = this.searchText
+      }
+      if (this.ordering) {
+        params.ordering = this.ordering
+      }
+      getOrders(params)
+        .then((res) => {
+          this.count = res.data.count
+          this.orders = res.data.results
+        })
+    },
     sortChange ({column, prop, order}) {
-      console.log(order)
+      let params = {page: this.page, 'page-size': this.pageSize}
+      if (this.searchFlag && this.searchText) {
+        params.search = this.searchText
+      }
       if (order === 'descending') {
         prop = '-' + prop
       }
-      getOrders(this.page, this.pageSize, prop)
+      this.ordering = prop
+      params.ordering = prop
+      getOrders(params)
         .then((res) => {
-          this.orders = res.data.results
           this.count = res.data.count
+          this.orders = res.data.results
         })
         .catch((error) => {
           console.log(error)
         })
     },
     filterGroup (value, row, column) {
-      console.log('filter')
-      return row.group.name === value
+      return true
+      // return row.group.name === value
     },
     filterChargeGroup (value, row, column) {
       return row.charge_group.name === value
     },
     filterChange (filters) {
-      console.log('filters')
+      console.log('change')
+      console.log(filters)
     }
   },
   filters: {
@@ -182,6 +288,14 @@ export default {
 
 <style lang='stylus'>
 @import '~styles/varibles'
+.search
+  margin 20px 0
+  .el-select
+    width 100px
+.search-msg
+  background rgba(255, 255, 255, 0.7)
+.searchConent
+  margin-bottom 20px
 .table-header
   th
     font-size 1.1em

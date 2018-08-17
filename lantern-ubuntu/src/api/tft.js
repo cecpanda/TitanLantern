@@ -87,24 +87,19 @@ export const startOrder = (order) => {
 }
 
 // query orders
-
-export const getOrders = (page, pageSize, ordering) => {
+// paarams = {
+//   page: page,
+//   'page-size': pageSize,
+//   username: username,
+//   realname: realname,
+//   group: group,
+//   charge_group: charge_group,
+//   search: search,
+//   ordering: ordering
+// }
+export const getOrders = (params) => {
   return axios.get(`${host}/tft/order/query/`, {
-    params: {
-      page: page,
-      'page-size': pageSize,
-      ordering: ordering
-    }
-  })
-}
-
-export const getUserOrders = (page, pageSize, username) => {
-  return axios.get(`${host}/tft/order/query/`, {
-    params: {
-      page: page,
-      'page-size': pageSize,
-      username: username
-    }
+    params: params
   })
 }
 

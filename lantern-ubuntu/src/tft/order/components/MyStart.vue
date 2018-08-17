@@ -130,7 +130,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import { formatDate } from '@/common/js/date.js'
-import { getUserOrders } from '@/api/tft'
+import { getOrders } from '@/api/tft'
 
 export default {
   name: 'MyStart',
@@ -149,7 +149,7 @@ export default {
   },
   methods: {
     getOrders () {
-      getUserOrders(this.page, this.pageSize, this.username)
+      getOrders({page: this.page, 'page-size': this.pageSize, username: this.username})
         .then((res) => {
           this.count = res.data.count
           this.orders = res.data.results
@@ -197,4 +197,15 @@ export default {
   word-break keep-all
   span
     color #5AA1E2
+.table-header
+  th
+    font-size 1.1em
+    background #CFD5DA
+.el-table
+  td
+    div
+      max-height 2.2em
+      overflow hidden
+      white-space nowrap
+      text-overflow ellipsis
 </style>
