@@ -5,12 +5,18 @@
       <el-col :span='12' :offset='12'>
         <el-input v-model='search' placeholder="请输入内容" @keyup.enter.native='searching'>
           <el-select v-model="select" slot="prepend" placeholder="请选择">
-            <el-option
-              v-for='(option, index) in selectOptions'
-              :label="option.label"
-              :value="option.value"
-              :key='index'
-            ></el-option>
+            <el-option-group
+              v-for="group in selectOptions"
+              :key="group.label"
+              :label="group.label"
+            >
+              <el-option
+                v-for='option in group.options'
+                :label="option.label"
+                :value="option.value"
+                :key='option.label'
+              ></el-option>
+            </el-option-group>
           </el-select>
           <el-button
             slot="append"
@@ -25,10 +31,13 @@
         </el-input>
       </el-col>
     </el-row>
-    <el-row v-if='searchFlag && searchText' class='searchConent'>
+    <el-row
+      v-if='searchFlag && Object.getOwnPropertyNames(this.searchText).length'
+      class='searchConent'
+    >
       <el-col :span='12' :offset='12'>
-        搜索内容: {{ this.searchText }} <br>
-        发现数量: {{ this.count }}
+        <i class="el-icon-info"></i> {{ searchText.label }}: {{ searchText.text }} <br>
+        <i class="el-icon-info"></i> 数量: {{ count }}
       </el-col>
     </el-row>
     <el-table
@@ -97,22 +106,69 @@ export default {
       pageSize: 3,
       count: null,
       orders: [],
-      selectOptions: [
-        {label: '所有', value: 'all'},
-        {label: '工号', value: 'username'},
-        {label: '真名', value: 'realname'},
-        {label: '开单工程', value: 'group'},
-        {label: '责任工程', value: 'charge_group'}
-      ],
+      // 留意 methods 中的 valueToLabel
+      selectOptions: [{
+        label: '模糊匹配',
+        options: [
+          {label: '所有', value: 'all'}
+        ]
+      }, {
+        label: '精确匹配',
+        options: [
+          {label: '工号', value: 'username'},
+          {label: '真名', value: 'realname'},
+          {label: '开单工程', value: 'group'},
+          {label: '责任工程', value: 'charge_group'}
+        ]
+      }],
       search: '',
       select: 'all',
       searchFlag: false,
-      searchText: '', // 上次搜索的内容，直接使用 search 会出现动态效果
+      // 上次搜索的内容，直接使用 search 会出现动态效果,如 {label: '', value: '', text: ''}
+      searchText: {},
       ordering: '',
-      filters: {}
+      // {group: {'cvd', 'pvd'}, charge_group: {'cvd', 'pvd'}}
+      filters: {},
+      filterFlag: false
     }
   },
   computed: {
+    params () {
+      let params = {page: this.page, 'page-size': this.pageSize}
+      if (this.select === 'username') {
+        params.username = this.search
+      } else if (this.select === 'realname') {
+        params.realname = this.search
+      } else if (this.select === 'group') {
+        params.group = this.search
+      } else if (this.select === 'charge_group') {
+        params.charge_group = this.search
+      } else {
+        params.search = this.search
+      }
+      // 从 handleCurrentChange 中转移来的，与上面重复
+      // if (this.searchFlag && Object.getOwnPropertyNames(this.searchText).length) {
+      //   for (let key in this.searchText) {
+      //     if (this.searchText.hasOwnProperty(key)) {
+      //       params[key] = this.searchText[key]
+      //     }
+      //   }
+      // }
+      if (this.ordering) {
+        params.ordering = this.ordering
+      }
+      // 因为 object 的属性不能重复，需重写同一属性对应多个值的过滤 API
+      // if (this.filterFlag && Object.keys(this.filters).length) {
+      //   for (let label in Object.keys(this.filters)) {
+      //     if (this.filters[label].size) {
+      //       this.filters[label].forEach((val) => {
+
+      //       })
+      //     }
+      //   }
+      // }
+      return params
+    },
     groupFilters () {
       // 在分页下得到不想要的结果
       // 只能过滤本页，切换页后，过滤状态保留
@@ -151,13 +207,13 @@ export default {
     },
     openSearchMsg () {
       this.$notify({
-        title: '检索说明',
+        title: '检索说明（忽略大小写）',
         type: 'info',
         customClass: 'search-msg',
         dangerouslyUseHTMLString: true,
         message: `<strong>搜索</strong>：所有数据 <br>
                   <strong>所有</strong>：工号、真名的模糊匹配 <br>
-                  <strong>其他</strong>：忽略大小写的精确匹配 <br><br>
+                  <strong>其他</strong>：精确匹配 <br><br>
                   <strong>过滤</strong>：当前表格中的所有页数据<br><br>
                   <strong>排序</strong>：当前表格中的所有页数据 <br>
                   `,
@@ -202,26 +258,42 @@ export default {
     },
     cellMouseLeave (row, column, cell, event) {
     },
+    // 根据 selectOption 中的 value 得到对应的 label，用来渲染
+    valueToLabel (val) {
+      // return 不能终止 forEach 循环,
+      let label = ''
+      this.selectOptions.forEach((selectOption) => {
+        selectOption.options.forEach((option) => {
+          if (option.value === val) {
+            label = option.label
+          }
+        })
+      })
+      return label
+    },
     searching () {
       // 搜索后，从第一页开始显示
       this.page = 1
-      let params = {page: this.page, 'page-size': this.pageSize}
-      if (this.select === 'username') {
-        params.username = this.search
-      } else if (this.select === 'realname') {
-        params.realname = this.search
-      } else if (this.select === 'group') {
-        params.group = this.search
-      } else if (this.select === 'charge_group') {
-        params.charge_group = this.search
-      } else {
-        params.search = this.search
-      }
-      getOrders(params)
+      // let params = {page: this.page, 'page-size': this.pageSize}
+      // if (this.select === 'username') {
+      //   params.username = this.search
+      // } else if (this.select === 'realname') {
+      //   params.realname = this.search
+      // } else if (this.select === 'group') {
+      //   params.group = this.search
+      // } else if (this.select === 'charge_group') {
+      //   params.charge_group = this.search
+      // } else {
+      //   params.search = this.search
+      // }
+      getOrders(this.params)
         .then((res) => {
           // searchFlag
           this.searchFlag = true
-          this.searchText = this.search
+          this.searchText = {} // 清空
+          // searchText: {label: '', value: '', text: ''}
+          let label = this.valueToLabel(this.select)
+          this.searchText = {label: label, value: this.select, text: this.search}
           this.count = res.data.count
           this.orders = res.data.results
         })
@@ -230,30 +302,38 @@ export default {
         })
     },
     handleCurrentChange (val) {
-      let params = {page: this.page, 'page-size': this.pageSize}
-      if (this.searchFlag && this.searchText) {
-        params.search = this.searchText
-      }
-      if (this.ordering) {
-        params.ordering = this.ordering
-      }
-      getOrders(params)
+      // let params = {page: this.page, 'page-size': this.pageSize}
+      // if (this.searchFlag && Object.getOwnPropertyNames(this.searchText).length) {
+      //   for (let key in this.searchText) {
+      //     if (this.searchText.hasOwnProperty(key)) {
+      //       params[key] = this.searchText[key]
+      //     }
+      //   }
+      // }
+      // if (this.ordering) {
+      //   params.ordering = this.ordering
+      // }
+      getOrders(this.params)
         .then((res) => {
           this.count = res.data.count
           this.orders = res.data.results
         })
     },
     sortChange ({column, prop, order}) {
-      let params = {page: this.page, 'page-size': this.pageSize}
-      if (this.searchFlag && this.searchText) {
-        params.search = this.searchText
-      }
+      // let params = {page: this.page, 'page-size': this.pageSize}
+      // if (this.searchFlag && Object.getOwnPropertyNames(this.searchText).length) {
+      //   for (let key in this.searchText) {
+      //     if (this.searchText.hasOwnProperty(key)) {
+      //       params[key] = this.searchText[key]
+      //     }
+      //   }
+      // }
       if (order === 'descending') {
         prop = '-' + prop
       }
       this.ordering = prop
-      params.ordering = prop
-      getOrders(params)
+      // params.ordering = prop
+      getOrders(this.params)
         .then((res) => {
           this.count = res.data.count
           this.orders = res.data.results
@@ -263,15 +343,28 @@ export default {
         })
     },
     filterGroup (value, row, column) {
-      return true
+      // console.log('value:', value)
+      // console.log('row:', row)
+      // console.log('column:', column)
       // return row.group.name === value
+      return true
     },
     filterChargeGroup (value, row, column) {
-      return row.charge_group.name === value
+      // return row.charge_group.name === value
+      return true
     },
     filterChange (filters) {
       console.log('change')
-      console.log(filters)
+      // filters = {group: ['cvd', 'pvd']}
+      this.filterFlag = true
+      for (let key of (Object.keys(filters))) {
+        this.filters[key] = new Set()
+        filters[key].forEach((val) => {
+          this.filters[key].add(val)
+        })
+      }
+      // this.filters = {group: {'cvd', 'pvd'}, charge_group: {'cvd', 'pvd'}}
+      // 同一属性对应多个值的过滤 API
     }
   },
   filters: {
@@ -281,7 +374,7 @@ export default {
     }
   },
   mounted () {
-    this.getOrders()
+    this.getOrders(this.params)
   }
 }
 </script>

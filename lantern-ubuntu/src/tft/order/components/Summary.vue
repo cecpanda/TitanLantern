@@ -1,25 +1,45 @@
 <template>
   <div>Summary
-    <div style="margin-top: 15px;">
-      <el-input placeholder="请输入内容" v-model="input5" class="input-with-select">
-        <el-select v-model="select" slot="prepend" placeholder="请选择">
-          <el-option label="餐厅名" value="1"></el-option>
-          <el-option label="订单号" value="2"></el-option>
-          <el-option label="用户电话" value="3"></el-option>
-        </el-select>
-        <el-button slot="append" icon="el-icon-search"></el-button>
-      </el-input>
-    </div>
+    {{ data }}
+    <button @click='change'>hehe</button>
   </div>
 </template>
 
 <script>
+import { getOrders } from '@/api/tft'
+
 export default {
   name: 'Summary',
   data () {
     return {
-      input5: '',
-      select: ''
+      name: 'jack',
+      age: 10,
+      data: {}
+    }
+  },
+  computed: {
+    msg: {
+      get () {
+        return this.name + this.age
+      },
+      set (val) {
+      }
+    }
+  },
+  methods: {
+    change () {
+      let params = {
+        page: 1,
+        'page-size': 3,
+        group: ['cvd', 'pvd']
+      }
+      getOrders(params)
+        .then((res) => {
+          this.data = res.data.results
+        })
+        .catch((err) => {
+          console.log(err)
+        })
     }
   }
 }
