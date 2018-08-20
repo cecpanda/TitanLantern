@@ -7,47 +7,41 @@
 </head>
 
 <body>
-  <form>
-    <input type="text" value="" v-model="name" placeholder="请输入用户名">
-    <input type="text" value="" v-model="age" placeholder="请输入年龄">
-    <input type="file" @change="getFile($event)">
-    <button @click="submitForm($event)">提交</button>
-  </form>
+  <div id="app">
+    {{ selectOptions }}
+    <br><br><br>
+    <button @click='change'>change</button>
+  </div>
 
   <script>
     window.onload = function () {
       Vue.prototype.$http = axios;
       new Vue({
-        el: 'form',
+        el: '#app',
         data: {
-          name: '',
-          age: '',
-          file: ''
+          selectOptions: [{
+            label: '模糊匹配',
+            options: [
+              {label: '所有', value: 'all'}
+            ]
+          }, {
+            label: '精确匹配',
+            options: [
+              {label: '工号', value: 'username'},
+              {label: '真名', value: 'realname'},
+              {label: '开单工程', value: 'group'},
+              {label: '责任工程', value: 'charge_group'}
+            ]
+          }]
         },
         methods: {
-          getFile(event) {
-            this.file = event.target.files[0];
-            console.log(this.file);
-          },
-          submitForm(event) {
-            event.preventDefault();
-            let formData = new FormData();
-            formData.append('name', this.name);
-            formData.append('age', this.age);
-            formData.append('file', this.file);
-            console.log(formData)
-            console.log(typeof formData)
-
-            let config = {
-              headers: {
-                'Content-Type': 'multipart/form-data'
-              }
-            }
-
-            this.$http.post('/upload', formData, config).then(function (res) {
-              if (res.status === 2000) {
-                /*这里做处理*/
-              }
+          change () {
+            this.selectOptions.forEach((val) => {
+              val.options.forEach((option) => {
+                if (option.value === 'group') {
+                  
+                }
+              })
             })
           }
         }

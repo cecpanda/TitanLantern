@@ -15,7 +15,12 @@ export default {
     return false
   },
   username: state => {
-    let userInfo = JSON.parse(base64.Base64.decode(state.token.split('.')[1]))
-    return state.username || userInfo.username
+    if (state.token) {
+      var userInfo = JSON.parse(base64.Base64.decode(state.token.split('.')[1]))
+    }
+    if (userInfo) {
+      return state.username || userInfo.username
+    }
+    return state.username
   }
 }

@@ -83,6 +83,13 @@ export default {
       this.$router.push({name: 'Home'})
     }
   },
+  watch: {
+    // 否则，在登录后，不进行信息查询。
+    // 在 updated 中执行，容易四循环
+    isLogin (val, oldVal) {
+      this.getUser()
+    }
+  },
   mounted () {
     this.getUser()
   }

@@ -18,12 +18,6 @@
             我要开单
           </span>
         </el-menu-item>
-        <el-menu-item index="/tft/order/mystart">
-          <i class='el-icon-edit'></i>
-          <span slot="title">
-            我的开单
-          </span>
-        </el-menu-item>
         <el-menu-item index="/tft/order/audit">
           <i class='el-icon-star-on'></i>
           <span slot="title">
@@ -33,13 +27,24 @@
           </span>
         </el-menu-item>
         <el-menu-item index="/tft/order">
-          <i class='el-icon-document'></i>
-          <span slot="title">图标统计</span>
+          <i class='el-icon-picture-outline'></i>
+          <span slot="title">图表统计</span>
         </el-menu-item>
-        <el-menu-item index="4">
+        <!-- <el-menu-item index="/tft/order/query">
           <i class='el-icon-document'></i>
           <span slot="title">报表查询</span>
-        </el-menu-item>
+        </el-menu-item> -->
+        <el-submenu index="/tft/order/query" class='query'>
+          <template slot="title">
+            <i class="el-icon-document"></i>
+            <router-link to='/tft/order/query'>
+              <span>报表查询</span>
+            </router-link>
+          </template>
+          <el-menu-item index="/tft/order/mystart">我的停机单</el-menu-item>
+          <el-menu-item index="2-4-2">我的复机单</el-menu-item>
+          <el-menu-item index="2-4-2">我的审核单</el-menu-item>
+        </el-submenu>
         <el-radio-group v-model="isCollapse" style="margin-bottom: 20px;">
           <el-radio-button :label="false" v-if='isCollapse'>
             <i class='el-icon-d-arrow-left'></i>
@@ -58,11 +63,14 @@ export default {
   name: 'Order',
   data () {
     return {
-      isCollapse: false
+      isCollapse: false,
+      defaultActive: '',
+      activeMenu: ''
     }
   },
   methods: {
     handleSelect (index, indexPath) {
+      console.log(index, indexPath)
     },
     handleOpen (key, keyPath) {
       console.log(key, keyPath)
@@ -75,10 +83,16 @@ export default {
 </script>
 
 <style lang='stylus' scoped>
+.active-menu
+  font-size 0.9rem
 .el-main
 .el-aside
   border 1px solid #283D52
   min-height 550px
 .el-menu-vertical-demo:not(.el-menu--collapse)
   width: 200px
+.query
+  a
+    text-decoration none
+    color #333
 </style>

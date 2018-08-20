@@ -85,3 +85,25 @@ export const startOrder = (order) => {
     // }
   })
 }
+
+// query orders
+// paarams = {
+//   page: page,
+//   'page-size': pageSize,
+//   username: username,
+//   realname: realname,
+//   group: group,
+//   charge_group: charge_group,
+//   search: search,
+//   ordering: ordering
+// }
+export const getOrders = (params) => {
+  return axios.get(`${host}/tft/order/query/`, {
+    params: params
+  })
+}
+
+// query order
+export const getOrder = (order) => {
+  return axios.get(`${host}/tft/order/query/${order}/`)
+}

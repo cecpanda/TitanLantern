@@ -1,5 +1,6 @@
 import axios from 'axios'
 import store from '../store/index'
+import router from '../router/index'
 // import router from '../router/index'
 
 axios.defaults.timeout = 5000
@@ -24,11 +25,17 @@ axios.interceptors.response.use(
     return response
   },
   error => {
-    // if (error.response) {
-    //   switch (error.response.status) {
-    //     case 401:
-    //   }
-    // }
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          localStorage.removeItem('token')
+          localStorage.removeItem('username')
+          router.replace({
+            path: 'login',
+            query: {redirect: router.currentRoute.fullPath}
+          })
+      }
+    }
     return Promise.reject(error.response.data)
   }
 )
