@@ -13,7 +13,7 @@ class OrderPagination(PageNumberPagination):
     page_size = 30
     page_size_query_param = 'page-size'
     page_query_param = "page"
-    max_page_size = 100
+    max_page_size = None
 
 
 class OrderFilter(filters.FilterSet):
@@ -21,6 +21,9 @@ class OrderFilter(filters.FilterSet):
     realname = filters.CharFilter(field_name='user__realname', lookup_expr='iexact')
     group = filters.CharFilter(field_name='group__name', lookup_expr='iexact')
     charge_group = filters.CharFilter(field_name='charge_group__name', lookup_expr='iexact')
+    created_after = filters.IsoDateTimeFilter(field_name='created', lookup_expr='gte')
+    created_before = filters.IsoDateTimeFilter(field_name='created', lookup_expr='lte')
+    # created = filters.DateTimeFromToRangeFilter(field_name='created')
 
     class Meta:
         model = Order

@@ -2,7 +2,7 @@
   <div class='table'>
     <h1>报表查询</h1>
     <el-row class='search'>
-      <el-col :span='12' :offset='12'>
+      <el-col :span='12'>
         <el-input v-model='search' placeholder="请输入内容" @keyup.enter.native='searching'>
           <el-select v-model="select" slot="prepend" placeholder="请选择">
             <el-option-group
@@ -30,6 +30,17 @@
           ></el-button>
         </el-input>
       </el-col>
+      <el-col :span='11' :offset='1'>
+        <el-date-picker
+          v-model="created"
+          type="datetimerange"
+          :picker-options="pickerClock"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          align="right">
+        </el-date-picker>
+      </el-col>
     </el-row>
     <el-row
       v-if='searchFlag && Object.getOwnPropertyNames(this.searchText).length'
@@ -37,7 +48,9 @@
     >
       <el-col :span='12' :offset='12'>
         <i class="el-icon-info"></i> {{ searchText.label }}: {{ searchText.text }} <br>
-        <i class="el-icon-info"></i> 数量: {{ count }}
+        <i class="el-icon-info"></i> 数量: {{ count }} <br>
+        <i class="el-icon-time"></i> 开始时间: {{ this.created_after | formatDate }} <br>
+        <i class="el-icon-time"></i> 结束时间: {{ this.created_before | formatDate }}
       </el-col>
     </el-row>
     <el-table
@@ -52,7 +65,17 @@
       @sort-change='sortChange'
       @filter-change='filterChange'
     >
-      <el-table-column prop="id" label="编号" min-width='100'></el-table-column>
+      <el-table-column label="编号" min-width='100'>
+        <template slot-scope="scope">
+          <router-link
+            :to="'/tft/order/detail/' + scope.row.id"
+            target='_blank'
+            class='id-href'
+          >
+            {{ scope.row.id }}
+          </router-link>
+        </template>
+      </el-table-column>
       <el-table-column prop="status.desc" label="状态" min-width='180'></el-table-column>
       <el-table-column prop="user.username" label="开单人"></el-table-column>
       <el-table-column
@@ -66,7 +89,7 @@
       <el-table-column prop="created" label="开单时间" :formatter='formatDate' min-width='150' sortable='custom'></el-table-column>
       <!-- <el-table-column prop="mod_user" label="修改人"></el-table-column>
       <el-table-column prop="modified" label="修改时间"  :formatter='formatDate'></el-table-column> -->
-      <el-table-column prop="found_step" label="发现站点" min-width='100'></el-table-column>
+      <el-table-column prop="found_step" label="发现站点" min-width='100' :show-overflow-tooltip='true'></el-table-column>
       <el-table-column prop="found_time" label="发现时间" :formatter='formatDate' min-width='150'></el-table-column>
       <el-table-column
         prop="charge_group.name"
@@ -76,12 +99,13 @@
         :filter-method='filterChargeGroup'
         column-key='charge_group'
       ></el-table-column>
-      <el-table-column prop="eq" label="停机设备" min-width='100'></el-table-column>
-      <el-table-column prop="kind" label="停机机种" min-width='100'></el-table-column>
-      <el-table-column prop="step" label="停机站点" min-width='100'></el-table-column>
+      <el-table-column prop="eq" label="停机设备" min-width='100' :show-overflow-tooltip='true'></el-table-column>
+      <el-table-column prop="kind" label="停机机种" min-width='100' :show-overflow-tooltip='true'></el-table-column>
+      <el-table-column prop="step" label="停机站点" min-width='100' :show-overflow-tooltip='true'></el-table-column>
       <el-table-column prop="defect_type" label="绝对不良" min-width='100'></el-table-column>
       <el-table-column prop="remarks[0].content" label="最新批注" min-width='100'></el-table-column>
     </el-table>
+    <keep-alive>
     <el-pagination
       background
       @current-change="handleCurrentChange"
@@ -91,6 +115,7 @@
       :total="count"
     >
     </el-pagination>
+  </keep-alive>
   </div>
 </template>
 
@@ -129,10 +154,45 @@ export default {
       ordering: '',
       // {group: {'cvd', 'pvd'}, charge_group: {'cvd', 'pvd'}}
       filters: {},
-      filterFlag: false
+      filterFlag: false,
+      // search clock
+      pickerClock: {
+        shortcuts: [{
+          text: '最近一周',
+          onClick (picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+            picker.$emit('pick', [start, end])
+          }
+        }, {
+          text: '最近一个月',
+          onClick (picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+            picker.$emit('pick', [start, end])
+          }
+        }, {
+          text: '最近三个月',
+          onClick (picker) {
+            const end = new Date()
+            const start = new Date()
+            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90)
+            picker.$emit('pick', [start, end])
+          }
+        }]
+      },
+      created: ''
     }
   },
   computed: {
+    created_after () {
+      return this.created ? this.created[0].toISOString() : undefined
+    },
+    created_before () {
+      return this.created ? this.created[1].toISOString() : undefined
+    },
     params () {
       let params = {page: this.page, 'page-size': this.pageSize}
       if (this.select === 'username') {
@@ -167,6 +227,12 @@ export default {
       //     }
       //   }
       // }
+      if (this.created_after) {
+        params.created_after = this.created_after
+      }
+      if (this.created_before) {
+        params.created_before = this.created_before
+      }
       return params
     },
     groupFilters () {
@@ -207,15 +273,16 @@ export default {
     },
     openSearchMsg () {
       this.$notify({
-        title: '检索说明（忽略大小写）',
+        title: '检索说明',
         type: 'info',
         customClass: 'search-msg',
         dangerouslyUseHTMLString: true,
-        message: `<strong>搜索</strong>：所有数据 <br>
-                  <strong>所有</strong>：工号、真名的模糊匹配 <br>
-                  <strong>其他</strong>：精确匹配 <br><br>
-                  <strong>过滤</strong>：当前表格中的所有页数据<br><br>
-                  <strong>排序</strong>：当前表格中的所有页数据 <br>
+        message: `<ul>
+                    <li>全部忽略大小写</li>
+                    <li>所有：包括工号、真名</li>
+                    <li>表格头部：当前表格中的所有页的数据</li>
+                    <li>其他: 搜索出的内容不再分页</li>
+                  </ul>
                   `,
         position: 'top-left',
         offset: 150
@@ -226,7 +293,7 @@ export default {
       return formatDate(date, 'yyyy-MM-dd hh:mm:ss')
     },
     rowdbClick (row, event) {
-      this.$router.push({path: `/tft/order/detail/${row.id}`})
+      // this.$router.push({path: `/tft/order/detail/${row.id}`})
     },
     tableRowClassName ({row, rowIndex}) {
       if (row.status.code === '0') {
@@ -295,7 +362,13 @@ export default {
           let label = this.valueToLabel(this.select)
           this.searchText = {label: label, value: this.select, text: this.search}
           this.count = res.data.count
-          this.orders = res.data.results
+          // this.orders = res.data.results
+          this.orders = []
+          this.pageSize = res.data.count
+          getOrders(this.params)
+            .then((res) => {
+              this.orders = res.data.results
+            })
         })
         .catch((error) => {
           console.log(error)
@@ -346,12 +419,10 @@ export default {
       // console.log('value:', value)
       // console.log('row:', row)
       // console.log('column:', column)
-      // return row.group.name === value
-      return true
+      return row.group.name === value
     },
     filterChargeGroup (value, row, column) {
-      // return row.charge_group.name === value
-      return true
+      return row.charge_group.name === value
     },
     filterChange (filters) {
       console.log('change')
@@ -365,6 +436,7 @@ export default {
       }
       // this.filters = {group: {'cvd', 'pvd'}, charge_group: {'cvd', 'pvd'}}
       // 同一属性对应多个值的过滤 API
+      // console.log(this.filters)
     }
   },
   filters: {
@@ -393,6 +465,9 @@ export default {
   th
     font-size 1.1em
     background #CFD5DA
+.id-href
+  text-decoration none
+  color #22558B
 .el-table
   td
     div

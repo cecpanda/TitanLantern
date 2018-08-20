@@ -15,11 +15,9 @@ export function formatDate (date, fmt) {
       fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? str : padLeftZero(str))
     }
   }
-
   if (Date.parse(date) === 0) {
     return undefined
   }
-
   return fmt
 }
 

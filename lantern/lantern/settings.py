@@ -50,6 +50,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'django_filters',
+    # 'rest_framework_filters',
 
     'account.apps.AccountConfig',
     'tft.apps.TftConfig',
