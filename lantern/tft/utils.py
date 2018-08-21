@@ -27,7 +27,7 @@ class OrderFilter(filters.FilterSet):
 
     class Meta:
         model = Order
-        fields = ('username', 'realname', 'group', 'charge_group')
+        fields = ('username', 'realname', 'status', 'group', 'charge_group')
 
 
 
