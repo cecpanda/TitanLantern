@@ -49,8 +49,8 @@
       <el-col :span='12' :offset='12'>
         <i class="el-icon-info"></i> {{ searchText.label }}: {{ searchText.text }} <br>
         <i class="el-icon-info"></i> 数量: {{ count }} <br>
-        <i class="el-icon-time"></i> 开始时间: {{ this.created_after | formatDate }} <br>
-        <i class="el-icon-time"></i> 结束时间: {{ this.created_before | formatDate }}
+        <i class="el-icon-time"></i> 开始时间: {{ this.showCreatedAfter | formatDate }} <br>
+        <i class="el-icon-time"></i> 结束时间: {{ this.showCreatedBefore | formatDate }}
       </el-col>
     </el-row>
     <el-table
@@ -68,8 +68,7 @@
       <el-table-column label="编号" min-width='100'>
         <template slot-scope="scope">
           <router-link
-            :to="'/tft/order/detail/' + scope.row.id"
-            target='_blank'
+            :to="'/tft/order/detaildialog/' + scope.row.id"
             class='id-href'
           >
             {{ scope.row.id }}
@@ -105,7 +104,6 @@
       <el-table-column prop="defect_type" label="绝对不良" min-width='100'></el-table-column>
       <el-table-column prop="remarks[0].content" label="最新批注" min-width='100'></el-table-column>
     </el-table>
-    <keep-alive>
     <el-pagination
       background
       @current-change="handleCurrentChange"
@@ -115,13 +113,14 @@
       :total="count"
     >
     </el-pagination>
-  </keep-alive>
+    <DetailDialog id='woca'></DetailDialog>
   </div>
 </template>
 
 <script>
 import { formatDate } from '@/common/js/date.js'
 import { getOrders } from '@/api/tft'
+import DetailDialog from './DetailDialog'
 
 export default {
   name: 'Query',
@@ -183,7 +182,9 @@ export default {
           }
         }]
       },
-      created: ''
+      created: '',
+      showCreatedAfter: '',
+      showCreatedBefore: ''
     }
   },
   computed: {
@@ -280,7 +281,7 @@ export default {
         message: `<ul>
                     <li>全部忽略大小写</li>
                     <li>所有：包括工号、真名</li>
-                    <li>表格头部：当前表格中的所有页的数据</li>
+                    <li>表格头部：当前表格中的当前页的数据</li>
                     <li>其他: 搜索出的内容不再分页</li>
                   </ul>
                   `,
@@ -294,6 +295,7 @@ export default {
     },
     rowdbClick (row, event) {
       // this.$router.push({path: `/tft/order/detail/${row.id}`})
+      this.visible = true
     },
     tableRowClassName ({row, rowIndex}) {
       if (row.status.code === '0') {
@@ -363,6 +365,8 @@ export default {
           this.searchText = {label: label, value: this.select, text: this.search}
           this.count = res.data.count
           // this.orders = res.data.results
+          this.showCreatedAfter = this.created_after
+          this.showCreatedBefore = this.created_before
           this.orders = []
           this.pageSize = res.data.count
           getOrders(this.params)
@@ -445,6 +449,9 @@ export default {
       return formatDate(date, 'yyyy-MM-dd hh:mm:ss')
     }
   },
+  components: {
+    DetailDialog
+  },
   mounted () {
     this.getOrders(this.params)
   }
@@ -506,4 +513,6 @@ export default {
 .status8:hover
 .status9:hover
   font-weight bold
+.el-pagination
+  margin 20px 0
 </style>

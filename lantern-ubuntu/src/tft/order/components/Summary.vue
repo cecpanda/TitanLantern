@@ -1,46 +1,31 @@
 <template>
   <div>Summary
-    {{ data }}
-    <button @click='change'>hehe</button>
+    <el-button type="text" @click="dialogVisible = true">点击打开 Dialog</el-button>
+    <el-dialog
+      title="提示"
+      :visible.sync="dialogVisible"
+      width="80%"
+    >
+      <span>这是一段信息</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getOrders } from '@/api/tft'
-
 export default {
   name: 'Summary',
   data () {
     return {
-      name: 'jack',
-      age: 10,
-      data: {}
+      dialogVisible: false
     }
   },
   computed: {
-    msg: {
-      get () {
-        return this.name + this.age
-      },
-      set (val) {
-      }
-    }
   },
   methods: {
-    change () {
-      let params = {
-        page: 1,
-        'page-size': 3,
-        group: ['cvd', 'pvd']
-      }
-      getOrders(params)
-        .then((res) => {
-          this.data = res.data.results
-        })
-        .catch((err) => {
-          console.log(err)
-        })
-    }
   }
 }
 </script>

@@ -15,7 +15,7 @@ export function formatDate (date, fmt) {
       fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? str : padLeftZero(str))
     }
   }
-  if (Date.parse(date) === 0) {
+  if (Date.parse(date) === 0 || isNaN(Date.parse(date))) {
     return undefined
   }
   return fmt
