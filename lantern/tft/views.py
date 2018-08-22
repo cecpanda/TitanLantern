@@ -74,6 +74,8 @@ class StartOrderViewSet(CreateModelMixin,
         #     return [DjangoModelPermissionsOrAnonReadOnly()]
         elif self.action == 'destroy':
             return [IsAuthenticated(), IsSameGroup(), DjangoModelPermissions()]
+        elif self.action == 'can_update':
+            return [IsAuthenticated(), IsSameGroup(), DjangoModelPermissions()]
         return [permission() for permission in self.permission_classes]
 
     def create(self, request, *args, **kwargs):
@@ -107,6 +109,14 @@ class StartOrderViewSet(CreateModelMixin,
     #     instance = self.get_object()
     #     self.perform_destroy(instance)
     #     return Response(status=status.HTTP_204_NO_CONTENT)
+    @action(methods=['get'], detail=True, url_path='can-update', url_name='can_update')
+    def can_update(self, request, id=None):
+        instance = self.get_object()
+        if Audit.objects.filter(order__id=instance.id).exists():
+            return Response({'can': False})
+        if RecoverOrder.objects.filter(order__id=instance.id).exists():
+            return Response({'can': False})
+        return Response({'can': True})
 
 
 class AuditViewSet(GenericViewSet):

@@ -68,7 +68,8 @@
       <el-table-column label="编号" min-width='100'>
         <template slot-scope="scope">
           <router-link
-            :to="'/tft/order/detaildialog/' + scope.row.id"
+            :to="'/tft/order/detail/' + scope.row.id"
+            target='_blank'
             class='id-href'
           >
             {{ scope.row.id }}
@@ -113,7 +114,6 @@
       :total="count"
     >
     </el-pagination>
-    <DetailDialog id='woca'></DetailDialog>
   </div>
 </template>
 

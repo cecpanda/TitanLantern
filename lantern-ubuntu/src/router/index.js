@@ -11,11 +11,15 @@ import ChangePassword from '@/user/components/ChangePassword'
 import Order from '@/tft/order/Order'
 import Summary from '@/tft/order/components/Summary'
 import StartOrder from '@/tft/order/components/Start'
+import UpdateOrder from '@/tft/order/components/Update'
 import MyStart from '@/tft/order/components/MyStart'
 import AuditOrder from '@/tft/order/components/Audit'
 import Detail from '@/tft/order/components/Detail'
 import DetailDialog from '@/tft/order/components/DetailDialog'
 import Query from '@/tft/order/components/Query'
+import Wiget from '@/widgets/index'
+import Clock from '@/widgets/Clock'
+import Rain from '@/widgets/Rain'
 // import { jwtVerify } from '@/api/user'
 
 Vue.use(Router)
@@ -65,6 +69,13 @@ const router = new Router({
             requireAuth: true
           }
         }, {
+          path: 'update/:id',
+          component: UpdateOrder,
+          props: true,
+          meta: {
+            requireAuth: true
+          }
+        }, {
           path: 'mystart',
           component: MyStart,
           meta: {
@@ -84,6 +95,18 @@ const router = new Router({
         }, {
           path: 'query',
           component: Query
+        }
+      ]
+    }, {
+      path: '/widget',
+      component: Wiget,
+      children: [
+        {
+          path: 'clock',
+          component: Clock
+        }, {
+          path: 'rain',
+          component: Rain
         }
       ]
     }

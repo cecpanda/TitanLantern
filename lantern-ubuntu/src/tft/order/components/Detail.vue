@@ -124,6 +124,11 @@
         </el-col>
       </el-col>
     </el-row>
+
+    <el-row v-if="canBeUpdated">
+      <el-button type="primary">修改</el-button>
+    </el-row>
+
     <el-row>
       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
         <h3>停机签核</h3>
@@ -261,7 +266,7 @@
 </template>
 
 <script>
-import { getOrder } from '@/api/tft'
+import { getOrder, canUpdate } from '@/api/tft'
 import { formatDate } from '@/common/js/date.js'
 
 export default {
@@ -284,8 +289,11 @@ export default {
           p_signer: {},
           c_signer: {}
         }
-      }
+      },
+      canBeUpdated: false
     }
+  },
+  computed: {
   },
   methods: {
     getOrder () {
@@ -295,6 +303,16 @@ export default {
         })
         .catch((error) => {
           console.log(error)
+        })
+    },
+    canUpdate () {
+      canUpdate(this.id)
+        .then((res) => {
+          console.log(res.data)
+          this.canBeUpdated = res.data.can
+        })
+        .catch((err) => {
+          console.log(err)
         })
     }
   },
@@ -306,6 +324,7 @@ export default {
   },
   beforeMount () {
     this.getOrder()
+    this.canUpdate()
   }
 }
 

@@ -1,13 +1,12 @@
 <template>
   <div>
-    Summary
-    <canvas red='canvas' id="canvas" width="400" height="400"></canvas>
+    <canvas ref='canvas' id="canvas" width='500' height='500'></canvas>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'Summary',
+  name: 'Clock',
   data () {
     return {
       date: new Date()
@@ -17,7 +16,8 @@ export default {
   },
   methods: {
     clock () {
-      let ctx = document.getElementById('canvas').getContext('2d')
+      // let ctx = document.getElementById('canvas').getContext('2d')
+      let ctx = this.$refs['canvas'].getContext('2d')
       let sec = this.date.getSeconds()
       let min = this.date.getMinutes()
       let hr = this.date.getHours()
@@ -169,7 +169,7 @@ export default {
 canvas
   border 1px solid #eee
   position: relative
-  left 200px
-  top 200px
+  left 300px
+  top 300px
   transform: translate(-50%, -50%)
 </style>
