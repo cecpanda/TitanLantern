@@ -59,7 +59,6 @@
       border
       header-row-class-name='table-header'
       @row-dblclick='rowdbClick'
-      @cell-click='cellClick'
       :row-class-name="tableRowClassName"
       @cell-mouse-enter='cellMouseEnter'
       @cell-mouse-leave='cellMouseLeave'
@@ -83,7 +82,7 @@
         prop="group.name"
         label="开单工程"
         min-width='100'
-        :filters="groupFilters"
+        :filters='groupFilters'
         :filter-method='filterGroup'
         column-key='group'
       ></el-table-column>
@@ -99,8 +98,7 @@
         :filters='chargeGroupFilters'
         :filter-method='filterChargeGroup'
         column-key='charge_group'
-      >
-      </el-table-column>
+      ></el-table-column>
       <el-table-column prop="eq" label="停机设备" min-width='100' :show-overflow-tooltip='true'></el-table-column>
       <el-table-column prop="kind" label="停机机种" min-width='100' :show-overflow-tooltip='true'></el-table-column>
       <el-table-column prop="step" label="停机站点" min-width='100' :show-overflow-tooltip='true'></el-table-column>
@@ -116,32 +114,13 @@
       :total="count"
     >
     </el-pagination>
-    <el-button type="text" @click="outerVisible = true">点击打开外层 Dialog</el-button>
-    <el-dialog title="外层 Dialog" :visible.sync="outerVisible">
-      <el-dialog
-        width="30%"
-        title="内层 Dialog"
-        :visible.sync="innerVisible"
-        append-to-body>
-      </el-dialog>
-      <el-dialog
-        width="30%"
-        title="内层1 Dialog"
-        :visible.sync="innerVisible1"
-        append-to-body>
-      </el-dialog>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="outerVisible = false">取 消</el-button>
-        <el-button type="primary" @click="innerVisible = true">打开内层 Dialog</el-button>
-        <el-button type="primary" @click="innerVisible1 = true">打开内层 Dialog</el-button>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
 <script>
 import { formatDate } from '@/common/js/date.js'
 import { getOrders } from '@/api/tft'
+import DetailDialog from './DetailDialog'
 
 export default {
   name: 'Query',
@@ -204,9 +183,8 @@ export default {
         }]
       },
       created: '',
-      outerVisible: false,
-      innerVisible: false,
-      innerVisible1: false
+      showCreatedAfter: '',
+      showCreatedBefore: ''
     }
   },
   computed: {
@@ -303,7 +281,7 @@ export default {
         message: `<ul>
                     <li>全部忽略大小写</li>
                     <li>所有：包括工号、真名</li>
-                    <li>表格头部：当前表格中的所有页的数据</li>
+                    <li>表格头部：当前表格中的当前页的数据</li>
                     <li>其他: 搜索出的内容不再分页</li>
                   </ul>
                   `,
@@ -317,12 +295,7 @@ export default {
     },
     rowdbClick (row, event) {
       // this.$router.push({path: `/tft/order/detail/${row.id}`})
-      console.log(this.groupFilters)
-    },
-    cellClick (row, column, cell, event) {
-      console.log(row)
-      console.log(column)
-      console.log(cell)
+      this.visible = true
     },
     tableRowClassName ({row, rowIndex}) {
       if (row.status.code === '0') {
@@ -370,6 +343,18 @@ export default {
     searching () {
       // 搜索后，从第一页开始显示
       this.page = 1
+      // let params = {page: this.page, 'page-size': this.pageSize}
+      // if (this.select === 'username') {
+      //   params.username = this.search
+      // } else if (this.select === 'realname') {
+      //   params.realname = this.search
+      // } else if (this.select === 'group') {
+      //   params.group = this.search
+      // } else if (this.select === 'charge_group') {
+      //   params.charge_group = this.search
+      // } else {
+      //   params.search = this.search
+      // }
       getOrders(this.params)
         .then((res) => {
           // searchFlag
@@ -465,6 +450,7 @@ export default {
     }
   },
   components: {
+    DetailDialog
   },
   mounted () {
     this.getOrders(this.params)
@@ -527,4 +513,6 @@ export default {
 .status8:hover
 .status9:hover
   font-weight bold
+.el-pagination
+  margin 20px 0
 </style>

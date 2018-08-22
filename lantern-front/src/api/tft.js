@@ -86,6 +86,10 @@ export const startOrder = (order) => {
   })
 }
 
+export const canUpdate = (id) => {
+  return axios.get(`${host}/tft/order/start/${id}/can-update/`)
+}
+
 // query orders
 // paarams = {
 //   page: page,
