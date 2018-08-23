@@ -27,7 +27,7 @@
       <el-submenu index="/widget">
         <template slot="title">小工具</template>
         <el-menu-item index="/widget/clock">时钟</el-menu-item>
-        <el-menu-item index="/widget/rain">字符雨</el-menu-item>
+        <el-menu-item index="/widget/panda">功夫熊猫</el-menu-item>
       </el-submenu>
       <el-submenu index="6" class='login' v-if='isLogin && username'>
         <template slot="title">
