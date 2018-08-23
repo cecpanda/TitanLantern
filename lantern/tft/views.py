@@ -124,7 +124,7 @@ class AuditViewSet(GenericViewSet):
     # serializer_class = ProductAuditSerializer
     lookup_field = 'order_id'
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
-    permission_classes = [IsAuthenticated, DjangoModelPermissions()]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
 
     def get_serializer_class(self):
         if self.action == 'product':
