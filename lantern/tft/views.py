@@ -60,6 +60,8 @@ class StartOrderViewSet(CreateModelMixin,
             return RetrieveStartOrderSerializer
         if self.action == 'list':
             return RetrieveStartOrderSerializer
+        if self.action == 'all_can_update':
+            return OrderSerializer
         # 因为createserializer 影响了 retrieve 的 format=api
         # 所以用下面那个
         # return self.serializer_class
@@ -76,6 +78,8 @@ class StartOrderViewSet(CreateModelMixin,
             return [IsAuthenticated(), IsSameGroup(), DjangoModelPermissions()]
         elif self.action == 'can_update':
             return [IsAuthenticated(), IsSameGroup(), DjangoModelPermissions()]
+        elif self.action == 'all_can_update':
+            return [IsAuthenticated(), DjangoModelPermissions()]
         return [permission() for permission in self.permission_classes]
 
     def create(self, request, *args, **kwargs):
@@ -117,6 +121,16 @@ class StartOrderViewSet(CreateModelMixin,
         if RecoverOrder.objects.filter(order__id=instance.id).exists():
             return Response({'can': False})
         return Response({'can': True})
+
+    @action(methods=['get'], detail=False, url_path='all-can-update', url_name='all_can_update')
+    def all_can_update(self, request):
+        user = request.user
+        orders = self.queryset.filter(group__name__in=[group.name for group in user.groups.all()],
+                                      startaudit=None,
+                                      recoverorders=None)
+        serializer = self.get_serializer(orders, many=True)
+        return Response(serializer.data)
+
 
 
 class AuditViewSet(GenericViewSet):
