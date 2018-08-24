@@ -68,7 +68,7 @@ export default {
 <style lang='stylus' scoped>
 div
   pre
-    // color rgba(255, 0, 0, 0.5) 
+    // color rgba(255, 0, 0, 0.5)
     font-size 8px
     line-height 8px
 </style>
