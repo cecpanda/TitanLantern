@@ -1,3 +1,4 @@
+from django.core.exceptions import FieldError
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.mixins import CreateModelMixin, UpdateModelMixin, RetrieveModelMixin, ListModelMixin, DestroyModelMixin
@@ -172,6 +173,7 @@ class AuditViewSet(GenericViewSet):
 class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
     queryset = RecoverOrder.objects.all()
     serializer_class = RecoverOrderSerializer
+    lookup_field = 'pk'
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -187,6 +189,10 @@ class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
             return [IsAuthenticated(), DjangoModelPermissions()]
         elif self.action == 'update':
             return [IsAuthenticated(), DjangoModelPermissions(), RecoverOrderIsSameGroup()]
+        elif self.action == 'can_update':
+            return [IsAuthenticated(), DjangoModelPermissions()]
+        elif self.action == 'all_can_update':
+            return [IsAuthenticated(), DjangoModelPermissions()]
         return [permission() for permission in self.permission_classes]
 
     def create(self, request, *args, **kwargs):
@@ -234,6 +240,30 @@ class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
                          'order_id': order.id,
                          'status_code': order.status,
                          'status': order.get_status_display()})
+
+    @action(methods=['get'], detail=True, url_path='can-update', url_name='can_update')
+    def can_update(self, request, pk=None):
+        user = request.user
+        instance = self.get_object()
+
+        if RecoverAudit.objects.filter(recover_order__id=instance.id).exists():
+            return Response({'can': False})
+        try:
+            if instance.order.group.name in [group.name for group in user.groups.all()]:
+                return Response({'can': True})
+        except AttributeError:
+            return Response({'can': False})
+        return Response({'can': False})
+
+
+    @action(methods=['get'], detail=False, url_path='all-can-update', url_name='all_can_update')
+    def all_can_update(self, request):
+        user = request.user
+        recover_orders = self.queryset.filter(order__group__name__in=[group.name for group in user.groups.all()],
+                                              audit=None)
+        ids = [recover_order.id for recover_order in recover_orders]
+
+        return Response(ids)
 
 
 
