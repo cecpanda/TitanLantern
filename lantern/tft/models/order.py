@@ -45,8 +45,8 @@ class Order(models.Model):
     next = models.CharField('下一步', choices=STATUS_CHOICES, max_length=2, blank=True, null=True, default='0')
 
     user = models.ForeignKey(UserModel, related_name='startorders', on_delete=models.PROTECT, verbose_name='开单人员')
-    group = models.ForeignKey(Group, related_name='startorders', on_delete=models.PROTECT,
-                              blank=True, null=True, verbose_name='开单工程')
+    # 开单工程不能为空，否则 element-ui 的表头过滤功能不保
+    group = models.ForeignKey(Group, related_name='startorders', on_delete=models.PROTECT, verbose_name='开单工程')
     created = models.DateTimeField('开单时间', auto_now_add=True)
 
     mod_user = models.ForeignKey(UserModel, related_name='modstartorders', blank=True, null=True,

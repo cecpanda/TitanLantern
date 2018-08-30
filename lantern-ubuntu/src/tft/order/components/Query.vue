@@ -78,6 +78,11 @@
       </el-table-column>
       <el-table-column prop="status.desc" label="状态" min-width='180'></el-table-column>
       <el-table-column prop="user.username" label="开单人"></el-table-column>
+      <el-table-column label="开单人" min-width='100'>
+        <template slot-scope="scope">
+          {{ scope.row.user.username }} {{ scope.row.user.realname }}
+        </template>
+      </el-table-column>
       <el-table-column
         prop="group.name"
         label="开单工程"
@@ -86,9 +91,18 @@
         :filter-method='filterGroup'
         column-key='group'
       ></el-table-column>
+      <!-- <el-table-column
+        label="开单工程"
+        min-width='100'
+        :filters='groupFilters'
+        :filter-method='filterGroup'
+        column-key='group'
+      >
+        <template slot-scope="scope">
+          {{ scope.row.group ? scope.row.group.name : ''}}
+        </template>
+      </el-table-column> -->
       <el-table-column prop="created" label="开单时间" :formatter='formatDate' min-width='150' sortable='custom'></el-table-column>
-      <!-- <el-table-column prop="mod_user" label="修改人"></el-table-column>
-      <el-table-column prop="modified" label="修改时间"  :formatter='formatDate'></el-table-column> -->
       <el-table-column prop="found_step" label="发现站点" min-width='100' :show-overflow-tooltip='true'></el-table-column>
       <el-table-column prop="found_time" label="发现时间" :formatter='formatDate' min-width='150'></el-table-column>
       <el-table-column
@@ -242,7 +256,9 @@ export default {
       let filters = []
       let values = new Set()
       this.orders.forEach((order) => {
-        values.add(order.group.name)
+        if (order.group) {
+          values.add(order.group.name)
+        }
       })
       values.forEach((value) => {
         filters.push({text: value, value: value})

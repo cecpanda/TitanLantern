@@ -1,0 +1,53 @@
+<head>
+  <title></title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.bootcss.com/vue/2.3.4/vue.js"></script>
+  <script src="https://cdn.bootcss.com/axios/0.16.2/axios.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    {{ selectOptions }}
+    <br><br><br>
+    <button @click='change'>change</button>
+  </div>
+
+  <script>
+    window.onload = function () {
+      Vue.prototype.$http = axios;
+      new Vue({
+        el: '#app',
+        data: {
+          selectOptions: [{
+            label: '模糊匹配',
+            options: [
+              {label: '所有', value: 'all'}
+            ]
+          }, {
+            label: '精确匹配',
+            options: [
+              {label: '工号', value: 'username'},
+              {label: '真名', value: 'realname'},
+              {label: '开单工程', value: 'group'},
+              {label: '责任工程', value: 'charge_group'}
+            ]
+          }]
+        },
+        methods: {
+          change () {
+            this.selectOptions.forEach((val) => {
+              val.options.forEach((option) => {
+                if (option.value === 'group') {
+                  
+                }
+              })
+            })
+          }
+        }
+      })
+    }
+  </script>
+</body>
+
+</html>

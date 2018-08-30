@@ -80,12 +80,15 @@ class StartOrderSerializer(serializers.ModelSerializer):
         如果没定义 QC，则不验证
         '''
         groups = attrs['user'].groups.all()
+
+        if len(groups) == 0:
+            raise serializers.ValidationError('您没有加入任何组，不能申请停机单')
         try:
             # qc = Group.objects.get(name='QC')
             qc_code = settings.GROUP_CODE['TFT'].get('QC')
             qc = GroupSetting.objects.get(code=qc_code).group
         except:
-            raise serializers.ValidationError('请联系管理员，确定 QC 组')
+            raise serializers.ValidationError('请联系管理员，定义 QC 组')
         if qc in groups:
             if attrs.get('defect_type') is None:
                 raise serializers.ValidationError('您在 QC 组下，defect_type 为必选！')
@@ -113,7 +116,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
         # 根据 appl 得到 开单工程 group
         # appl 加入的第一个科室
         user = self.context['request'].user
-        return user.groups.all().first()  # 返回最先加入的组，有可能为空，
+        return user.groups.all().first()  # 返回最先加入的组，不能为空，
 
     # def get_charge_group(self):
     #     # 根据 eq 得到 charge_group
@@ -1000,3 +1003,4 @@ class OrderSerializer(serializers.ModelSerializer):
         return {
             pathlib.PurePath(report.file.name).name: self.context['request'].build_absolute_uri(report.file.url) for report in obj.reports.all()
         }
+    
