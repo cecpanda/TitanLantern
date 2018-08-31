@@ -8,7 +8,6 @@
 
 <body>
   <div id="app">
-    {{ selectOptions }}
     <br><br><br>
     <button @click='change'>change</button>
   </div>
@@ -19,31 +18,25 @@
       new Vue({
         el: '#app',
         data: {
-          selectOptions: [{
-            label: '模糊匹配',
-            options: [
-              {label: '所有', value: 'all'}
-            ]
-          }, {
-            label: '精确匹配',
-            options: [
-              {label: '工号', value: 'username'},
-              {label: '真名', value: 'realname'},
-              {label: '开单工程', value: 'group'},
-              {label: '责任工程', value: 'charge_group'}
-            ]
-          }]
+          file: ''
         },
         methods: {
-          change () {
-            this.selectOptions.forEach((val) => {
-              val.options.forEach((option) => {
-                if (option.value === 'group') {
-                  
-                }
-              })
+          getFile () {
+            this.$http.get("http://127.0.0.1:8000/media/reports/TEA-A6I-41/default.png", {
+              headers: {
+                'Accept': 'image/jpeg'
+              }
             })
+              .then((res) => {
+                console.log(res)
+              })
+              .catch((err) => {
+                console.log(err)
+              })
           }
+        },
+        mounted () {
+          this.getFile()
         }
       })
     }

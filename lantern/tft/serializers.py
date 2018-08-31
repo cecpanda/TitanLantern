@@ -957,6 +957,12 @@ class AuditSerializer(serializers.ModelSerializer):
         fields = ('p_signer', 'p_time', 'recipe_close', 'recipe_confirm',
                   'c_signer', 'c_time', 'rejected', 'reason', 'created')
 
+    # def to_representation(self, instance):
+    #     '''序列化, startaudit 为空时，返回 {}, 而不是 null'''
+    #     ret = super().to_representation(instance)
+    #     return ret
+
+
 
 class QueryRecoverAuditSerializer(serializers.ModelSerializer):
     qc_signer = UserOrderSerializer()
@@ -1003,4 +1009,10 @@ class OrderSerializer(serializers.ModelSerializer):
         return {
             pathlib.PurePath(report.file.name).name: self.context['request'].build_absolute_uri(report.file.url) for report in obj.reports.all()
         }
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if not ret.get('startaudit'):
+            ret['startaudit'] = {}
+        return ret
     

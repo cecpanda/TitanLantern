@@ -111,3 +111,9 @@ export const getOrders = (params) => {
 export const getOrder = (order) => {
   return axios.get(`${host}/tft/order/query/${order}/`)
 }
+
+// update order
+// get report handler
+export const getReport = (url) => {
+  return axios.get(url)
+}

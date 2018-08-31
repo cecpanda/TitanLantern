@@ -79,15 +79,23 @@
         <el-col :span='4' class='label'>停机原因</el-col>
         <el-col :span='20' class='content'>{{ order.reason }}</el-col>
       </el-col>
-    </el-row>
-    <el-row>
-      <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+      <!-- <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
         <el-col :span='8' class='label'>通知生产人员</el-col>
         <el-col :span='16' class='content'>{{ order.users}}</el-col>
       </el-col>
       <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
         <el-col :span='8' class='label'>通知制程人员</el-col>
         <el-col :span='16' class='content'>{{ order.charge_users }}</el-col>
+      </el-col> -->
+      <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+        <el-row>
+          <el-col :span='8' class='label'>通知生产人员</el-col>
+          <el-col :span='16' class='content'>{{ order.users}}</el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='8' class='label'>通知制程人员</el-col>
+          <el-col :span='16' class='content'>{{ order.charge_users}}</el-col>
+        </el-row>
       </el-col>
     </el-row>
     <el-row>
@@ -95,19 +103,23 @@
         <el-col :span='4' class='label'>异常描述</el-col>
         <el-col :span='20' class='content'>{{ order.desc }}</el-col>
       </el-col>
-    </el-row>
-    <el-row>
-      <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+      <!-- <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
         <el-col :span='8' class='label'>受害开始时间</el-col>
         <el-col :span='16' class='content'>{{ order.start_time | formatDate }}</el-col>
       </el-col>
       <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
         <el-col :span='8' class='label'>受害结束时间</el-col>
         <el-col :span='16' class='content'>{{ order.end_time | formatDate }}</el-col>
-      </el-col>
+      </el-col> -->
       <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
-        <el-col :span='8' class='label'>受害批次数</el-col>
-        <el-col :span='16' class='content'>{{ order.lot_num }}</el-col>
+        <el-row>
+          <el-col :span='8' class='label'>受害开始时间</el-col>
+          <el-col :span='16' class='content'>{{ order.start_time | formatDate }}</el-col>
+        </el-row>
+        <el-row>
+          <el-col :span='8' class='label'>受害结束时间</el-col>
+          <el-col :span='16' class='content'>{{ order.end_time | formatDate }}</el-col>
+        </el-row>
       </el-col>
     </el-row>
     <el-row>
@@ -115,11 +127,15 @@
         <el-col :span='4' class='label'>异常批次/基板</el-col>
         <el-col :span='20' class='content'>{{ order.lots }}</el-col>
       </el-col>
+      <el-col :xs='24' :sm='24' :md='24' :lg='8' :xl='8'>
+        <el-col :span='8' class='label'>受害批次数</el-col>
+        <el-col :span='16' class='content'>{{ order.lot_num }}</el-col>
+      </el-col>
     </el-row>
     <el-row>
-      <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
-        <el-col :span='8' class='label'>复机条件</el-col>
-        <el-col :span='16' class='content'>{{ order.condition }}</el-col>
+      <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
+        <el-col :span='4' class='label'>复机条件</el-col>
+        <el-col :span='20' class='content'>{{ order.condition }}</el-col>
       </el-col>
       <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
         <el-col :span='8' class='label'>绝对不良</el-col>
@@ -131,17 +147,6 @@
       </el-col>
     </el-row>
     <el-row>
-      <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
-        <el-col :span='8' class='label'>调查报告</el-col>
-        <el-col :span='16' class='content'>
-          <span
-            v-for='(url, name, index) in order.reports'
-            :key='index'
-          >
-            <a :href='url'>{{ name }}</a> <br>
-          </span>
-        </el-col>
-      </el-col>
       <el-col :xs='24' :sm='12' :md='12' :lg='16' :xl='18'>
         <el-col :span='4' class='label'>批注</el-col>
         <el-col :span='20' class='content'>
@@ -158,9 +163,24 @@
           </span>
         </el-col>
       </el-col>
+      <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+        <el-col :span='8' class='label'>调查报告</el-col>
+        <el-col :span='16' class='content'>
+          <span
+            v-for='(url, name, index) in order.reports'
+            :key='index'
+          >
+            <a :href='url'>{{ name }}</a> <br>
+          </span>
+        </el-col>
+      </el-col>
     </el-row>
     <el-row v-if="canBeUpdated">
-      <el-button type="primary">修改</el-button>
+      <el-col :span='2' :offset='20'>
+        <router-link :to='"/tft/order/update/" + order.id'>
+          <el-button type="warning" icon='el-icon-edit' round>修改</el-button>
+        </router-link>
+      </el-col>
     </el-row>
     <el-row>
       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">

@@ -172,7 +172,7 @@
               multiple
               action=''
               :on-change='handleChange'
-              :limit="3"
+              :limit="20"
               :on-exceed="handleExceed"
               :before-upload="beforeUpload"
               :http-request='upload'
@@ -230,7 +230,7 @@ export default {
       rules: {
         found_step: [
           { required: true, message: '请输入发现站点', trigger: 'blur' },
-          { min: 1, max: 5, message: '长度在 1 到 30 个字符', trigger: 'blur' }
+          { min: 1, max: 30, message: '长度在 1 到 30 个字符', trigger: 'blur' }
         ],
         found_time: [
           { required: true, message: '请选择时间', trigger: 'blur' }
@@ -308,10 +308,11 @@ export default {
         })
     },
     handleExceed (files, fileList) {
-      this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
+      this.$message.warning(`当前限制选择 20 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
     },
     handleChange (file, files) {
       console.log(file)
+      console.log(typeof file)
       console.log(files)
       this.order.reports = []
       files.forEach((file) => {
