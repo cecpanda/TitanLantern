@@ -208,10 +208,12 @@
             <el-upload
               multiple
               action=''
+              :auto-upload='false'
               :on-change='handleChange'
               :limit="20"
               :on-exceed="handleExceed"
               :before-upload="beforeUpload"
+              :file-list='reportsList'
             >
               <el-button size="small" type="primary">点击上传</el-button>
             </el-upload>
@@ -308,7 +310,16 @@ export default {
   computed: {
     ...mapGetters({
       username: 'username'
-    })
+    }),
+    reportsList () {
+      let list = []
+      for (let name in this.order.reports) {
+        if (this.order.reports.hasOwnProperty) {
+          list.push({name: name, url: this.order.reports[name]})
+        }
+      }
+      return list
+    }
   },
   methods: {
     getUser (username) {
@@ -361,11 +372,9 @@ export default {
       this.$message.warning(`当前限制选择 20 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
     },
     handleChange (file, files) {
-      
       console.log(file)
       console.log(typeof file)
       console.log(files)
-
       this.order.reports = []
       files.forEach((file) => {
         this.order.reports.push(file.raw)

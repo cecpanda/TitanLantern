@@ -24,8 +24,8 @@
           getFile () {
             this.$http.get("http://127.0.0.1:8000/media/reports/TEA-A6I-41/default.png", {
               headers: {
-                'Accept': 'image/jpeg'
-              }
+              },
+              responseType: 'file'
             })
               .then((res) => {
                 console.log(res)
