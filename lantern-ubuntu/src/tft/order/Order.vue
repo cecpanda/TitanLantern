@@ -63,20 +63,17 @@ export default {
   name: 'Order',
   data () {
     return {
-      isCollapse: false,
+      isCollapse: true,
       defaultActive: '',
       activeMenu: ''
     }
   },
   methods: {
     handleSelect (index, indexPath) {
-      console.log(index, indexPath)
     },
     handleOpen (key, keyPath) {
-      console.log(key, keyPath)
     },
     handleClose (key, keyPath) {
-      console.log(key, keyPath)
     }
   }
 }

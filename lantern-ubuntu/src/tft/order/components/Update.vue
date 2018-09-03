@@ -1,14 +1,8 @@
 <template>
   <div>
     <el-row>
-      <el-col :xs="24" :sm="24" :md="16" :lg="16" :xl="16">
+      <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
         <h1>设备品质异常停机单 - 修改</h1>
-      </el-col>
-      <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8" class='user'>
-        <span class='user-info'>当前用户:</span>
-        <span class='user-content'>{{ username }}</span><br>
-        <span class='user-info'>当前时间:</span>
-        <span class='user-content'>{{ date | formatDate }}</span>
       </el-col>
     </el-row>
     <el-form
@@ -68,6 +62,11 @@
               disabled
             >
             </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="当前时间">
+            {{ date | formatDate }}
           </el-form-item>
         </el-col>
       </el-row>
@@ -143,7 +142,7 @@
           </el-row>
         </el-col>
       </el-row>
-      <h3>异常状况描述（不良现象说明）</h3>
+      <h5>异常状况描述（不良现象说明）</h5>
       <el-row>
         <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
           <el-form-item label="异常描述" prop='desc'>
@@ -172,7 +171,7 @@
           </el-row>
         </el-col>
       </el-row>
-      <el-row>
+<!--       <el-row>
         <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
           <el-form-item label="异常批次/基板" prop='lots'>
             <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.lots">
@@ -183,12 +182,29 @@
           <el-form-item label="受害批次数" prop='lot_num'>
             <el-input v-model="order.lot_num"></el-input>
           </el-form-item>
+          <el-form-item label="异常批次/基板" prop='lots'>
+            <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.lots">
+            </el-input>
+          </el-form-item>
         </el-col>
-      </el-row>
+      </el-row> -->
       <el-row>
         <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
           <el-form-item label="复机条件" prop='condition'>
             <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.condition">
+            </el-input>
+          </el-form-item>
+          <el-form-item label="添加批注" prop='remark'>
+            <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.remark">
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='24' :md='24' :lg='8' :xl='8'>
+          <el-form-item label="受害批次数" prop='lot_num'>
+            <el-input v-model="order.lot_num"></el-input>
+          </el-form-item>
+          <el-form-item label="异常批次/基板" prop='lots'>
+            <el-input type="textarea" :rows="7" placeholder="请输入内容" v-model="order.lots">
             </el-input>
           </el-form-item>
         </el-col>
@@ -218,11 +234,16 @@
               <el-button size="small" type="primary">点击上传</el-button>
             </el-upload>
           </el-form-item>
-          <!-- <input type="file" @change="getFile($event)"> -->
         </el-col>
       </el-row>
-      <el-row>
-        pizhu
+      <el-row class='button'>
+        <el-col :xs="24" :sm="12" :md="12" :lg="8" :xl="6" :offset='16'>
+          <el-form-item>
+            <el-button type="warning" @click="submitForm('form')">
+              立即修改
+            </el-button>
+          </el-form-item>
+        </el-col>
       </el-row>
     </el-form>
   </div>
@@ -232,7 +253,7 @@
 import { mapGetters } from 'vuex'
 import { getUser, getAllGroups } from '@/api/user'
 import { formatDate } from '@/common/js/date.js'
-import { getOrder, canUpdate, getReport } from '@/api/tft'
+import { getOrder, canUpdate, getReport, updateOrder } from '@/api/tft'
 
 export default {
   name: 'Update',
@@ -250,7 +271,8 @@ export default {
         user: {},
         group: {},
         mod_user: {},
-        charge_group: {}
+        charge_group: null,
+        remark: ''
       },
       rules: {
         found_step: [
@@ -300,10 +322,10 @@ export default {
         condition: [
           { required: true, message: '请输入复机条件', trigger: 'blur' },
           { min: 1, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
+        ],
+        remark: [
+          { min: 0, max: 300, message: '长度不能超过 300 个字符', trigger: 'blur' }
         ]
-        // remark: [
-        //   { min: 0, max: 300, message: '长度不能超过 300 个字符', trigger: 'blur' }
-        // ]
       }
     }
   },
@@ -344,6 +366,7 @@ export default {
       getOrder(this.id)
         .then((res) => {
           this.order = res.data
+          this.order.charge_group = res.data.charge_group.id
         })
         .catch((error) => {
           console.log(error)
@@ -372,9 +395,6 @@ export default {
       this.$message.warning(`当前限制选择 20 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
     },
     handleChange (file, files) {
-      console.log(file)
-      console.log(typeof file)
-      console.log(files)
       this.order.reports = []
       files.forEach((file) => {
         this.order.reports.push(file.raw)
@@ -395,6 +415,31 @@ export default {
         this.$message.error('上传文件大小不能超过 10MB!')
       }
       return isLt10M && isJpgPng
+    },
+    submitForm (formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          updateOrder(this.order)
+            .then((res) => {
+              let id = res.data.id
+              let status = res.data.status
+              this.$notify({
+                title: '成功',
+                dangerouslyUseHTMLString: true,
+                message: `<strong>编号</strong>: ${id}<br><strong>状态</strong>: ${status}`,
+                type: 'success'
+              })
+              this.$router.push({path: `/tft/order/detail/${this.id}`})
+            })
+            .catch((error) => {
+              this.$notify({
+                title: '错误',
+                message: error,
+                type: 'error'
+              })
+            })
+        }
+      })
     }
   },
   filters: {
@@ -421,11 +466,11 @@ export default {
 </script>
 
 <style lang='stylus' scoped>
-h1
-  font-size 30px
-h3
-  font-size 20px
-  margin-top 50px
+// h1
+//   font-size 30px
+// h3
+//   font-size 20px
+//   margin-top 50px
 .el-col
   // border 1px solid #8FA5BC
   border-radius 8px

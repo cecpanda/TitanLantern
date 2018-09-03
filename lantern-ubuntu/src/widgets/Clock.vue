@@ -166,10 +166,9 @@ export default {
 </script>
 
 <style lang='stylus' scoped>
-canvas
-  border 1px solid #eee
-  position: relative
-  left 300px
-  top 300px
-  transform: translate(-50%, -50%)
+//   border 1px solid #eee
+//   position: relative
+//   left 300px
+//   top 300px
+//   transform: translate(-50%, -50%)
 </style>

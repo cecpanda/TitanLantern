@@ -27,7 +27,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
     # 下面的这两个字段甚至影响了 retrieveserializer 的 foramt=api 的展示，百思不得其解
     charge_group = serializers.IntegerField(label='责任工程')
     reports = serializers.ListField(label='调查报告', child=serializers.FileField(), required=False)
-    # remark = serializers.CharField(label='生产批注', max_length=500, required=False)
+    remark = serializers.CharField(label='生产批注', max_length=500, required=False)
 
     class Meta:
         model = Order
@@ -37,7 +37,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
                   'users', 'charge_users',
                   'desc', 'start_time', 'end_time', 'lot_num', 'lots',
                   'condition', 'defect_type',
-                  'reports')#, 'remark')
+                  'reports', 'remark')
         read_only_fields = ('id', 'status')
 
     # 改成字符串了
@@ -197,9 +197,9 @@ class StartOrderSerializer(serializers.ModelSerializer):
                         Report.objects.create(order=order, file=file)
 
                 # # remark
-                # remark = validated_data.get('remark')
-                # if remark:
-                #     Remark.objects.create(user=user, order=order, content=remark)
+                remark = validated_data.get('remark')
+                if remark:
+                    Remark.objects.create(user=user, order=order, content=remark)
 
         except Exception as e:
             raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
@@ -255,9 +255,9 @@ class StartOrderSerializer(serializers.ModelSerializer):
                     for file in reports:
                         Report.objects.create(order=instance, file=file)
                 # # remark
-                # remark = validated_data.get('remark')
-                # if remark:
-                #     Remark.objects.create(user=user, order=instance, content=remark)
+                remark = validated_data.get('remark')
+                if remark:
+                    Remark.objects.create(user=user, order=instance, content=remark)
 
         except Exception as e:
             raise serializers.ValidationError(f'出现错误{e}，提交数据被回滚。')
@@ -948,6 +948,7 @@ class UserOrderSerializer(serializers.ModelSerializer):
         model = UserModel
         fields = ('username', 'realname')
 
+
 class AuditSerializer(serializers.ModelSerializer):
     p_signer = UserOrderSerializer()
     c_signer = UserOrderSerializer()
@@ -957,10 +958,13 @@ class AuditSerializer(serializers.ModelSerializer):
         fields = ('p_signer', 'p_time', 'recipe_close', 'recipe_confirm',
                   'c_signer', 'c_time', 'rejected', 'reason', 'created')
 
-    # def to_representation(self, instance):
-    #     '''序列化, startaudit 为空时，返回 {}, 而不是 null'''
-    #     ret = super().to_representation(instance)
-    #     return ret
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if not ret.get('p_signer'):
+            ret['p_signer'] = {}
+        if not ret.get('c_signer'):
+            ret['c_signer'] = {}
+        return ret
 
 
 
@@ -971,6 +975,15 @@ class QueryRecoverAuditSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecoverAudit
         fields = ('qc_signer', 'qc_time', 'p_signer', 'p_time', 'rejected', 'reason')
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if not ret.get('qc_signer'):
+            ret['qc_signer'] = {}
+        if not ret.get('p_signer'):
+            ret['p_signer'] = {}
+        return ret
+
 
 class QueryRecoverOrderSerializer(serializers.ModelSerializer):
     audit = QueryRecoverAuditSerializer()
@@ -1013,6 +1026,8 @@ class OrderSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         if not ret.get('startaudit'):
-            ret['startaudit'] = {}
+            ret['startaudit'] = {'p_signer': {}, 'c_signer': {}}
+        if not ret.get('mod_user'):
+            ret['mod_user'] = {}
         return ret
     

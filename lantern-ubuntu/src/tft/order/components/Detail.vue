@@ -148,7 +148,9 @@
     </el-row>
     <el-row>
       <el-col :xs='24' :sm='12' :md='12' :lg='16' :xl='18'>
-        <el-col :span='4' class='label'>批注</el-col>
+        <el-col :span='4' class='label'>
+          批注 <i class="el-icon-plus" @click='addRemarkVisible = true'></i>
+        </el-col>
         <el-col :span='20' class='content'>
           <span
             v-for='(remark, index) in order.remarks'
@@ -175,7 +177,7 @@
         </el-col>
       </el-col>
     </el-row>
-    <el-row v-if="canBeUpdated">
+    <el-row v-if="canBeUpdated" class='button'>
       <el-col :span='2' :offset='20'>
         <router-link :to='"/tft/order/update/" + order.id'>
           <el-button type="warning" icon='el-icon-edit' round>修改</el-button>
@@ -191,9 +193,7 @@
       <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
         <el-col :span='8' class='label'>生产领班签核</el-col>
         <el-col :span='16' class='content'>
-          <span v-if='order.startaudit.p_signer'>
-            {{ order.startaudit.p_signer.username }}
-          </span>
+          {{ order.startaudit.p_signer.username }}
         </el-col>
       </el-col>
       <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
@@ -211,9 +211,7 @@
       <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
         <el-col :span='8' class='label'>责任工程签字</el-col>
         <el-col :span='16' class='content'>
-          <span v-if='order.startaudit.c_signer'>
-            {{ order.startaudit.c_signer.username }}
-          </span>
+          {{ order.startaudit.c_signer.username }}
         </el-col>
       </el-col>
       <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
@@ -232,11 +230,30 @@
         <el-col :span='20' class='content'>{{ order.startaudit.reason }}</el-col>
       </el-col>
     </el-row>
+    <div class='dialog'>
+      <el-dialog title="添加批注" :visible.sync="addRemarkVisible">
+        <el-form :model='remark' :rules='remarkRules' ref='remarkForm'>
+          <el-form-item label="" prop='content'>
+            <el-input
+              type='textarea'
+              :rows='5'
+              v-model="remark.content"
+              placeholder='批注内容'
+            ></el-input>
+            不能超过 500 字符
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="addRemarkVisible = false">取 消</el-button>
+          <el-button type="primary" @click="addRemark">确 定</el-button>
+        </div>
+      </el-dialog>
+    </div>
   </div>
 </template>
 
 <script>
-import { getOrder, canUpdate } from '@/api/tft'
+import { getOrder, canUpdate, addRemark } from '@/api/tft'
 import { formatDate } from '@/common/js/date.js'
 
 export default {
@@ -260,7 +277,17 @@ export default {
           c_signer: {}
         }
       },
-      canBeUpdated: false
+      canBeUpdated: false,
+      addRemarkVisible: false,
+      remark: {
+        content: ''
+      },
+      remarkRules: {
+        content: [
+          { required: true, message: '请输入批注内容', trigger: 'blur' },
+          { min: 1, max: 500, message: '长度在 1 到 500 个字符', trigger: 'blur' }
+        ]
+      }
     }
   },
   computed: {
@@ -284,6 +311,32 @@ export default {
         .catch((err) => {
           console.log(err)
         })
+    },
+    addRemark () {
+      this.$refs['remarkForm'].validate((valid) => {
+        if (valid) {
+          addRemark(this.order.id, this.remark.content)
+            .then((res) => {
+              this.$notify({
+                title: '成功',
+                message: '添加成功',
+                type: 'success'
+              })
+              this.remark.content = ''
+              this.addRemarkVisible = false
+              this.getOrder()
+            })
+            .catch((err) => {
+              this.$notify({
+                title: '错误',
+                message: err,
+                type: 'error'
+              })
+              this.remark.content = ''
+              this.addRemarkVisible = false
+            })
+        }
+      })
     }
   },
   filters: {
@@ -292,7 +345,7 @@ export default {
       return formatDate(date, 'yyyy-MM-dd hh:mm:ss')
     }
   },
-  beforeMount () {
+  mounted () {
     this.getOrder()
     this.canUpdate()
   }
