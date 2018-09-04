@@ -212,3 +212,21 @@ export const addRemark = (order, content) => {
     content: content
   })
 }
+
+// product audit
+// export const productAudit = (order, recipeClose, recipeConfirm, remark) => {
+//   return axios.post(`${host}/tft/order/audit/product/`, {
+//     order: order,
+//     recipe_close: recipeClose,
+//     recipe_confirm: recipeConfirm,
+//     remark: remark
+//   })
+// }
+export const productAudit = (params) => {
+  return axios.post(`${host}/tft/order/audit/product/`, params)
+}
+
+// charge audit
+export const chargeAudit = (params) => {
+  return axios.post(`${host}/tft/order/audit/charge/`, params)
+}

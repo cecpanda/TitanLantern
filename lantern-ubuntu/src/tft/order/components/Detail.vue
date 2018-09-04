@@ -193,7 +193,12 @@
       <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
         <el-col :span='8' class='label'>生产领班签核</el-col>
         <el-col :span='16' class='content'>
-          {{ order.startaudit.p_signer.username }}
+          <span v-if='order.status.code === "1"' @click='productAuditVisible = true'>
+            <i class="el-icon-star-off"></i>
+            <i class="el-icon-star-off"></i>
+            <i class="el-icon-star-off"></i>
+          </span>
+          <span v-else>{{ order.startaudit.p_signer.username }}</span>
         </el-col>
       </el-col>
       <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
@@ -211,7 +216,12 @@
       <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
         <el-col :span='8' class='label'>责任工程签字</el-col>
         <el-col :span='16' class='content'>
-          {{ order.startaudit.c_signer.username }}
+          <span v-if="order.status.code === '2'" @click='chargeAuditVisible = true'>
+            <i class="el-icon-star-off"></i>
+            <i class="el-icon-star-off"></i>
+            <i class="el-icon-star-off"></i>
+          </span>
+          <span v-else>{{ order.startaudit.c_signer.username }}</span>
         </el-col>
       </el-col>
       <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
@@ -248,12 +258,55 @@
           <el-button type="primary" @click="addRemark">确 定</el-button>
         </div>
       </el-dialog>
+      <el-dialog title="生产签核" :visible.sync="productAuditVisible">
+        <el-form :model='productAudit' :rules='productRules' ref='productForm'>
+          <el-form-item label="Recipe关闭人员" prop='recipe_close' label-width='20%'>
+            <el-input v-model="productAudit.recipe_close"></el-input>
+          </el-form-item>
+          <el-form-item label="Recipe确认人员" prop='recipe_confirm' label-width='20%'>
+            <el-input v-model="productAudit.recipe_confirm"></el-input>
+          </el-form-item>
+          <el-form-item label="添加批注" prop='remark' label-width='20%'>
+            <el-input
+              type='textarea'
+              :rows='4'
+              v-model="productAudit.remark"
+              placeholder='不能超过 500 字符'
+            ></el-input>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="productAuditVisible = false">取 消</el-button>
+          <el-button type="primary" @click="addProductAudit">确 定</el-button>
+        </div>
+      </el-dialog>
+      <el-dialog :title="'责任工程审核 - ' + order.charge_group.name" :visible.sync="chargeAuditVisible">
+        <el-form :model='chargeAudit' :rules='chargeRules' ref='chargeForm'>
+          <el-form-item label="是否拒签" prop='rejected' label-width='20%'>
+            <el-radio v-model="chargeAudit.rejected" :label="true">是</el-radio>
+            <el-radio v-model="chargeAudit.rejected" :label="false">否</el-radio>
+          </el-form-item>
+          <el-form-item label="拒签理由" prop='reason' label-width='20%'>
+            <el-input
+              type='textarea'
+              :rows='4'
+              v-model="chargeAudit.reason"
+              placeholder='不能超过 100 字符'
+            ></el-input>
+            拒签时必填
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="chargeAuditVisible = false">取 消</el-button>
+          <el-button type="primary" @click="addChargeAudit">确 定</el-button>
+        </div>
+      </el-dialog>
     </div>
   </div>
 </template>
 
 <script>
-import { getOrder, canUpdate, addRemark } from '@/api/tft'
+import { getOrder, canUpdate, addRemark, productAudit, chargeAudit } from '@/api/tft'
 import { formatDate } from '@/common/js/date.js'
 
 export default {
@@ -286,6 +339,38 @@ export default {
         content: [
           { required: true, message: '请输入批注内容', trigger: 'blur' },
           { min: 1, max: 500, message: '长度在 1 到 500 个字符', trigger: 'blur' }
+        ]
+      },
+      productAuditVisible: false,
+      productAudit: {
+        recipe_close: '',
+        recipe_confirm: '',
+        remark: ''
+      },
+      productRules: {
+        recipe_close: [
+          { required: true, message: '请输入 Recipe 关闭人员', trigger: 'blur' },
+          { min: 1, max: 10, message: '长度在 1 到 10 个字符', trigger: 'blur' }
+        ],
+        recipe_confirm: [
+          { required: true, message: '请输入 Recipe 确认人员', trigger: 'blur' },
+          { min: 1, max: 10, message: '长度在 1 到 10 个字符', trigger: 'blur' }
+        ],
+        remark: [
+          { min: 1, max: 500, message: '长度在 1 到 500 个字符', trigger: 'blur' }
+        ]
+      },
+      chargeAuditVisible: false,
+      chargeAudit: {
+        rejected: false,
+        reason: ''
+      },
+      chargeRules: {
+        rejected: [
+          { required: true, message: '是否拒签', trigger: 'blur' }
+        ],
+        reason: [
+          { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' }
         ]
       }
     }
@@ -334,6 +419,75 @@ export default {
               })
               this.remark.content = ''
               this.addRemarkVisible = false
+            })
+        }
+      })
+    },
+    addProductAudit () {
+      this.$refs['productForm'].validate((valid) => {
+        if (valid) {
+          let params = {
+            order: this.id,
+            recipe_close: this.productAudit.recipe_close,
+            recipe_confirm: this.productAudit.recipe_confirm
+          }
+          if (this.productAudit.remark) {
+            params.remark = this.productAudit.remark
+          }
+          productAudit(params)
+            .then((res) => {
+              this.$notify({
+                title: '成功',
+                message: '生产签核成功',
+                type: 'success'
+              })
+              this.productAudit = {recipe_close: '', recipe_confirm: '', remark: ''}
+              this.productAuditVisible = false
+              this.getOrder()
+            })
+            .catch((err) => {
+              console.log(err)
+              this.$notify({
+                title: '错误',
+                message: err,
+                type: 'error'
+              })
+              this.productAudit = {recipe_close: '', recipe_confirm: '', remark: ''}
+              this.productAuditVisible = false
+            })
+        }
+      })
+    },
+    addChargeAudit () {
+      this.$refs['chargeForm'].validate((valid) => {
+        if (valid) {
+          let params = {
+            order: this.id,
+            rejected: this.chargeAudit.rejected
+          }
+          if (this.chargeAudit.reason) {
+            params.reason = this.chargeAudit.reason
+          }
+          chargeAudit(params)
+            .then((res) => {
+              this.$notify({
+                title: '成功',
+                message: '责任工程审核成功',
+                type: 'success'
+              })
+              this.chargeAudit = {rejected: false, reason: ''}
+              this.chargeAuditVisible = false
+              this.getOrder()
+            })
+            .catch((err) => {
+              console.log(err)
+              this.$notify({
+                title: '错误',
+                message: err,
+                type: 'error'
+              })
+              this.chargeAudit = {rejected: false, reason: ''}
+              this.chargeAuditVisible = false
             })
         }
       })

@@ -30,7 +30,6 @@ class OrderFilter(filters.FilterSet):
         fields = ('username', 'realname', 'status', 'group', 'charge_group')
 
 
-
 # 请求用户是否为开单用户
 class IsStartOrderUser(BasePermission):
     def has_permission(self, request, view):

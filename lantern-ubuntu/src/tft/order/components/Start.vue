@@ -177,12 +177,13 @@
               multiple
               action=''
               :on-change='handleChange'
-              :limit="20"
+              :limit='20'
               :on-exceed="handleExceed"
               :before-upload="beforeUpload"
               :http-request='upload'
             >
               <el-button size="small" type="primary">点击上传</el-button>
+              <div slot="tip" class="el-upload__tip">不超过 20 个且每个不超过 20MB</div>
             </el-upload>
           </el-form-item>
           <!-- <input type="file" @change="getFile($event)"> -->
@@ -335,15 +336,16 @@ export default {
       // testAvatar(formdata)
     },
     beforeUpload (file) {
-      const isJpgPng = file.type === 'image/jpeg' || file.type === 'image/png'
-      const isLt10M = file.size / 1024 / 1024 < 10
-      if (!isJpgPng) {
-        this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+      // const isJpgPng = file.type === 'image/jpeg' || file.type === 'image/png'
+      const isLt20M = file.size / 1024 / 1024 < 20
+      // if (!isJpgPng) {
+      //   this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+      // }
+      if (!isLt20M) {
+        this.$message.error('上传文件大小不能超过 20MB!')
       }
-      if (!isLt10M) {
-        this.$message.error('上传文件大小不能超过 10MB!')
-      }
-      return isLt10M && isJpgPng
+      // return isLt20M && isJpgPng
+      return isLt20M
     },
     getFile (e) {
       let file = e.target.files[0]

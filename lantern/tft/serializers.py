@@ -249,7 +249,7 @@ class StartOrderSerializer(serializers.ModelSerializer):
                 instance.save()
 
                 # reports
-                instance.reports.all().delete()
+                # instance.reports.all().delete()
                 reports = validated_data.get('reports')
                 if reports:
                     for file in reports:

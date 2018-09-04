@@ -177,7 +177,7 @@ def report_handler(instance, filename):
 
 class Report(models.Model):
     order = models.ForeignKey(Order, related_name='reports', on_delete=models.CASCADE, verbose_name='订单')
-    file = models.FileField(upload_to=report_handler, blank=True, null=True, verbose_name='调查报告')
+    file = models.FileField(upload_to=report_handler, verbose_name='调查报告')
 
     class Meta:
         verbose_name = '调查报告'

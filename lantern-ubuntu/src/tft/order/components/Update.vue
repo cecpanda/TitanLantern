@@ -226,12 +226,14 @@
               action=''
               :auto-upload='false'
               :on-change='handleChange'
-              :limit="20"
+              :limit="fileLimit"
               :on-exceed="handleExceed"
               :before-upload="beforeUpload"
-              :file-list='reportsList'
             >
               <el-button size="small" type="primary">点击上传</el-button>
+              <div slot="tip" class="el-upload__tip">
+                不超过 {{ reportsLimit }} 个且每个不超过 20MB。(不影响原来的调查报告，即继续添加！)
+              </div>
             </el-upload>
           </el-form-item>
         </el-col>
@@ -253,7 +255,7 @@
 import { mapGetters } from 'vuex'
 import { getUser, getAllGroups } from '@/api/user'
 import { formatDate } from '@/common/js/date.js'
-import { getOrder, canUpdate, getReport, updateOrder } from '@/api/tft'
+import { getOrder, canUpdate, updateOrder } from '@/api/tft'
 
 export default {
   name: 'Update',
@@ -274,6 +276,7 @@ export default {
         charge_group: null,
         remark: ''
       },
+      fileLimit: null,
       rules: {
         found_step: [
           { required: true, message: '请输入发现站点', trigger: 'blur' },
@@ -336,11 +339,17 @@ export default {
     reportsList () {
       let list = []
       for (let name in this.order.reports) {
-        if (this.order.reports.hasOwnProperty) {
+        if (this.order.reports.hasOwnProperty(name)) {
           list.push({name: name, url: this.order.reports[name]})
         }
       }
       return list
+    },
+    reportsLimit () {
+      if (this.fileLimit <= 0) {
+        return 0
+      }
+      return this.fileLimit
     }
   },
   methods: {
@@ -366,7 +375,14 @@ export default {
       getOrder(this.id)
         .then((res) => {
           this.order = res.data
+          // 计算还能上传的调查报告数
+          // 0 好像表示不限制个数
+          this.fileLimit = 20 - Object.keys(this.order.reports).length
+          if (this.fileLimit <= 0) {
+            this.fileLimit = -1
+          }
           this.order.charge_group = res.data.charge_group.id
+          this.order.reports = []
         })
         .catch((error) => {
           console.log(error)
@@ -382,17 +398,8 @@ export default {
           console.log(err)
         })
     },
-    getReport (url) {
-      getReport(url)
-        .then((res) => {
-          console.log(res.data)
-        })
-        .catch((err) => {
-          console.log(err)
-        })
-    },
     handleExceed (files, fileList) {
-      this.$message.warning(`当前限制选择 20 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
+      this.$message.warning(`当前限制选择 ${this.reportsLimit} 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
     },
     handleChange (file, files) {
       this.order.reports = []
@@ -406,15 +413,16 @@ export default {
       // testAvatar(formdata)
     },
     beforeUpload (file) {
-      const isJpgPng = file.type === 'image/jpeg' || file.type === 'image/png'
-      const isLt10M = file.size / 1024 / 1024 < 10
-      if (!isJpgPng) {
-        this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
-      }
-      if (!isLt10M) {
+      // const isJpgPng = file.type === 'image/jpeg' || file.type === 'image/png'
+      const isLt20M = file.size / 1024 / 1024 < 20
+      // if (!isJpgPng) {
+      //   this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+      // }
+      if (!isLt20M) {
         this.$message.error('上传文件大小不能超过 10MB!')
       }
-      return isLt10M && isJpgPng
+      // return isLt20M && isJpgPng
+      return isLt20M
     },
     submitForm (formName) {
       this.$refs[formName].validate((valid) => {
