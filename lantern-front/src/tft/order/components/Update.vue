@@ -1,22 +1,253 @@
 <template>
   <div>
     <el-row>
-      <el-col :xs="24" :sm="24" :md="16" :lg="16" :xl="16">
+      <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
         <h1>设备品质异常停机单 - 修改</h1>
       </el-col>
-      <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8" class='user'>
-        <span class='user-info'>开单工程:</span>
-        <span v-for='group of user.groups' :key='group.id' class='user-content'>
-          {{ group.name }}
-        </span>
-        <br>
-        <span class='user-info'>修改人员:</span>
-        <span class='user-content'>{{ username }}</span>
-        <br>
-        <span class='user-info'>当前时间:</span>
-        <span class='user-content'>{{ date | formatDate }}</span>
-      </el-col>
     </el-row>
+    <el-form
+      ref="form"
+      :model="order"
+      :rules="rules"
+      label-width="120px"
+      status-icon
+    >
+      <el-row>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="编号" prop='id'>
+            <el-input v-model="order.id" disabled></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="状态" prop='status'>
+            <el-input v-model="order.status.desc" disabled></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="开单工程" prop='group'>
+            <el-input v-model="order.group.name" disabled></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="开单人员" prop='user'>
+            <el-input v-model="order.user.username" disabled></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="开单时间" prop='created'>
+            <el-date-picker
+              v-model="order.created"
+              type="datetime"
+              placeholder="选择日期时间"
+              disabled
+            >
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="修改人员" prop='mod_user'>
+            <el-input v-model="order.mod_user.username" disabled></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="修改时间" prop='modified'>
+            <el-date-picker
+              v-model="order.modified"
+              type="datetime"
+              placeholder="选择日期时间"
+              disabled
+            >
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="当前时间">
+            {{ date | formatDate }}
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="发现站点" prop='found_step'>
+            <el-input v-model="order.found_step"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="发现时间" prop='found_time'>
+            <el-date-picker
+              v-model="order.found_time"
+              type="datetime"
+              placeholder="选择日期时间"
+            >
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="责任工程" prop='charge_group'>
+            <el-select v-model="order.charge_group" clearable>
+              <el-option
+                v-for="group in groups"
+                :key="group.id"
+                :label="group.name"
+                :value="group.id"
+              >
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="停机设备" prop='eq'>
+            <el-input v-model="order.eq"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="停机机种" prop='kind'>
+            <el-input v-model="order.kind"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="停机站点" prop='step'>
+            <el-input v-model="order.step"></el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
+          <el-form-item label="停机原因" prop='reason'>
+            <el-input
+              v-model="order.reason"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入内容"
+            >
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-row>
+            <el-form-item label="通知生产人员" prop='users'>
+              <el-input v-model="order.users"></el-input>
+            </el-form-item>
+          </el-row>
+          <el-row>
+            <el-form-item label="通知制程人员" prop='charge_users'>
+              <el-input v-model="order.charge_users"></el-input>
+            </el-form-item>
+          </el-row>
+        </el-col>
+      </el-row>
+      <h5>异常状况描述（不良现象说明）</h5>
+      <el-row>
+        <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
+          <el-form-item label="异常描述" prop='desc'>
+            <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.desc">
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-row>
+            <el-form-item label="受害开始时间">
+              <el-date-picker
+                v-model="order.start_time"
+                type="datetime"
+                placeholder="选择日期时间">
+              </el-date-picker>
+            </el-form-item>
+          </el-row>
+          <el-row>
+            <el-form-item label="受害结束时间">
+              <el-date-picker
+                v-model="order.end_time"
+                type="datetime"
+                placeholder="选择日期时间">
+              </el-date-picker>
+            </el-form-item>
+          </el-row>
+        </el-col>
+      </el-row>
+<!--       <el-row>
+        <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
+          <el-form-item label="异常批次/基板" prop='lots'>
+            <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.lots">
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='24' :md='24' :lg='8' :xl='8'>
+          <el-form-item label="受害批次数" prop='lot_num'>
+            <el-input v-model="order.lot_num"></el-input>
+          </el-form-item>
+          <el-form-item label="异常批次/基板" prop='lots'>
+            <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.lots">
+            </el-input>
+          </el-form-item>
+        </el-col>
+      </el-row> -->
+      <el-row>
+        <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
+          <el-form-item label="复机条件" prop='condition'>
+            <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.condition">
+            </el-input>
+          </el-form-item>
+          <el-form-item label="添加批注" prop='remark'>
+            <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.remark">
+            </el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='24' :md='24' :lg='8' :xl='8'>
+          <el-form-item label="受害批次数" prop='lot_num'>
+            <el-input v-model="order.lot_num"></el-input>
+          </el-form-item>
+          <el-form-item label="异常批次/基板" prop='lots'>
+            <el-input type="textarea" :rows="7" placeholder="请输入内容" v-model="order.lots">
+            </el-input>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
+          <el-form-item label="不良类型">
+            <el-radio v-model="order.defect_type" :label="null">默认选项</el-radio>
+            <el-radio v-model="order.defect_type" :label="true">绝对不良</el-radio>
+            <el-radio v-model="order.defect_type" :label="false">非绝对不良</el-radio>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
+          <el-form-item label="调查报告">
+            <el-upload
+              multiple
+              action=''
+              :auto-upload='false'
+              :on-change='handleChange'
+              :limit="fileLimit"
+              :on-exceed="handleExceed"
+              :before-upload="beforeUpload"
+            >
+              <el-button size="small" type="primary">点击上传</el-button>
+              <div slot="tip" class="el-upload__tip">
+                不超过 {{ reportsLimit }} 个且每个不超过 20MB。(不影响原来的调查报告，即继续添加！)
+              </div>
+            </el-upload>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row class='button'>
+        <el-col :xs="24" :sm="12" :md="12" :lg="8" :xl="6" :offset='16'>
+          <el-form-item>
+            <el-button type="warning" @click="submitForm('form')">
+              立即修改
+            </el-button>
+          </el-form-item>
+        </el-col>
+      </el-row>
+    </el-form>
   </div>
 </template>
 
@@ -24,7 +255,7 @@
 import { mapGetters } from 'vuex'
 import { getUser, getAllGroups } from '@/api/user'
 import { formatDate } from '@/common/js/date.js'
-import { getOrder, canUpdate } from '@/api/tft'
+import { getOrder, canUpdate, updateOrder } from '@/api/tft'
 
 export default {
   name: 'Update',
@@ -35,15 +266,91 @@ export default {
     return {
       user: {},
       date: new Date(),
+      groups: [],
       canBeUpdated: false,
       order: {
+        status: {},
+        user: {},
+        group: {},
+        mod_user: {},
+        charge_group: null,
+        remark: ''
+      },
+      fileLimit: null,
+      rules: {
+        found_step: [
+          { required: true, message: '请输入发现站点', trigger: 'blur' },
+          { min: 1, max: 30, message: '长度在 1 到 30 个字符', trigger: 'blur' }
+        ],
+        found_time: [
+          { required: true, message: '请选择时间', trigger: 'blur' }
+        ],
+        charge_group: [
+          { required: true, message: '请输入责任工程', trigger: 'change' }
+        ],
+        eq: [
+          { required: true, message: '请输入停机设备', trigger: 'blur' },
+          { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }
+        ],
+        kind: [
+          { required: true, message: '请输入停机机种', trigger: 'blur' },
+          { min: 1, max: 30, message: '长度在 1 到 30 个字符', trigger: 'blur' }
+        ],
+        step: [
+          { required: true, message: '请输入停机站点', trigger: 'blur' },
+          { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }
+        ],
+        reason: [
+          { required: true, message: '请输入停机原因', trigger: 'blur' },
+          { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' }
+        ],
+        users: [
+          { required: true, message: '请输入通知生产人员', trigger: 'blur' },
+          { min: 1, max: 10, message: '长度在 1 到 10 个字符', trigger: 'blur' }
+        ],
+        charge_users: [
+          { required: true, message: '请输入制程生产人员', trigger: 'blur' },
+          { min: 1, max: 10, message: '长度在 1 到 10 个字符', trigger: 'blur' }
+        ],
+        desc: [
+          { required: true, message: '请输入异常描述', trigger: 'blur' },
+          { min: 1, max: 300, message: '长度在 1 到 300 个字符', trigger: 'blur' }
+        ],
+        lot_num: [
+          { min: 0, max: 10, message: '长度不能超过 10 个字符', trigger: 'blur' }
+        ],
+        lots: [
+          { min: 0, max: 100, message: '长度不能超过 100 个字符', trigger: 'blur' }
+        ],
+        condition: [
+          { required: true, message: '请输入复机条件', trigger: 'blur' },
+          { min: 1, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
+        ],
+        remark: [
+          { min: 0, max: 300, message: '长度不能超过 300 个字符', trigger: 'blur' }
+        ]
       }
     }
   },
   computed: {
     ...mapGetters({
       username: 'username'
-    })
+    }),
+    reportsList () {
+      let list = []
+      for (let name in this.order.reports) {
+        if (this.order.reports.hasOwnProperty(name)) {
+          list.push({name: name, url: this.order.reports[name]})
+        }
+      }
+      return list
+    },
+    reportsLimit () {
+      if (this.fileLimit <= 0) {
+        return 0
+      }
+      return this.fileLimit
+    }
   },
   methods: {
     getUser (username) {
@@ -68,6 +375,14 @@ export default {
       getOrder(this.id)
         .then((res) => {
           this.order = res.data
+          // 计算还能上传的调查报告数
+          // 0 好像表示不限制个数
+          this.fileLimit = 20 - Object.keys(this.order.reports).length
+          if (this.fileLimit <= 0) {
+            this.fileLimit = -1
+          }
+          this.order.charge_group = res.data.charge_group.id
+          this.order.reports = []
         })
         .catch((error) => {
           console.log(error)
@@ -82,6 +397,57 @@ export default {
         .catch((err) => {
           console.log(err)
         })
+    },
+    handleExceed (files, fileList) {
+      this.$message.warning(`当前限制选择 ${this.reportsLimit} 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
+    },
+    handleChange (file, files) {
+      this.order.reports = []
+      files.forEach((file) => {
+        this.order.reports.push(file.raw)
+      })
+      // 上传文件必须是 FormData，内容是 file.raw
+      // var formdata = new FormData()
+      // formdata.append('avatar', file.raw)
+      // formdata.append('realname', 'woca')
+      // testAvatar(formdata)
+    },
+    beforeUpload (file) {
+      // const isJpgPng = file.type === 'image/jpeg' || file.type === 'image/png'
+      const isLt20M = file.size / 1024 / 1024 < 20
+      // if (!isJpgPng) {
+      //   this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+      // }
+      if (!isLt20M) {
+        this.$message.error('上传文件大小不能超过 10MB!')
+      }
+      // return isLt20M && isJpgPng
+      return isLt20M
+    },
+    submitForm (formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          updateOrder(this.order)
+            .then((res) => {
+              let id = res.data.id
+              let status = res.data.status
+              this.$notify({
+                title: '成功',
+                dangerouslyUseHTMLString: true,
+                message: `<strong>编号</strong>: ${id}<br><strong>状态</strong>: ${status}`,
+                type: 'success'
+              })
+              this.$router.push({path: `/tft/order/detail/${this.id}`})
+            })
+            .catch((error) => {
+              this.$notify({
+                title: '错误',
+                message: error,
+                type: 'error'
+              })
+            })
+        }
+      })
     }
   },
   filters: {
@@ -108,11 +474,11 @@ export default {
 </script>
 
 <style lang='stylus' scoped>
-h1
-  font-size 30px
-h3
-  font-size 20px
-  margin-top 50px
+// h1
+//   font-size 30px
+// h3
+//   font-size 20px
+//   margin-top 50px
 .el-col
   // border 1px solid #8FA5BC
   border-radius 8px

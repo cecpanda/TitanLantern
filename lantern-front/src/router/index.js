@@ -19,7 +19,7 @@ import DetailDialog from '@/tft/order/components/DetailDialog'
 import Query from '@/tft/order/components/Query'
 import Wiget from '@/widgets/index'
 import Clock from '@/widgets/Clock'
-import Rain from '@/widgets/Rain'
+import Panda from '@/widgets/Panda'
 // import { jwtVerify } from '@/api/user'
 
 Vue.use(Router)
@@ -105,8 +105,8 @@ const router = new Router({
           path: 'clock',
           component: Clock
         }, {
-          path: 'rain',
-          component: Rain
+          path: 'panda',
+          component: Panda
         }
       ]
     }

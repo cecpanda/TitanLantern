@@ -111,7 +111,7 @@ export default {
       return formatDate(date, 'yyyy-MM-dd hh:mm:ss')
     },
     rowdbClick (row, event) {
-      this.$router.push({path: `/tft/order/detail/${row.id}`})
+      // this.$router.push({path: `/tft/order/detail/${row.id}`})
     }
   },
   filters: {

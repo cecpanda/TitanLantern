@@ -63,20 +63,17 @@ export default {
   name: 'Order',
   data () {
     return {
-      isCollapse: false,
+      isCollapse: true,
       defaultActive: '',
       activeMenu: ''
     }
   },
   methods: {
     handleSelect (index, indexPath) {
-      console.log(index, indexPath)
     },
     handleOpen (key, keyPath) {
-      console.log(key, keyPath)
     },
     handleClose (key, keyPath) {
-      console.log(key, keyPath)
     }
   }
 }
@@ -87,7 +84,7 @@ export default {
   font-size 0.9rem
 .el-main
 .el-aside
-  border 1px solid #283D52
+  border 1px dashed #283D52
   min-height 550px
 .el-menu-vertical-demo:not(.el-menu--collapse)
   width: 200px

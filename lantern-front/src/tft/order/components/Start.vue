@@ -1,20 +1,8 @@
 <template>
   <div>
     <el-row>
-      <el-col :span='16'>
+      <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
         <h1>设备品质异常停机单</h1>
-      </el-col>
-      <el-col :span='8' class='user'>
-        <span class='user-info'>开单工程:</span>
-        <span v-for='group of user.groups' :key='group.id' class='user-content'>
-          {{ group.name }}
-        </span>
-        <br>
-        <span class='user-info'>开单人员:</span>
-        <span class='user-content'>{{ username }}</span>
-        <br>
-        <span class='user-info'>当前时间:</span>
-        <span class='user-content'>{{ date | formatDate }}</span>
       </el-col>
     </el-row>
     <el-form
@@ -25,12 +13,29 @@
       status-icon
     >
       <el-row>
-        <el-col :span='8'>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="开单工程" prop='group'>
+            {{ user.groups.length ? user.groups[0].name : null }}
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="开单人员" prop='user'>
+            {{ username }}
+          </el-form-item>
+        </el-col>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
+          <el-form-item label="当前时间" prop='group'>
+            {{ date | formatDate }}
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
           <el-form-item label="发现站点" prop='found_step'>
             <el-input v-model="order.found_step"></el-input>
           </el-form-item>
         </el-col>
-        <el-col :span='8'>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
           <el-form-item label="发现时间" prop='found_time'>
             <el-date-picker
               v-model="order.found_time"
@@ -40,7 +45,7 @@
             </el-date-picker>
           </el-form-item>
         </el-col>
-        <el-col :span='8'>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
           <el-form-item label="责任工程" prop='charge_group'>
             <el-select v-model="order.charge_group" clearable>
               <el-option
@@ -55,7 +60,7 @@
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span='8'>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
           <el-form-item label="停机设备" prop='eq'>
             <el-input
               v-model="order.eq"
@@ -66,7 +71,7 @@
             </el-input>
           </el-form-item>
         </el-col>
-        <el-col :span='8'>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
           <el-form-item label="停机机种" prop='kind'>
             <el-input
               v-model="order.kind"
@@ -77,7 +82,7 @@
             </el-input>
           </el-form-item>
         </el-col>
-        <el-col :span='8'>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
           <el-form-item label="停机站点" prop='step'>
             <el-input
               v-model="order.step"
@@ -90,7 +95,7 @@
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span='16'>
+        <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
           <el-form-item label="停机原因" prop='reason'>
             <el-input
               v-model="order.reason"
@@ -101,7 +106,7 @@
             </el-input>
           </el-form-item>
         </el-col>
-        <el-col :span='8'>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
           <el-form-item label="通知生产人员" prop='users'>
             <el-input v-model="order.users"></el-input>
           </el-form-item>
@@ -110,15 +115,15 @@
           </el-form-item>
         </el-col>
       </el-row>
-      <h3>异常状况描述（不良现象说明）</h3>
+      <h5>异常状况描述（不良现象说明）</h5>
       <el-row>
-        <el-col :span='16'>
+        <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
           <el-form-item label="异常描述" prop='desc'>
             <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.desc">
             </el-input>
           </el-form-item>
         </el-col>
-        <el-col :span='8'>
+        <el-col :xs='24' :sm='12' :md='12' :lg='8' :xl='6'>
           <el-form-item label="受害开始时间">
             <el-date-picker
               v-model="order.start_time"
@@ -136,28 +141,28 @@
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span='16'>
+        <el-col :xs='24' :sm='24' :md='24' :lg='16' :xl='16'>
           <el-form-item label="复机条件" prop='condition'>
             <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.condition">
             </el-input>
           </el-form-item>
-          <!-- <el-form-item label="批注" prop='remark'>
+          <el-form-item label="添加批注" prop='remark'>
             <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.remark">
             </el-input>
-          </el-form-item> -->
+          </el-form-item>
         </el-col>
-        <el-col :span='8'>
+        <el-col :xs='24' :sm='24' :md='24' :lg='8' :xl='8'>
           <el-form-item label="受害批次数" prop='lot_num'>
             <el-input v-model="order.lot_num"></el-input>
           </el-form-item>
           <el-form-item label="异常批次/基板" prop='lots'>
-            <el-input type="textarea" :rows="4" placeholder="请输入内容" v-model="order.lots">
+            <el-input type="textarea" :rows="7" placeholder="请输入内容" v-model="order.lots">
             </el-input>
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span='24'>
+        <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
           <el-form-item label="不良类型">
             <el-radio v-model="order.defect_type" label="">默认选项</el-radio>
             <el-radio v-model="order.defect_type" :label="true">绝对不良</el-radio>
@@ -166,30 +171,33 @@
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span='8'>
+        <el-col :xs="24" :sm="12" :md="12" :lg="8" :xl="6">
           <el-form-item label="调查报告">
             <el-upload
               multiple
               action=''
               :on-change='handleChange'
-              :limit="3"
+              :limit='20'
               :on-exceed="handleExceed"
               :before-upload="beforeUpload"
               :http-request='upload'
             >
               <el-button size="small" type="primary">点击上传</el-button>
+              <div slot="tip" class="el-upload__tip">不超过 20 个且每个不超过 20MB</div>
             </el-upload>
           </el-form-item>
           <!-- <input type="file" @change="getFile($event)"> -->
         </el-col>
       </el-row>
-      <el-row>
-        <el-form-item>
-          <el-button @click="resetForm('form')">重置</el-button>
-          <el-button type="primary" round @click="submitForm('form')">
-            立即创建
-          </el-button>
-        </el-form-item>
+      <el-row class='button'>
+        <el-col :xs="24" :sm="12" :md="12" :lg="8" :xl="6" :offset='16'>
+          <el-form-item>
+            <el-button type='warning' @click="resetForm('form')">重置</el-button>
+            <el-button type="primary" @click="submitForm('form')">
+              立即创建
+            </el-button>
+          </el-form-item>
+        </el-col>
       </el-row>
     </el-form>
   </div>
@@ -200,12 +208,15 @@ import { mapGetters } from 'vuex'
 import { getUser, getAllGroups } from '@/api/user'
 import { startOrder } from '@/api/tft'
 import { formatDate } from '@/common/js/date.js'
+import Clock from '@/widgets/Clock'
 
 export default {
   name: 'StartOrder',
   data () {
     return {
-      user: {},
+      user: {
+        groups: []
+      },
       groups: [], // 责任工程用
       order: {
         found_step: '',
@@ -230,7 +241,7 @@ export default {
       rules: {
         found_step: [
           { required: true, message: '请输入发现站点', trigger: 'blur' },
-          { min: 1, max: 5, message: '长度在 1 到 30 个字符', trigger: 'blur' }
+          { min: 1, max: 30, message: '长度在 1 到 30 个字符', trigger: 'blur' }
         ],
         found_time: [
           { required: true, message: '请选择时间', trigger: 'blur' }
@@ -275,10 +286,10 @@ export default {
         condition: [
           { required: true, message: '请输入复机条件', trigger: 'blur' },
           { min: 1, max: 200, message: '长度在 1 到 200 个字符', trigger: 'blur' }
+        ],
+        remark: [
+          { min: 0, max: 500, message: '长度不能超过 500 个字符', trigger: 'blur' }
         ]
-        // remark: [
-        //   { min: 0, max: 300, message: '长度不能超过 300 个字符', trigger: 'blur' }
-        // ]
       },
       date: new Date()
     }
@@ -287,6 +298,9 @@ export default {
     ...mapGetters({
       username: 'username'
     })
+  },
+  components: {
+    Clock
   },
   methods: {
     getUser (username) {
@@ -308,11 +322,9 @@ export default {
         })
     },
     handleExceed (files, fileList) {
-      this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
+      this.$message.warning(`当前限制选择 20 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
     },
     handleChange (file, files) {
-      console.log(file)
-      console.log(files)
       this.order.reports = []
       files.forEach((file) => {
         this.order.reports.push(file.raw)
@@ -324,15 +336,16 @@ export default {
       // testAvatar(formdata)
     },
     beforeUpload (file) {
-      const isJpgPng = file.type === 'image/jpeg' || file.type === 'image/png'
-      const isLt10M = file.size / 1024 / 1024 < 10
-      if (!isJpgPng) {
-        this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+      // const isJpgPng = file.type === 'image/jpeg' || file.type === 'image/png'
+      const isLt20M = file.size / 1024 / 1024 < 20
+      // if (!isJpgPng) {
+      //   this.$message.error('上传头像图片只能是 JPG/PNG 格式!')
+      // }
+      if (!isLt20M) {
+        this.$message.error('上传文件大小不能超过 20MB!')
       }
-      if (!isLt10M) {
-        this.$message.error('上传文件大小不能超过 10MB!')
-      }
-      return isLt10M && isJpgPng
+      // return isLt20M && isJpgPng
+      return isLt20M
     },
     getFile (e) {
       let file = e.target.files[0]
@@ -346,9 +359,12 @@ export default {
         if (valid) {
           startOrder(this.order)
             .then((res) => {
+              let id = res.data.id
+              let status = res.data.status
               this.$notify({
                 title: '成功',
-                message: res.data,
+                dangerouslyUseHTMLString: true,
+                message: `<strong>编号</strong>: ${id}<br><strong>状态</strong>: ${status}`,
                 type: 'success'
               })
               this.$router.push({path: '/tft/order/mystart'})
@@ -390,11 +406,11 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-h1
-  font-size 30px
-h3
-  font-size 20px
-  margin-top 50px
+// h1
+//   font-size 30px
+// h3
+//   font-size 20px
+//   margin-top 50px
 .el-col
   // border 1px solid #8FA5BC
   border-radius 8px
@@ -406,4 +422,6 @@ h3
   .user-content
     font-size 15px
     color #38739F
+.button
+  margin-top 50px
 </style>
