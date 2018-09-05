@@ -230,3 +230,17 @@ export const productAudit = (params) => {
 export const chargeAudit = (params) => {
   return axios.post(`${host}/tft/order/audit/charge/`, params)
 }
+
+// whether I could create a recover order for a definite order
+export const canCreate = (order) => {
+  return axios.get(`${host}/tft/order/recover/can-create/`, {
+    params: {
+      order: order
+    }
+  })
+}
+
+// create recover order
+export const createRecoverOrder = (params) => {
+  return axios.post(`${host}/tft/order/recover/`, params)
+}

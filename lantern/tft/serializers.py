@@ -995,6 +995,14 @@ class QueryRecoverOrderSerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'created', 'mod_user', 'modified',
                   'solution', 'explain', 'partial', 'eq', 'kind', 'step', 'audit')
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if not ret.get('audit'):
+            ret['audit'] = {'qc_signer': {}, 'p_signer': {}}
+        if not ret.get('mod_user'):
+            ret['mod_user'] = {}
+        return ret
+
 
 class OrderSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()

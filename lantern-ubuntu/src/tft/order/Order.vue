@@ -84,7 +84,7 @@ export default {
   font-size 0.9rem
 .el-main
 .el-aside
-  border 1px solid #283D52
+  border 1px dashed #283D52
   min-height 550px
 .el-menu-vertical-demo:not(.el-menu--collapse)
   width: 200px

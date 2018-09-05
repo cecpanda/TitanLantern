@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.db.models import Q
 from django.core.exceptions import FieldError
 from rest_framework.response import Response
 from rest_framework import status
@@ -12,6 +14,7 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
+from account.models import GroupSetting
 from action.utils import create_action
 from .models import Order, Audit, RecoverOrder, RecoverAudit, Remark, Shortcut
 from .serializers import StartOrderSerializer, RetrieveStartOrderSerializer, \
@@ -133,7 +136,6 @@ class StartOrderViewSet(CreateModelMixin,
         return Response(serializer.data)
 
 
-
 class AuditViewSet(GenericViewSet):
     queryset = Audit.objects.all()
     # serializer_class = ProductAuditSerializer
@@ -189,6 +191,8 @@ class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
             return [IsAuthenticated(), DjangoModelPermissions()]
         elif self.action == 'update':
             return [IsAuthenticated(), DjangoModelPermissions(), RecoverOrderIsSameGroup()]
+        elif self.action == 'can_create':
+            return [IsAuthenticated(), DjangoModelPermissions()]
         elif self.action == 'can_update':
             return [IsAuthenticated(), DjangoModelPermissions()]
         elif self.action == 'all_can_update':
@@ -240,6 +244,34 @@ class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
                          'order_id': order.id,
                          'status_code': order.status,
                          'status': order.get_status_display()})
+
+    @action(methods=['get'], detail=False, url_path='can-create', url_name='can_create')
+    def can_create(self, request):
+        user = request.user
+        id = request.query_params.get('order')
+        if not id:
+            return Response({'detail': '请输入 order 参数'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            order = Order.objects.get(id=id)
+        except Exception as e:
+            return Response({'detail': e}, status=status.HTTP_400_BAD_REQUEST)
+
+        qc_code = settings.GROUP_CODE['TFT'].get('QC')
+        qc = GroupSetting.objects.get(code=qc_code).group
+
+        if order.status == '1' or order.status == '2' or order.status == '3' or order.status == '9':
+            return Response({'detail': '此状态不允许复机申请'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not order.group:
+            if not user.groups.filter(name=order.charge_group.name).exists():
+                return Response({'detail': '开单工程不是 QC，只有责任工程才能申请复机'}, status=status.HTTP_400_BAD_REQUEST)
+        elif order.group.name == qc.name:
+            if not user.groups.filter(Q(name=order.charge_group.name) | Q(name=qc.name)).exists():
+                return Response({'detail': '开单工程是 QC，只有责任工程和 QC 才能申请复机'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            if not user.groups.filter(name=order.charge_group.name).exists():
+                return Response({'detail': '开单工程不是 QC，只有责任工程才能申请复机'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'can': True})
 
     @action(methods=['get'], detail=True, url_path='can-update', url_name='can_update')
     def can_update(self, request, pk=None):
