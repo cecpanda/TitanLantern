@@ -15,7 +15,6 @@ import UpdateOrder from '@/tft/order/components/Update'
 import MyStart from '@/tft/order/components/MyStart'
 import AuditOrder from '@/tft/order/components/Audit'
 import Detail from '@/tft/order/components/Detail'
-import DetailDialog from '@/tft/order/components/DetailDialog'
 import Query from '@/tft/order/components/Query'
 import Wiget from '@/widgets/index'
 import Clock from '@/widgets/Clock'
@@ -87,10 +86,6 @@ const router = new Router({
         }, {
           path: 'detail/:id',
           component: Detail,
-          props: true
-        }, {
-          path: 'detaildialog/:id',
-          component: DetailDialog,
           props: true
         }, {
           path: 'query',

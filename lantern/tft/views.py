@@ -280,18 +280,26 @@ class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
 
         if RecoverAudit.objects.filter(recover_order__id=instance.id).exists():
             return Response({'can': False})
-        try:
-            if instance.order.group.name in [group.name for group in user.groups.all()]:
-                return Response({'can': True})
-        except AttributeError:
-            return Response({'can': False})
+        # 这段逻辑错误
+        # try:
+        #     if instance.order.group.name in [group.name for group in user.groups.all()]:
+        #         return Response({'can': True})
+        # except AttributeError:
+        #     return Response({'can': False})
+
+        groups = [group.name for group in instance.user.groups.all()]
+        user_groups = [group.name for group in user.groups.all()]
+        if set(groups) & set(user_groups):
+            return Response({'can': True})
         return Response({'can': False})
 
 
     @action(methods=['get'], detail=False, url_path='all-can-update', url_name='all_can_update')
     def all_can_update(self, request):
         user = request.user
-        recover_orders = self.queryset.filter(order__group__name__in=[group.name for group in user.groups.all()],
+        # recover_orders = self.queryset.filter(order__group__name__in=[group.name for group in user.groups.all()],
+        #                                       audit=None)
+        recover_orders = self.queryset.filter(user__groups__name__in=[group.name for group in user.groups.all()],
                                               audit=None)
         ids = [recover_order.id for recover_order in recover_orders]
 

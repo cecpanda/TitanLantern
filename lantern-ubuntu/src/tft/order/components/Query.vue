@@ -134,7 +134,6 @@
 <script>
 import { formatDate } from '@/common/js/date.js'
 import { getOrders } from '@/api/tft'
-import DetailDialog from './DetailDialog'
 
 export default {
   name: 'Query',
@@ -464,9 +463,6 @@ export default {
       let date = new Date(time)
       return formatDate(date, 'yyyy-MM-dd hh:mm:ss')
     }
-  },
-  components: {
-    DetailDialog
   },
   mounted () {
     this.getOrders(this.params)
