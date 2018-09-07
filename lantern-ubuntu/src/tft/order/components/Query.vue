@@ -128,19 +128,21 @@
       :total="count"
     >
     </el-pagination>
+    <BackTop></BackTop>
   </div>
 </template>
 
 <script>
 import { formatDate } from '@/common/js/date.js'
 import { getOrders } from '@/api/tft'
+import BackTop from '@/common/components/BackTop'
 
 export default {
   name: 'Query',
   data () {
     return {
       page: 1,
-      pageSize: 3,
+      pageSize: 15,
       count: null,
       orders: [],
       // 留意 methods 中的 valueToLabel
@@ -457,6 +459,9 @@ export default {
       // 同一属性对应多个值的过滤 API
       // console.log(this.filters)
     }
+  },
+  components: {
+    BackTop
   },
   filters: {
     formatDate (time) {

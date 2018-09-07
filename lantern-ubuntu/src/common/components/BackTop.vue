@@ -1,5 +1,9 @@
 <template>
-  <transition name='icon'>
+  <transition
+    name='icon'
+    enter-active-class='animated bounceInDown'
+    leave-active-class='animated rotateOutDownRight'
+  >
     <i class='iconfont' title='返回顶部' v-show="show" @click="backTop">&#xe6ae;</i>
   </transition>
 </template>
@@ -47,12 +51,12 @@ export default {
 </script>
 
 <style lang='stylus' scoped>
-.icon-enter
-.icon-leave-to
-  opacity 0
-.icon-enter-active
-.icon-leave-active
-  transition opacity 2s
+// .icon-enter
+// .icon-leave-to
+//   opacity 0
+// .icon-enter-active
+// .icon-leave-active
+//   transition opacity 2s
 .iconfont
   position fixed
   bottom 20px

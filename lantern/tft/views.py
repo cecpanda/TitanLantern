@@ -259,7 +259,8 @@ class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
         qc_code = settings.GROUP_CODE['TFT'].get('QC')
         qc = GroupSetting.objects.get(code=qc_code).group
 
-        if order.status == '1' or order.status == '2' or order.status == '3' or order.status == '9':
+        # if order.status == '1' or order.status == '2' or order.status == '3' or order.status == '9':
+        if order.status != '4' and order.status != '7' and order.status != '8':
             return Response({'detail': '此状态不允许复机申请'}, status=status.HTTP_400_BAD_REQUEST)
 
         if not order.group:

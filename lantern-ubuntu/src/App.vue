@@ -4,7 +4,9 @@
       <HomeHeader></HomeHeader>
     </el-header>
     <router-view/>
-    <el-footer>Footer</el-footer>
+    <el-footer>
+      Copyright © 2010-2020, Cecpandalcd.com.cn, All Right Reserver.
+    </el-footer>
   </el-container>
 </template>
 
@@ -22,12 +24,12 @@ export default {
 <style lang='stylus' scoped>
 .el-header
   color: #333
-  text-align: center
-  line-height: 60px
+  text-align center
+  line-height 60px
   position relativce
   margin-bottom 20px
 .el-footer
-  text-align: center
+  text-align center
   margin-top 20px
   border 1px solid green
 // .el-main

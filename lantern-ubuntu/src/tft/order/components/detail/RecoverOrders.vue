@@ -7,133 +7,37 @@
     </el-row>
 
     <div v-for='(recoverorder, index) in recoverorders' :key='index' class='recover-order'>
-      <el-row>
-        <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-          <h5 class='recover-order-title'>复机申请-{{ index }}</h5>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
-          <el-col :span='8' class='label'>申请人</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.user.username }}</el-col>
-        </el-col>
-        <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
-          <el-col :span='8' class='label'>申请时间</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.created | formatDate }}</el-col>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
-          <el-col :span='8' class='label'>修改人</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.mod_user.username }}</el-col>
-        </el-col>
-        <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
-          <el-col :span='8' class='label'>修改时间</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.modified | formatDate }}</el-col>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :xs='24' :sm='24' :md='24' :lg='24' :xl='24'>
-          <el-col :span='4' class='label'>责任单位对策说明</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.solution }}</el-col>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :xs='24' :sm='24' :md='24' :lg='24' :xl='24'>
-          <el-col :span='4' class='label'>先行 lot 结果说明</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.explain }}</el-col>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :xs='24' :sm='24' :md='24' :lg='24' :xl='24'>
-          <el-col :span='4' class='label'>部分复机</el-col>
-          <el-col :span='16' class='content'>
-            <el-radio v-model="recoverorder.partial" :label="true">是</el-radio>
-            <el-radio v-model="recoverorder.partial" :label="false">否</el-radio>
-          </el-col>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :xs='24' :sm='24' :md='24' :lg='24' :xl='24'>
-          <el-col :span='4' class='label'>部分复机设备</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.eq }}</el-col>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :xs='24' :sm='24' :md='24' :lg='24' :xl='24'>
-          <el-col :span='4' class='label'>部分复机机种</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.kind }}</el-col>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :xs='24' :sm='24' :md='24' :lg='24' :xl='24'>
-          <el-col :span='4' class='label'>部分复机站点</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.step }}</el-col>
-        </el-col>
-      </el-row>
-
-      <el-row>
-        <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-          <h5 class='recover-order-title'>复机申请-{{ index }}-签核</h5>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
-          <el-col :span='8' class='label'>工程品质签复</el-col>
-          <el-col :span='16' class='content'>
-            <span>{{ recoverorder.audit.qc_signer.username }}</span>
-          </el-col>
-        </el-col>
-        <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
-          <el-col :span='8' class='label'>品质签复时间</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.audit.qc_time | formatDate }}</el-col>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
-          <el-col :span='8' class='label'>生产领班签复</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.audit.p_signer.username }}</el-col>
-        </el-col>
-        <el-col :xs='24' :sm='12' :md='12' :lg='12' :xl='6'>
-          <el-col :span='8' class='label'>生产签复时间</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.audit.p_time | formatDate }}</el-col>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :xs='24' :sm='24' :md='24' :lg='24' :xl='24'>
-          <el-col :span='4' class='label'>是否拒签</el-col>
-          <el-col :span='16' class='content'>
-            <el-radio v-model="recoverorder.audit.rejected" :label="true">是</el-radio>
-            <el-radio v-model="recoverorder.audit.rejected" :label="false">否</el-radio>
-          </el-col>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :xs='24' :sm='24' :md='24' :lg='24' :xl='24'>
-          <el-col :span='4' class='label'>拒签理由</el-col>
-          <el-col :span='16' class='content'>{{ recoverorder.audit.reason }}</el-col>
-        </el-col>
-      </el-row>
+      <RecoverOrder
+        :recoverorder='recoverorder'
+        :index='index'
+        @change='handleChange'
+        :status='status'
+      ></RecoverOrder>
     </div>
   </div>
 </template>
 
 <script>
-import { formatDate } from '@/common/js/date.js'
+import RecoverOrder from './RecoverOrder'
 
 export default {
   name: 'RecoverOrders',
   props: {
+    status: {
+      required: true
+    },
     recoverorders: {
       type: Array,
       required: true
     }
   },
-  filters: {
-    formatDate (time) {
-      let date = new Date(time)
-      return formatDate(date, 'yyyy-MM-dd hh:mm:ss')
+  methods: {
+    handleChange () {
+      this.$emit('change')
     }
+  },
+  components: {
+    RecoverOrder
   }
 }
 </script>

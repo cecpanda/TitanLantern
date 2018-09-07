@@ -679,8 +679,10 @@ class RecoverOrderSerializer(serializers.ModelSerializer):
         return '0'
 
     def validate_order(self, order):
-        if order.status == '1' or order.status == '2' or order.status == '3' or order.status == '9':
-            # raise serializers.ValidationError(f'{order.get_status_display()}, 不允许复机申请')
+        # if order.status == '1' or order.status == '2' or order.status == '3' or order.status == '9':
+        #     # raise serializers.ValidationError(f'{order.get_status_display()}, 不允许复机申请')
+        #     raise PermissionDenied(f'{order.get_status_display()}, 不允许复机申请')
+        if order.status != '4' and order.status != '7' and order.status != '8':
             raise PermissionDenied(f'{order.get_status_display()}, 不允许复机申请')
         return order
 

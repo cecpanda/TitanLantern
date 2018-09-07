@@ -244,7 +244,11 @@
       </el-row>
     </div>
 
-    <RecoverOrders :recoverorders='order.recoverorders'></RecoverOrders>
+    <RecoverOrders
+      :recoverorders='order.recoverorders'
+      @change='handleChange'
+      :status='order.status.code'
+    ></RecoverOrders>
 
     <div class='button'>
       <OrderStatus :order='id'></OrderStatus>
@@ -252,7 +256,7 @@
 
     <el-row>
       <el-col :span='4' :offset='20'>
-        <CreateRecoverOrder :order='id'></CreateRecoverOrder>
+        <CreateRecoverOrder :order='id' @change='handleChange'></CreateRecoverOrder>
       </el-col>
     </el-row>
 
@@ -351,17 +355,10 @@ export default {
 .el-col
   // border 1px dashed #5098E3
 .order
-.recover-orders
   border 1px solid #0E67CC
   border-radius 20px
   box-shadow -8px 8px 5px #888888
   margin-bottom 20px
-  .recover-order
-    border 2px double #4FA110
-    .recover-order-title
-      text-align center
-      color #2E77C2
-      // text-shadow 2px 2px 5px #2E77C2
 .title
   text-align center
 .el-form-item
