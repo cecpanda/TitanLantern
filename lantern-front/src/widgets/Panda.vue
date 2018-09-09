@@ -28,6 +28,7 @@ export default {
   },
   methods: {
     getPanda1 () {
+      console.log('@')
       axios.get('/static/panda1.json')
         .then((res) => {
           this.panda1 = res.data

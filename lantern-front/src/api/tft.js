@@ -244,3 +244,28 @@ export const canCreate = (order) => {
 export const createRecoverOrder = (params) => {
   return axios.post(`${host}/tft/order/recover/`, params)
 }
+
+// update recover order
+export const updateRecoverOrder = (id, params) => {
+  return axios.put(`${host}/tft/order/recover/${id}/`, params)
+}
+
+// can update recover order
+export const canUpdateRecoverOrder = (id) => {
+  return axios.get(`${host}/tft/order/recover/${id}/can-update/`)
+}
+
+// can update recover orders
+export const canUpdateRecoverOrders = () => {
+  return axios.get(`${host}/tft/order/recover/all-can-update/`)
+}
+
+// recover order QC audit
+export const recoverQcAudit = (params) => {
+  return axios.post(`${host}/tft/order/recover-audit/qc/`, params)
+}
+
+// recover order product audit
+export const recoverProductAudit = (params) => {
+  return axios.post(`${host}/tft/order/recover-audit/product/`, params)
+}

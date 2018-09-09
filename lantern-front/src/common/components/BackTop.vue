@@ -1,8 +1,11 @@
-
 <template>
-  <div id='back-top'>
-    <i class='iconfont' v-show="backTopShow" @click="backTop">&#xe6ae;</i>
-  </div>
+  <transition
+    name='icon'
+    enter-active-class='animated bounceInDown'
+    leave-active-class='animated rotateOutDownRight'
+  >
+    <i class='iconfont' title='返回顶部' v-show="show" @click="backTop">&#xe6ae;</i>
+  </transition>
 </template>
 <script>
 export default {
@@ -10,14 +13,16 @@ export default {
   data () {
     return {
       scrollTop: '',
-      backTopShow: false
+      show: false
     }
   },
   methods: {
     handleScroll () {
       this.scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop
       if (this.scrollTop > 500) {
-        this.backTopShow = true
+        this.show = true
+      } else {
+        this.show = false
       }
     },
     backTop () {
@@ -31,7 +36,7 @@ export default {
           timer = requestAnimationFrame(fn)
         } else {
           cancelAnimationFrame(timer)
-          _that.goTopShow = false
+          _that.show = false
         }
       })
     }
@@ -46,10 +51,19 @@ export default {
 </script>
 
 <style lang='stylus' scoped>
-#back-top
+// .icon-enter
+// .icon-leave-to
+//   opacity 0
+// .icon-enter-active
+// .icon-leave-active
+//   transition opacity 2s
+.iconfont
   position fixed
-  right 20px
   bottom 20px
+  right 20px
+  font-size 3em
+  color #409EFF
 .iconfont:hover
-  font-size 2em
+  font-size 3.5em
+  color #065FBB
 </style>
