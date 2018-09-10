@@ -1,6 +1,7 @@
 <template>
   <div>
-    <h1>我的停机单</h1>
+    <h1>我的复机单</h1>
+    <p>BUG：修改一个停机单中的多个复机单，此停机单会过滤成多个</p>
     <el-tabs v-model="activeName" @tab-click="handleClick">
       <el-tab-pane label="我的申请" name="start">
       </el-tab-pane>
@@ -32,8 +33,6 @@
         <el-table-column prop="user.username" label="开单人"></el-table-column>
         <el-table-column prop="group.name" label="开单工程" min-width='100'></el-table-column>
         <el-table-column prop="created" label="开单时间" :formatter='formatDate' min-width='150'></el-table-column>
-        <el-table-column prop="mod_user.username" label="修改人" width='100'></el-table-column>
-        <el-table-column prop="modified" label="修改时间"  :formatter='formatDate' width='150'></el-table-column>
         <el-table-column prop="found_step" label="发现站点" min-width='100' :show-overflow-tooltip='true'></el-table-column>
         <el-table-column prop="found_time" label="发现时间" :formatter='formatDate' min-width='150'></el-table-column>
         <el-table-column prop="charge_group.name" label="责任工程" min-width='100'></el-table-column>
@@ -61,7 +60,7 @@ import { formatDate } from '@/common/js/date.js'
 import { getOrders } from '@/api/tft'
 
 export default {
-  name: 'MyStart',
+  name: 'MyRecover',
   data () {
     return {
       activeName: 'start',
@@ -86,7 +85,7 @@ export default {
       }
     },
     getStartOrders () {
-      getOrders({page: this.page, 'page-size': this.pageSize, username: this.username})
+      getOrders({page: this.page, 'page-size': this.pageSize, r_user: this.username})
         .then((res) => {
           this.count = res.data.count
           this.orders = res.data.results
@@ -96,7 +95,7 @@ export default {
         })
     },
     getModOrders () {
-      getOrders({page: this.page, 'page-size': this.pageSize, mod_user: this.username})
+      getOrders({page: this.page, 'page-size': this.pageSize, r_mod: this.username})
         .then((res) => {
           this.count = res.data.count
           this.orders = res.data.results

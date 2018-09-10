@@ -42,8 +42,8 @@
             </router-link>
           </template>
           <el-menu-item index="/tft/order/mystart">我的停机单</el-menu-item>
-          <el-menu-item index="2-4-2">我的复机单</el-menu-item>
-          <el-menu-item index="2-4-2">我的审核单</el-menu-item>
+          <el-menu-item index="/tft/order/myrecover">我的复机单</el-menu-item>
+          <el-menu-item index="/tft/order/myaudit">我的审核单</el-menu-item>
         </el-submenu>
         <el-radio-group v-model="isCollapse" style="margin-bottom: 20px;">
           <el-radio-button :label="false" v-if='isCollapse'>

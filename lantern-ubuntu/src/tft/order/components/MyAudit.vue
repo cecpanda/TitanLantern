@@ -1,10 +1,11 @@
 <template>
   <div>
-    <h1>我的停机单</h1>
+    <h1>我的审核</h1>
     <el-tabs v-model="activeName" @tab-click="handleClick">
-      <el-tab-pane label="我的申请" name="start">
+      <el-tab-pane label="停机审核" name="start">
       </el-tab-pane>
-      <el-tab-pane label="我的修改" name="mod">
+      <el-tab-pane label="复机审核" name="recover">
+        BUG：修改一个停机单中的多个复机单，此停机单会过滤成多个
       </el-tab-pane>
     </el-tabs>
     <br><br>
@@ -61,7 +62,7 @@ import { formatDate } from '@/common/js/date.js'
 import { getOrders } from '@/api/tft'
 
 export default {
-  name: 'MyStart',
+  name: 'MyAudit',
   data () {
     return {
       activeName: 'start',
@@ -81,12 +82,12 @@ export default {
       this.page = 1
       if (tab.name === 'start') {
         this.getStartOrders()
-      } else if (tab.name === 'mod') {
-        this.getModOrders()
+      } else if (tab.name === 'recover') {
+        this.getRecoverOrders()
       }
     },
     getStartOrders () {
-      getOrders({page: this.page, 'page-size': this.pageSize, username: this.username})
+      getOrders({page: this.page, 'page-size': this.pageSize, audit_signer: this.username})
         .then((res) => {
           this.count = res.data.count
           this.orders = res.data.results
@@ -95,8 +96,8 @@ export default {
           console.log(error)
         })
     },
-    getModOrders () {
-      getOrders({page: this.page, 'page-size': this.pageSize, mod_user: this.username})
+    getRecoverOrders () {
+      getOrders({page: this.page, 'page-size': this.pageSize, r_audit_signer: this.username})
         .then((res) => {
           this.count = res.data.count
           this.orders = res.data.results
@@ -132,8 +133,8 @@ export default {
     handleCurrentChange (val) {
       if (this.activeName === 'start') {
         this.getStartOrders()
-      } else if (this.activeName === 'mod') {
-        this.getModOrders()
+      } else if (this.activeName === 'recover') {
+        this.getRecoverOrders()
       }
     },
     formatDate (row, column, time, index) {

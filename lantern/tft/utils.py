@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.conf import settings
 from rest_framework import status
 from rest_framework.permissions import BasePermission
@@ -19,15 +20,27 @@ class OrderPagination(PageNumberPagination):
 class OrderFilter(filters.FilterSet):
     username = filters.CharFilter(field_name='user__username', lookup_expr='iexact')
     realname = filters.CharFilter(field_name='user__realname', lookup_expr='iexact')
+    mod_user = filters.CharFilter(field_name='mod_user__username', lookup_expr='iexact')
     group = filters.CharFilter(field_name='group__name', lookup_expr='iexact')
     charge_group = filters.CharFilter(field_name='charge_group__name', lookup_expr='iexact')
     created_after = filters.IsoDateTimeFilter(field_name='created', lookup_expr='gte')
     created_before = filters.IsoDateTimeFilter(field_name='created', lookup_expr='lte')
     # created = filters.DateTimeFromToRangeFilter(field_name='created')
+    r_user = filters.CharFilter(field_name='recoverorders__user__username', lookup_expr='iexact')
+    r_mod = filters.CharFilter(field_name='recoverorders__mod_user__username', lookup_expr='iexact')
+    audit_signer = filters.CharFilter(method='audit_signer_filter')
+    r_audit_signer = filters.CharFilter(method='r_audit_signer_filter')
 
     class Meta:
         model = Order
-        fields = ('username', 'realname', 'status', 'group', 'charge_group')
+        fields = ('username', 'realname', 'mod_user', 'status', 'group', 'charge_group')
+
+    def audit_signer_filter(self, queryset, name, value):
+        return queryset.filter(Q(startaudit__p_signer__username=value) | Q(startaudit__c_signer__username=value))
+
+    def r_audit_signer_filter(self, queryset, name, value):
+        return queryset.filter(Q(recoverorders__audit__qc_signer__username=value) | Q(recoverorders__audit__p_signer__username=value))
+
 
 
 # 请求用户是否为开单用户

@@ -13,6 +13,8 @@ import Summary from '@/tft/order/components/Summary'
 import StartOrder from '@/tft/order/components/Start'
 import UpdateOrder from '@/tft/order/components/Update'
 import MyStart from '@/tft/order/components/MyStart'
+import MyRecover from '@/tft/order/components/MyRecover'
+import MyAudit from '@/tft/order/components/MyAudit'
 import AuditOrder from '@/tft/order/components/Audit'
 import Detail from '@/tft/order/components/Detail'
 import Query from '@/tft/order/components/Query'
@@ -77,6 +79,18 @@ const router = new Router({
         }, {
           path: 'mystart',
           component: MyStart,
+          meta: {
+            requireAuth: true
+          }
+        }, {
+          path: 'myrecover',
+          component: MyRecover,
+          meta: {
+            requireAuth: true
+          }
+        }, {
+          path: 'myaudit',
+          component: MyAudit,
           meta: {
             requireAuth: true
           }
