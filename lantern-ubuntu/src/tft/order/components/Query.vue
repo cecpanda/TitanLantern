@@ -77,12 +77,13 @@
         </template>
       </el-table-column>
       <el-table-column prop="status.desc" label="状态" min-width='180'></el-table-column>
-      <el-table-column prop="user.username" label="开单人"></el-table-column>
-      <el-table-column label="开单人" min-width='100'>
+      <el-table-column prop="user.username" label="工号" min-width='80'></el-table-column>
+      <el-table-column prop="user.realname" label="真名" min-width='80'></el-table-column>
+      <!-- <el-table-column label="开单人" min-width='100'>
         <template slot-scope="scope">
           {{ scope.row.user.username }} {{ scope.row.user.realname }}
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column
         prop="group.name"
         label="开单工程"

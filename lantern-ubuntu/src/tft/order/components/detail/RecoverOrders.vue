@@ -6,14 +6,26 @@
       </el-col>
     </el-row>
 
-    <div v-for='(recoverorder, index) in recoverorders' :key='index' class='recover-order'>
+    <!-- <div v-for='(recoverorder, index) in recoverorders' :key='index' class='recover-order'>
       <RecoverOrder
         :recoverorder='recoverorder'
         :index='index'
         @change='handleChange'
         :status='status'
       ></RecoverOrder>
-    </div>
+    </div> -->
+
+    <el-carousel class='recover-order' height='700px'>
+      <el-carousel-item v-for='(recoverorder, index) in recoverorders' :key='index'>
+        <RecoverOrder
+          :recoverorder='recoverorder'
+          :index='index + 1'
+          @change='handleChange'
+          :status='status'
+        ></RecoverOrder>
+      </el-carousel-item>
+    </el-carousel>
+
   </div>
 </template>
 
@@ -42,7 +54,7 @@ export default {
 }
 </script>
 
-<style lang='stylus' scoped>
+<style lang='stylus'>
 .recover-orders
   border 1px solid #0E67CC
   border-radius 20px
@@ -84,4 +96,17 @@ export default {
     color #22558B
   .remark-user
     color #000
+.el-carousel__item:nth-child(2n)
+  background-color #CFE0F1
+.el-carousel__item:nth-child(2n+1)
+  background-color #D7EED9
+// 想改这个样式，记得去 scoped
+.el-carousel__arrow
+  background-color #8C9095
+.el-carousel__button
+  height 7px
+  background-color #8C9095
+.el-carousel__indicator.is-active
+  button
+    background-color #000
 </style>

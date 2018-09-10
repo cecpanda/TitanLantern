@@ -21,7 +21,7 @@
           <i class='el-icon-star-on'></i>
           <span slot="title">我的关注</span>
         </el-menu-item>
-        <el-menu-item index="4" disabled>
+        <el-menu-item index="4">
           <i class="el-icon-setting"></i>
           <span slot="title">个人设置</span>
         </el-menu-item>

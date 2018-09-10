@@ -251,7 +251,7 @@
     ></RecoverOrders>
 
     <div class='button'>
-      <OrderStatus :order='id'></OrderStatus>
+      <OrderStatus :order='id' :status='order.status.desc'></OrderStatus>
     </div>
 
     <el-row>

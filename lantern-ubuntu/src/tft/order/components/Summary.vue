@@ -2,7 +2,6 @@
   <div>
     <v-chart :options="polar"/>
     <v-chart :options='bar'/>
-    <v-chart :options='bar3'/>
   </div>
 </template>
 

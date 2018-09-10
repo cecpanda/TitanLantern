@@ -1,11 +1,11 @@
 <template>
-  <el-button type='info'>{{ order }}</el-button>
+  <el-button type='info'>{{ status }}</el-button>
 </template>
 
 <script>
 export default {
   name: 'OrderStatus',
-  props: ['order']
+  props: ['order', 'status']
 }
 </script>
 
