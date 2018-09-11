@@ -1,13 +1,13 @@
 <template>
   <div>
     <h1>我的停机单</h1>
-    <el-tabs v-model="activeName" @tab-click="handleClick">
+    <!-- <el-tabs v-model="activeName" @tab-click="handleClick">
       <el-tab-pane label="我的申请" name="start">
       </el-tab-pane>
       <el-tab-pane label="我的修改" name="mod">
       </el-tab-pane>
-    </el-tabs>
-    <br><br>
+    </el-tabs> -->
+    <el-tag type='info'>申请或者修改的停机单</el-tag>
     <template>
       <el-table
         :data="orders"
@@ -66,7 +66,7 @@ export default {
     return {
       activeName: 'start',
       page: 1,
-      pageSize: 10,
+      pageSize: 15,
       count: null,
       orders: []
     }
@@ -77,16 +77,16 @@ export default {
     })
   },
   methods: {
-    handleClick (tab, event) {
-      this.page = 1
-      if (tab.name === 'start') {
-        this.getStartOrders()
-      } else if (tab.name === 'mod') {
-        this.getModOrders()
-      }
-    },
-    getStartOrders () {
-      getOrders({page: this.page, 'page-size': this.pageSize, username: this.username})
+    // handleClick (tab, event) {
+    //   this.page = 1
+    //   if (tab.name === 'start') {
+    //     this.getStartOrders()
+    //   } else if (tab.name === 'mod') {
+    //     this.getModOrders()
+    //   }
+    // },
+    getOrders () {
+      getOrders({page: this.page, 'page-size': this.pageSize, name: this.username})
         .then((res) => {
           this.count = res.data.count
           this.orders = res.data.results
@@ -95,16 +95,26 @@ export default {
           console.log(error)
         })
     },
-    getModOrders () {
-      getOrders({page: this.page, 'page-size': this.pageSize, mod_user: this.username})
-        .then((res) => {
-          this.count = res.data.count
-          this.orders = res.data.results
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
+    // getStartOrders () {
+    //   getOrders({page: this.page, 'page-size': this.pageSize, username: this.username})
+    //     .then((res) => {
+    //       this.count = res.data.count
+    //       this.orders = res.data.results
+    //     })
+    //     .catch((error) => {
+    //       console.log(error)
+    //     })
+    // },
+    // getModOrders () {
+    //   getOrders({page: this.page, 'page-size': this.pageSize, mod_user: this.username})
+    //     .then((res) => {
+    //       this.count = res.data.count
+    //       this.orders = res.data.results
+    //     })
+    //     .catch((error) => {
+    //       console.log(error)
+    //     })
+    // },
     tableRowClassName ({row, rowIndex}) {
       if (row.status.code === '0') {
         return 'status0'
@@ -130,11 +140,12 @@ export default {
       return 'status0'
     },
     handleCurrentChange (val) {
-      if (this.activeName === 'start') {
-        this.getStartOrders()
-      } else if (this.activeName === 'mod') {
-        this.getModOrders()
-      }
+      // if (this.activeName === 'start') {
+      //   this.getStartOrders()
+      // } else if (this.activeName === 'mod') {
+      //   this.getModOrders()
+      // }
+      this.getOrders()
     },
     formatDate (row, column, time, index) {
       let date = new Date(time)
@@ -151,7 +162,7 @@ export default {
     }
   },
   mounted () {
-    this.getStartOrders()
+    this.getOrders()
   }
 }
 </script>

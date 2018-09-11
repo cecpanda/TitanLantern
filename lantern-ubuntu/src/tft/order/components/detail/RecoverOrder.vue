@@ -2,7 +2,7 @@
   <div>
     <el-row>
       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-        <h5 class='recover-order-title'>复机申请-{{ index }}</h5>
+        <h5 class='recover-order-title'>复机单-{{ index }}</h5>
       </el-col>
     </el-row>
     <el-row>
@@ -70,7 +70,7 @@
 
     <el-row>
       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-        <h5 class='recover-order-title'>复机申请-{{ index }}-签核</h5>
+        <h5 class='recover-order-title'>复机签核</h5>
       </el-col>
     </el-row>
     <el-row>
@@ -227,4 +227,5 @@ export default {
     color #22558B
   .remark-user
     color #000
+
 </style>

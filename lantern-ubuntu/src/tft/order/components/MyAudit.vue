@@ -8,7 +8,7 @@
         BUG：修改一个停机单中的多个复机单，此停机单会过滤成多个
       </el-tab-pane>
     </el-tabs>
-    <br><br>
+    <br>
     <template>
       <el-table
         :data="orders"

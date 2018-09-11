@@ -26,14 +26,22 @@ class OrderFilter(filters.FilterSet):
     created_after = filters.IsoDateTimeFilter(field_name='created', lookup_expr='gte')
     created_before = filters.IsoDateTimeFilter(field_name='created', lookup_expr='lte')
     # created = filters.DateTimeFromToRangeFilter(field_name='created')
-    r_user = filters.CharFilter(field_name='recoverorders__user__username', lookup_expr='iexact')
-    r_mod = filters.CharFilter(field_name='recoverorders__mod_user__username', lookup_expr='iexact')
-    audit_signer = filters.CharFilter(method='audit_signer_filter')
-    r_audit_signer = filters.CharFilter(method='r_audit_signer_filter')
+    name = filters.CharFilter(method='name_filter', label='申请人或修改人')
+    r_name = filters.CharFilter(method='r_name_filter', label='复机单的申请人或修改人')
+    # r_user = filters.CharFilter(field_name='recoverorders__user__username', lookup_expr='iexact')
+    # r_mod = filters.CharFilter(field_name='recoverorders__mod_user__username', lookup_expr='iexact')
+    audit_signer = filters.CharFilter(method='audit_signer_filter', label='审核人')
+    r_audit_signer = filters.CharFilter(method='r_audit_signer_filter', label='复机单的审核人')
 
     class Meta:
         model = Order
         fields = ('username', 'realname', 'mod_user', 'status', 'group', 'charge_group')
+
+    def name_filter(self, queryset, name, value):
+        return queryset.filter(Q(user__username=value) | Q(mod_user__username=value))
+
+    def r_name_filter(self, queryset, name, value):
+        return queryset.filter(Q(recoverorders__user__username=value) | Q(recoverorders__mod_user__username=value))
 
     def audit_signer_filter(self, queryset, name, value):
         return queryset.filter(Q(startaudit__p_signer__username=value) | Q(startaudit__c_signer__username=value))

@@ -1,10 +1,11 @@
 <template>
   <div>
-    <span @click='visible = true'>
+    <!-- <span @click='visible = true'>
       <i class="el-icon-star-off"></i>
       <i class="el-icon-star-off"></i>
       <i class="el-icon-star-off"></i>
-    </span>
+    </span> -->
+    <el-button type="success" size='mini' @click='visible = true'>点击这里</el-button>
     <el-dialog title="复机审核 - QC" :visible.sync="visible">
       <el-form :model='audit' :rules='rules' ref='form'>
         <el-form-item label="是否拒签" prop='rejected' label-width='20%'>

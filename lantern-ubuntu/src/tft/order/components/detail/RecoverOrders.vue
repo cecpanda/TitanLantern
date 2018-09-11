@@ -15,7 +15,7 @@
       ></RecoverOrder>
     </div> -->
 
-    <el-carousel class='recover-order' height='700px'>
+    <el-carousel class='recover-order' height='730px'>
       <el-carousel-item v-for='(recoverorder, index) in recoverorders' :key='index'>
         <RecoverOrder
           :recoverorder='recoverorder'
@@ -96,6 +96,8 @@ export default {
     color #22558B
   .remark-user
     color #000
+.el-carousel
+  z-index 0
 .el-carousel__item:nth-child(2n)
   background-color #CFE0F1
 .el-carousel__item:nth-child(2n+1)

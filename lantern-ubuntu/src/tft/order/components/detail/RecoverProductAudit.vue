@@ -1,10 +1,11 @@
 <template>
-  <div>
-    <span @click='visible = true'>
-      <i class="el-icon-star-off"></i>
-      <i class="el-icon-star-off"></i>
-      <i class="el-icon-star-off"></i>
-    </span>
+  <div class='audit'>
+    <!-- <span @click='visible = true' class='visible'>
+      <i class="el-icon-star-off"></i>点
+      <i class="el-icon-star-off"></i>这
+      <i class="el-icon-star-off"></i>里
+    </span> -->
+    <el-button type="success" size='mini' @click='visible = true'>点击这里</el-button>
     <el-dialog title="复机审核 - 生产" :visible.sync="visible">
       <div>准奏</div>
       <div slot="footer" class="dialog-footer">
@@ -59,5 +60,7 @@ export default {
 </script>
 
 <style lang='stylus'>
-
+// .el-dialog
+//   box-shadow 10px 10px 5px #888888
+//   background rgba(255, 255, 255, 0.1)
 </style>

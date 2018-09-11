@@ -1,56 +1,85 @@
 <template>
   <div>
     <h1>我的复机单</h1>
-    <p>BUG：修改一个停机单中的多个复机单，此停机单会过滤成多个</p>
-    <el-tabs v-model="activeName" @tab-click="handleClick">
+    <el-tag type='info'>申请或者修改的停机单</el-tag> <br>
+    <!-- <el-tabs v-model="activeName" @tab-click="handleClick">
       <el-tab-pane label="我的申请" name="start">
       </el-tab-pane>
       <el-tab-pane label="我的修改" name="mod">
       </el-tab-pane>
-    </el-tabs>
-    <br><br>
-    <template>
-      <el-table
-        :data="orders"
-        style="width: 100%"
-        border
-        header-row-class-name='table-header'
-        :row-class-name="tableRowClassName"
-        @row-dblclick='rowdbClick'
-      >
-        <el-table-column label="编号" min-width='100'>
-          <template slot-scope="scope">
-            <router-link
-              :to="'/tft/order/detail/' + scope.row.id"
-              target='_blank'
-              class='id-href'
-            >
-              {{ scope.row.id }}
-            </router-link>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status.desc" label="状态" width='180'></el-table-column>
-        <el-table-column prop="user.username" label="开单人"></el-table-column>
-        <el-table-column prop="group.name" label="开单工程" min-width='100'></el-table-column>
-        <el-table-column prop="created" label="开单时间" :formatter='formatDate' min-width='150'></el-table-column>
-        <el-table-column prop="found_step" label="发现站点" min-width='100' :show-overflow-tooltip='true'></el-table-column>
-        <el-table-column prop="found_time" label="发现时间" :formatter='formatDate' min-width='150'></el-table-column>
-        <el-table-column prop="charge_group.name" label="责任工程" min-width='100'></el-table-column>
-        <el-table-column prop="eq" label="停机设备" min-width='100' :show-overflow-tooltip='true'></el-table-column>
-        <el-table-column prop="kind" label="停机机种" min-width='100' :show-overflow-tooltip='true'></el-table-column>
-        <el-table-column prop="step" label="停机站点" min-width='100' :show-overflow-tooltip='true'></el-table-column>
-        <el-table-column prop="defect_type" label="绝对不良" min-width='100'></el-table-column>
-        <el-table-column prop="remarks[0].content" label="最新批注" min-width='100'></el-table-column>
-      </el-table>
-    </template>
-    <el-pagination
+    </el-tabs> -->
+    <br>
+    <el-table
+      :data="orders"
+      style="width: 100%"
+      border
+      header-row-class-name='table-header'
+      :row-class-name="tableRowClassName"
+      @row-dblclick='rowdbClick'
+    >
+      <el-table-column label="编号" min-width='100'>
+        <template slot-scope="scope">
+          <router-link
+            :to="'/tft/order/detail/' + scope.row.id"
+            target='_blank'
+            class='id-href'
+          >
+            {{ scope.row.id }}
+          </router-link>
+        </template>
+      </el-table-column>
+      <el-table-column prop="status.desc" label="状态" min-width='180'></el-table-column>
+      <el-table-column label="序号" min-width='60'>
+        <template slot-scope="scope">
+          {{ scope.$index + 1 }}
+        </template>
+      </el-table-column>
+      <el-table-column label="申请人" min-width='80'>
+        <template slot-scope="scope">
+          {{ recoverorders[scope.$index].user.username }}
+        </template>
+      </el-table-column>
+      <el-table-column label="申请时间" min-width='150'>
+        <template slot-scope="scope">
+          {{ recoverorders[scope.$index].created | formatDate }}
+        </template>
+      </el-table-column>
+      <el-table-column label="修改人" min-width='80'>
+        <template slot-scope="scope">
+          {{ recoverorders[scope.$index].mod_user.username }}
+        </template>
+      </el-table-column>
+      <el-table-column label="修改时间" min-width='150'>
+        <template slot-scope="scope">
+          {{ recoverorders[scope.$index].modified | formatDate }}
+        </template>
+      </el-table-column>
+      <el-table-column label="责任单位对策说明" min-width='150' show-overflow-tooltip>
+        <template slot-scope="scope">
+          {{ recoverorders[scope.$index].solution }}
+        </template>
+      </el-table-column>
+      <el-table-column label="先行 lot 结果说明" min-width='150' show-overflow-tooltip>
+        <template slot-scope="scope">
+          {{ recoverorders[scope.$index].explain }}
+        </template>
+      </el-table-column>
+      <el-table-column label="部分复机" min-width='100'>
+        <template slot-scope="scope">
+          <span v-if='recoverorders[scope.$index].partial'>是</span>
+          <span v-else>否</span>
+        </template>
+      </el-table-column>
+    </el-table>
+    总数: {{ this.count }}
+<!--     <el-pagination
       background
       @current-change="handleCurrentChange"
       :current-page.sync="page"
       :page-size='pageSize'
       layout="prev, pager, next, jumper"
       :total="count">
-    </el-pagination>
+    </el-pagination> -->
   </div>
 </template>
 
@@ -63,9 +92,9 @@ export default {
   name: 'MyRecover',
   data () {
     return {
-      activeName: 'start',
-      page: 1,
-      pageSize: 10,
+      // 逻辑上无法分页
+      // page: 1,
+      // pageSize: 2,
       count: null,
       orders: []
     }
@@ -73,37 +102,54 @@ export default {
   computed: {
     ...mapGetters({
       username: 'username'
-    })
+    }),
+    recoverorders () {
+      return this.orders.length ? this.orders[0].recoverorders : []
+    }
   },
   methods: {
-    handleClick (tab, event) {
-      this.page = 1
-      if (tab.name === 'start') {
-        this.getStartOrders()
-      } else if (tab.name === 'mod') {
-        this.getModOrders()
-      }
-    },
-    getStartOrders () {
-      getOrders({page: this.page, 'page-size': this.pageSize, r_user: this.username})
+    // handleClick (tab, event) {
+    //   this.page = 1
+    //   if (tab.name === 'start') {
+    //     this.getStartOrders()
+    //   } else if (tab.name === 'mod') {
+    //     this.getModOrders()
+    //   }
+    // },
+    getOrders () {
+      getOrders({r_name: this.username})
         .then((res) => {
           this.count = res.data.count
-          this.orders = res.data.results
+          // 这是没有办法的事情，防止后端的默认分页小于此处应有的数据
+          getOrders({'page-size': this.count, r_name: this.username})
+            .then((res) => {
+              this.orders = res.data.results
+            })
         })
         .catch((error) => {
           console.log(error)
         })
     },
-    getModOrders () {
-      getOrders({page: this.page, 'page-size': this.pageSize, r_mod: this.username})
-        .then((res) => {
-          this.count = res.data.count
-          this.orders = res.data.results
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
+    // getStartOrders () {
+    //   getOrders({page: this.page, 'page-size': this.pageSize, r_user: this.username})
+    //     .then((res) => {
+    //       this.count = res.data.count
+    //       this.orders = res.data.results
+    //     })
+    //     .catch((error) => {
+    //       console.log(error)
+    //     })
+    // },
+    // getModOrders () {
+    //   getOrders({page: this.page, 'page-size': this.pageSize, r_mod: this.username})
+    //     .then((res) => {
+    //       this.count = res.data.count
+    //       this.orders = res.data.results
+    //     })
+    //     .catch((error) => {
+    //       console.log(error)
+    //     })
+    // },
     tableRowClassName ({row, rowIndex}) {
       if (row.status.code === '0') {
         return 'status0'
@@ -129,11 +175,12 @@ export default {
       return 'status0'
     },
     handleCurrentChange (val) {
-      if (this.activeName === 'start') {
-        this.getStartOrders()
-      } else if (this.activeName === 'mod') {
-        this.getModOrders()
-      }
+      // if (this.activeName === 'start') {
+      //   this.getStartOrders()
+      // } else if (this.activeName === 'mod') {
+      //   this.getModOrders()
+      // }
+      this.getOrders()
     },
     formatDate (row, column, time, index) {
       let date = new Date(time)
@@ -150,7 +197,7 @@ export default {
     }
   },
   mounted () {
-    this.getStartOrders()
+    this.getOrders()
   }
 }
 </script>

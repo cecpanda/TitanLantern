@@ -114,6 +114,7 @@ class Audit(models.Model):
     class Meta:
         verbose_name = '停机签核'
         verbose_name_plural = verbose_name
+        ordering = ('-created',)
 
     def __str__(self):
         return self.order.id
@@ -140,6 +141,7 @@ class RecoverOrder(models.Model):
     class Meta:
         verbose_name = '复机单'
         verbose_name_plural = verbose_name
+        # ordering = ('-created',)  # 为了前端索引
 
     def __str__(self):
         return self.order.id

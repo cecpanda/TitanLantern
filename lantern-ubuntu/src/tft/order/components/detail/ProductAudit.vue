@@ -1,10 +1,11 @@
 <template>
   <div id='product-audit'>
-    <span @click='visible = true'>
+    <!-- <span @click='visible = true'>
       <i class="el-icon-star-off"></i>
       <i class="el-icon-star-off"></i>
       <i class="el-icon-star-off"></i>
-    </span>
+    </span> -->
+    <el-button type="success" size='mini' @click='visible = true'>点击这里</el-button>
     <el-dialog title="生产签核" :visible.sync="visible">
       <el-form :model='productAudit' :rules='productRules' ref='productForm'>
         <el-form-item label="Recipe关闭人员" prop='recipe_close' label-width='20%'>
@@ -104,6 +105,7 @@ export default {
 </script>
 
 <style lang='stylus' scoped>
-// #product-audit
-//   display inline
+// .el-dialog
+//   box-shadow -10px 10px 5px #677078
+//   background-color rgba(119, 171, 225, 0.8)
 </style>
