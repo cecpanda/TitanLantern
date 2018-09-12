@@ -7,6 +7,7 @@
     >
       申请复机
     </el-button>
+    <p>申请之前最好 F5 刷新下</p>
     <el-dialog title="申请复机" :visible.sync="visible" width='68%'>
       <el-form :model='recoverOrder' :rules='recoverOrderRules' ref='recoverOrderForm' v-if='canCreateRecoverOrder'>
         <el-form-item label="责任单位对策说明" prop='solution' label-width='15%'>

@@ -1,14 +1,6 @@
 <template>
   <div>
-    <h1>我的复机单</h1>
-    <el-tag type='info'>申请或者修改的复机单</el-tag> <br>
-    <!-- <el-tabs v-model="activeName" @tab-click="handleClick">
-      <el-tab-pane label="我的申请" name="start">
-      </el-tab-pane>
-      <el-tab-pane label="我的修改" name="mod">
-      </el-tab-pane>
-    </el-tabs> -->
-    <br>
+    <h1>我的复机审核</h1>
     <el-table
       :data="orders"
       style="width: 100%"
@@ -29,32 +21,32 @@
         </template>
       </el-table-column>
       <el-table-column prop="status.desc" label="状态" min-width='180'></el-table-column>
-      <!-- <el-table-column label="序号" min-width='60'>
+      <el-table-column label="序号" min-width='60'>
         <template slot-scope="scope">
           {{ scope.$index + 1 }}
         </template>
-      </el-table-column> -->
-      <!-- <el-table-column label="申请人" min-width='80'>
+      </el-table-column>
+      <el-table-column label="申请人" min-width='80'>
         <template slot-scope="scope">
           {{ recoverorders[scope.$index].user.username }}
         </template>
       </el-table-column>
-      <el-table-column label="申请时间" min-width='150'>
+      <!-- <el-table-column label="申请时间" min-width='150'>
         <template slot-scope="scope">
           {{ recoverorders[scope.$index].created | formatDate }}
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="修改人" min-width='80'>
         <template slot-scope="scope">
           {{ recoverorders[scope.$index].mod_user.username }}
         </template>
       </el-table-column>
-      <el-table-column label="修改时间" min-width='150'>
+      <!-- <el-table-column label="修改时间" min-width='150'>
         <template slot-scope="scope">
           {{ recoverorders[scope.$index].modified | formatDate }}
         </template>
-      </el-table-column>
-      <el-table-column label="责任单位对策说明" min-width='150' show-overflow-tooltip>
+      </el-table-column> -->
+      <!-- <el-table-column label="责任单位对策说明" min-width='150' show-overflow-tooltip>
         <template slot-scope="scope">
           {{ recoverorders[scope.$index].solution }}
         </template>
@@ -63,23 +55,41 @@
         <template slot-scope="scope">
           {{ recoverorders[scope.$index].explain }}
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column label="部分复机" min-width='100'>
         <template slot-scope="scope">
           <span v-if='recoverorders[scope.$index].partial'>是</span>
           <span v-else>否</span>
         </template>
-      </el-table-column> -->
+      </el-table-column>
+      <el-table-column label="工程品质签复" min-width='150'>
+        <template slot-scope="scope">
+          {{ recoverorders[scope.$index].audit.qc_signer.username }}
+        </template>
+      </el-table-column>
+      <el-table-column label="品质签复时间" min-width='150'>
+        <template slot-scope="scope">
+          {{ recoverorders[scope.$index].audit.qc_time | formatDate }}
+        </template>
+      </el-table-column>
+      <el-table-column label="生产领班签复" min-width='150'>
+        <template slot-scope="scope">
+          {{ recoverorders[scope.$index].audit.p_signer.username }}
+        </template>
+      </el-table-column>
+      <el-table-column label="品质签复时间" min-width='150'>
+        <template slot-scope="scope">
+          {{ recoverorders[scope.$index].audit.p_time | formatDate }}
+        </template>
+      </el-table-column>
+      <el-table-column label="是否拒签" min-width='100'>
+        <template slot-scope="scope">
+          <span v-if='recoverorders[scope.$index].audit.p_signer.rejected'>是</span>
+          <span v-else>否</span>
+        </template>
+      </el-table-column>
     </el-table>
     总数: {{ this.count }}
-<!--     <el-pagination
-      background
-      @current-change="handleCurrentChange"
-      :current-page.sync="page"
-      :page-size='pageSize'
-      layout="prev, pager, next, jumper"
-      :total="count">
-    </el-pagination> -->
   </div>
 </template>
 
@@ -89,12 +99,9 @@ import { formatDate } from '@/common/js/date.js'
 import { getOrders } from '@/api/tft'
 
 export default {
-  name: 'MyRecover',
+  name: 'MyRecoverAudit',
   data () {
     return {
-      // 逻辑上无法分页
-      // page: 1,
-      // pageSize: 2,
       count: null,
       orders: []
     }
@@ -102,26 +109,18 @@ export default {
   computed: {
     ...mapGetters({
       username: 'username'
-    })
-    // recoverorders () {
-    //   return this.orders.length ? this.orders[0].recoverorders : []
-    // }
+    }),
+    recoverorders () {
+      return this.orders.length ? this.orders[0].recoverorders : []
+    }
   },
   methods: {
-    // handleClick (tab, event) {
-    //   this.page = 1
-    //   if (tab.name === 'start') {
-    //     this.getStartOrders()
-    //   } else if (tab.name === 'mod') {
-    //     this.getModOrders()
-    //   }
-    // },
-    getOrders () {
-      getOrders({r_name: this.username})
+    getRecoverOrders () {
+      getOrders({r_audit_signer: this.username})
         .then((res) => {
           this.count = res.data.count
           // 这是没有办法的事情，防止后端的默认分页小于此处应有的数据
-          getOrders({'page-size': this.count, r_name: this.username})
+          getOrders({'page-size': this.count, r_audit_signer: this.username})
             .then((res) => {
               this.orders = res.data.results
             })
@@ -130,26 +129,6 @@ export default {
           console.log(error)
         })
     },
-    // getStartOrders () {
-    //   getOrders({page: this.page, 'page-size': this.pageSize, r_user: this.username})
-    //     .then((res) => {
-    //       this.count = res.data.count
-    //       this.orders = res.data.results
-    //     })
-    //     .catch((error) => {
-    //       console.log(error)
-    //     })
-    // },
-    // getModOrders () {
-    //   getOrders({page: this.page, 'page-size': this.pageSize, r_mod: this.username})
-    //     .then((res) => {
-    //       this.count = res.data.count
-    //       this.orders = res.data.results
-    //     })
-    //     .catch((error) => {
-    //       console.log(error)
-    //     })
-    // },
     tableRowClassName ({row, rowIndex}) {
       if (row.status.code === '0') {
         return 'status0'
@@ -175,12 +154,7 @@ export default {
       return 'status0'
     },
     handleCurrentChange (val) {
-      // if (this.activeName === 'start') {
-      //   this.getStartOrders()
-      // } else if (this.activeName === 'mod') {
-      //   this.getModOrders()
-      // }
-      this.getOrders()
+      this.getRecoverOrders()
     },
     formatDate (row, column, time, index) {
       let date = new Date(time)
@@ -197,7 +171,7 @@ export default {
     }
   },
   mounted () {
-    this.getOrders()
+    this.getRecoverOrders()
   }
 }
 </script>

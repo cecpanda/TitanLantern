@@ -14,8 +14,10 @@ import StartOrder from '@/tft/order/components/Start'
 import UpdateOrder from '@/tft/order/components/Update'
 import MyStart from '@/tft/order/components/MyStart'
 import MyRecover from '@/tft/order/components/MyRecover'
-import MyAudit from '@/tft/order/components/MyAudit'
-import AuditOrder from '@/tft/order/components/Audit'
+import MyStartAudit from '@/tft/order/components/MyStartAudit'
+import MyRecoverAudit from '@/tft/order/components/MyRecoverAudit'
+import ToAudit from '@/tft/order/components/ToAudit'
+import ToRecoverAudit from '@/tft/order/components/ToRecoverAudit'
 import Detail from '@/tft/order/components/Detail'
 import Query from '@/tft/order/components/Query'
 import Wiget from '@/widgets/index'
@@ -77,6 +79,20 @@ const router = new Router({
             requireAuth: true
           }
         }, {
+          path: 'to-audit',
+          component: ToAudit,
+          props: true,
+          meta: {
+            requireAuth: true
+          }
+        }, {
+          path: 'to-recover-audit',
+          component: ToRecoverAudit,
+          props: true,
+          meta: {
+            requireAuth: true
+          }
+        }, {
           path: 'mystart',
           component: MyStart,
           meta: {
@@ -89,14 +105,17 @@ const router = new Router({
             requireAuth: true
           }
         }, {
-          path: 'myaudit',
-          component: MyAudit,
+          path: 'mystartaudit',
+          component: MyStartAudit,
           meta: {
             requireAuth: true
           }
         }, {
-          path: 'audit',
-          component: AuditOrder
+          path: 'myrecoveraudit',
+          component: MyRecoverAudit,
+          meta: {
+            requireAuth: true
+          }
         }, {
           path: 'detail/:id',
           component: Detail,

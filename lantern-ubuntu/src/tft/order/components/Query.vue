@@ -117,7 +117,13 @@
       <el-table-column prop="eq" label="停机设备" min-width='100' :show-overflow-tooltip='true'></el-table-column>
       <el-table-column prop="kind" label="停机机种" min-width='100' :show-overflow-tooltip='true'></el-table-column>
       <el-table-column prop="step" label="停机站点" min-width='100' :show-overflow-tooltip='true'></el-table-column>
-      <el-table-column prop="defect_type" label="绝对不良" min-width='100'></el-table-column>
+      <el-table-column label="绝对不良" min-width='100'>
+        <template slot-scope="scope">
+          <span v-if='scope.row.defect_type'>是</span>
+          <span v-else-if='scope.row.defect_type === false'>否</span>
+          <span v-else></span>
+        </template>
+      </el-table-column>
       <el-table-column prop="remarks[0].content" label="最新批注" min-width='100'></el-table-column>
     </el-table>
     <el-pagination

@@ -1,7 +1,7 @@
 <template>
   <el-container>
     <el-main>
-      Maindfsd <br/><br/><br/><br/>
+      Maindfsd
     </el-main>
     <el-aside width="200px">
       aside
@@ -22,10 +22,11 @@ export default {
 
 <style lang='stylus' scoped>
 .el-main
+  height 620px
   background-color: #E9EEF3
   color: #333
   text-align: center
-  line-height: 160px
+  // line-height: 160px
   border 1px solid red
 .el-aside
   background-color: #D3DCE6

@@ -1,14 +1,6 @@
 <template>
   <div>
-    <h1>我的审核</h1>
-    <el-tabs v-model="activeName" @tab-click="handleClick">
-      <el-tab-pane label="停机审核" name="start">
-      </el-tab-pane>
-      <el-tab-pane label="复机审核" name="recover">
-        BUG：修改一个停机单中的多个复机单，此停机单会过滤成多个
-      </el-tab-pane>
-    </el-tabs>
-    <br>
+    <h1>我的停机审核</h1>
     <template>
       <el-table
         :data="orders"
@@ -32,17 +24,25 @@
         <el-table-column prop="status.desc" label="状态" width='180'></el-table-column>
         <el-table-column prop="user.username" label="开单人"></el-table-column>
         <el-table-column prop="group.name" label="开单工程" min-width='100'></el-table-column>
-        <el-table-column prop="created" label="开单时间" :formatter='formatDate' min-width='150'></el-table-column>
         <el-table-column prop="mod_user.username" label="修改人" width='100'></el-table-column>
-        <el-table-column prop="modified" label="修改时间"  :formatter='formatDate' width='150'></el-table-column>
-        <el-table-column prop="found_step" label="发现站点" min-width='100' :show-overflow-tooltip='true'></el-table-column>
-        <el-table-column prop="found_time" label="发现时间" :formatter='formatDate' min-width='150'></el-table-column>
         <el-table-column prop="charge_group.name" label="责任工程" min-width='100'></el-table-column>
-        <el-table-column prop="eq" label="停机设备" min-width='100' :show-overflow-tooltip='true'></el-table-column>
-        <el-table-column prop="kind" label="停机机种" min-width='100' :show-overflow-tooltip='true'></el-table-column>
-        <el-table-column prop="step" label="停机站点" min-width='100' :show-overflow-tooltip='true'></el-table-column>
-        <el-table-column prop="defect_type" label="绝对不良" min-width='100'></el-table-column>
-        <el-table-column prop="remarks[0].content" label="最新批注" min-width='100'></el-table-column>
+        <el-table-column label="绝对不良" min-width='100'>
+          <template slot-scope="scope">
+            <span v-if='scope.row.defect_type'>是</span>
+            <span v-else-if='scope.row.defect_type === false'>否</span>
+            <span v-else></span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="startaudit.p_signer.username" label="生产领班签核" min-width='120'></el-table-column>
+        <el-table-column prop="startaudit.p_time" label="生产签字时间" :formatter='formatDate' min-width='150'></el-table-column>
+        <el-table-column prop="startaudit.c_signer.username" label="责任工程签字" min-width='120'></el-table-column>
+        <el-table-column prop="startaudit.c_time" label="工程签字时间" :formatter='formatDate' min-width='150'></el-table-column>
+        <el-table-column label="是否拒签" min-width='100'>
+          <template slot-scope="scope">
+            <span v-if='scope.row.startaudit.rejected'>是</span>
+            <span v-else>否</span>
+          </template>
+        </el-table-column>
       </el-table>
     </template>
     <el-pagination
@@ -62,12 +62,11 @@ import { formatDate } from '@/common/js/date.js'
 import { getOrders } from '@/api/tft'
 
 export default {
-  name: 'MyAudit',
+  name: 'MyStartAudit',
   data () {
     return {
-      activeName: 'start',
       page: 1,
-      pageSize: 10,
+      pageSize: 15,
       count: null,
       orders: []
     }
@@ -78,26 +77,8 @@ export default {
     })
   },
   methods: {
-    handleClick (tab, event) {
-      this.page = 1
-      if (tab.name === 'start') {
-        this.getStartOrders()
-      } else if (tab.name === 'recover') {
-        this.getRecoverOrders()
-      }
-    },
     getStartOrders () {
       getOrders({page: this.page, 'page-size': this.pageSize, audit_signer: this.username})
-        .then((res) => {
-          this.count = res.data.count
-          this.orders = res.data.results
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    },
-    getRecoverOrders () {
-      getOrders({page: this.page, 'page-size': this.pageSize, r_audit_signer: this.username})
         .then((res) => {
           this.count = res.data.count
           this.orders = res.data.results
@@ -131,11 +112,7 @@ export default {
       return 'status0'
     },
     handleCurrentChange (val) {
-      if (this.activeName === 'start') {
-        this.getStartOrders()
-      } else if (this.activeName === 'recover') {
-        this.getRecoverOrders()
-      }
+      this.getStartOrders()
     },
     formatDate (row, column, time, index) {
       let date = new Date(time)

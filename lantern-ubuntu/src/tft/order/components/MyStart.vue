@@ -1,12 +1,6 @@
 <template>
   <div>
     <h1>我的停机单</h1>
-    <!-- <el-tabs v-model="activeName" @tab-click="handleClick">
-      <el-tab-pane label="我的申请" name="start">
-      </el-tab-pane>
-      <el-tab-pane label="我的修改" name="mod">
-      </el-tab-pane>
-    </el-tabs> -->
     <el-tag type='info'>申请或者修改的停机单</el-tag>
     <template>
       <el-table
@@ -40,7 +34,13 @@
         <el-table-column prop="eq" label="停机设备" min-width='100' :show-overflow-tooltip='true'></el-table-column>
         <el-table-column prop="kind" label="停机机种" min-width='100' :show-overflow-tooltip='true'></el-table-column>
         <el-table-column prop="step" label="停机站点" min-width='100' :show-overflow-tooltip='true'></el-table-column>
-        <el-table-column prop="defect_type" label="绝对不良" min-width='100'></el-table-column>
+        <el-table-column label="绝对不良" min-width='100'>
+          <template slot-scope="scope">
+            <span v-if='scope.row.defect_type'>是</span>
+            <span v-else-if='scope.row.defect_type === false'>否</span>
+            <span v-else></span>
+          </template>
+        </el-table-column>
         <el-table-column prop="remarks[0].content" label="最新批注" min-width='100'></el-table-column>
       </el-table>
     </template>
@@ -64,7 +64,6 @@ export default {
   name: 'MyStart',
   data () {
     return {
-      activeName: 'start',
       page: 1,
       pageSize: 15,
       count: null,

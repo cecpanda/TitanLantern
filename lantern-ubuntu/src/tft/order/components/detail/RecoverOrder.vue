@@ -2,7 +2,9 @@
   <div>
     <el-row>
       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-        <h5 class='recover-order-title'>复机单-{{ index }}</h5>
+        <h3 class='recover-order-title'>
+          复机单 {{ index }}
+        </h3>
       </el-col>
     </el-row>
     <el-row>
