@@ -141,10 +141,10 @@ class RecoverOrder(models.Model):
     class Meta:
         verbose_name = '复机单'
         verbose_name_plural = verbose_name
-        # ordering = ('-created',)  # 为了前端索引
+        ordering = ('-created',)
 
     def __str__(self):
-        return self.order.id
+        return f'{self.order.id} <{self.id}>'
 
 
 class RecoverAudit(models.Model):

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>复机单 - 待审核</h1>
+    <h1>复机单 - 待我审核</h1>
     <p>如果修改了生产科、QC的名字，记得更改这里的代码</p>
     <el-table
       :data="orders"
@@ -11,72 +11,49 @@
       <el-table-column label="编号" min-width='100'>
         <template slot-scope="scope">
           <router-link
-            :to="'/tft/order/detail/' + scope.row.id"
+            :to="'/tft/order/detail/' + scope.row.order.id"
             target='_blank'
             class='id-href'
           >
-            {{ scope.row.id }}
+            {{ scope.row.order.id }}
           </router-link>
         </template>
       </el-table-column>
-      <el-table-column prop="status.desc" label="状态" min-width='180'></el-table-column>
-      <el-table-column label="序号" min-width='60'>
-        <template slot-scope="scope">
-          {{ scope.$index + 1 }}
-        </template>
-      </el-table-column>
-      <!-- <el-table-column label="申请人" min-width='80'>
-        <template slot-scope="scope">
-          {{ recoverorders[scope.$index].user.username }}
-        </template>
-      </el-table-column>
-      <el-table-column label="申请时间" min-width='150'>
-        <template slot-scope="scope">
-          {{ recoverorders[scope.$index].created | formatDate }}
-        </template>
-      </el-table-column>
-      <el-table-column label="修改人" min-width='80'>
-        <template slot-scope="scope">
-          {{ recoverorders[scope.$index].mod_user.username }}
-        </template>
-      </el-table-column>
-      <el-table-column label="修改时间" min-width='150'>
-        <template slot-scope="scope">
-          {{ recoverorders[scope.$index].modified | formatDate }}
-        </template>
-      </el-table-column>
-      <el-table-column label="责任单位对策说明" min-width='150' show-overflow-tooltip>
-        <template slot-scope="scope">
-          {{ recoverorders[scope.$index].solution }}
-        </template>
-      </el-table-column>
-      <el-table-column label="先行 lot 结果说明" min-width='150' show-overflow-tooltip>
-        <template slot-scope="scope">
-          {{ recoverorders[scope.$index].explain }}
-        </template>
-      </el-table-column>
+      <el-table-column prop="order.status" label="状态" min-width='180'></el-table-column>
+      <el-table-column prop="id" label="序号" min-width='60'></el-table-column>
+      <el-table-column prop='user.username' label="申请人" min-width='80'></el-table-column>
+      <el-table-column prop='mod_user.username' label="修改人" min-width='80'></el-table-column>
       <el-table-column label="部分复机" min-width='100'>
         <template slot-scope="scope">
-          <span v-if='recoverorders[scope.$index].partial'>是</span>
+          <span v-if='scope.row.partial'>是</span>
           <span v-else>否</span>
         </template>
-      </el-table-column> -->
+      </el-table-column>
+      <el-table-column prop='audit.qc_signer.username' label="工程品质签复" min-width='150'></el-table-column>
+      <el-table-column prop='audit.qc_time' label="品质签复时间" :formatter='formatDate' min-width='150'></el-table-column>
+      <el-table-column prop='audit.p_signer.username' label="生产领班签复" min-width='150'></el-table-column>
+      <el-table-column prop='audit.p_time' label="生产签复时间" :formatter='formatDate' min-width='150'></el-table-column>
+      <el-table-column label="是否拒签" min-width='100'>
+        <template slot-scope="scope">
+          <span v-if='scope.row.rejected'>是</span>
+          <span v-else>否</span>
+        </template>
+      </el-table-column>
     </el-table>
-    总数: {{ this.count }}
-    <!-- <el-pagination
+    <el-pagination
       background
       @current-change="handleCurrentChange"
       :current-page.sync="page"
       :page-size='pageSize'
-      layout="total, prev, pager, next, jumper"
+      layout="prev, pager, next, jumper"
       :total="count">
-    </el-pagination> -->
+    </el-pagination>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-import { getOrders } from '@/api/tft'
+import { getRecoverOrders } from '@/api/tft'
 import { getUser } from '@/api/user'
 import { formatDate } from '@/common/js/date.js'
 
@@ -84,8 +61,8 @@ export default {
   name: 'ToRecoverAudit',
   data () {
     return {
-      // page: 1,
-      // pageSize: 15,
+      page: 1,
+      pageSize: 15,
       count: null,
       group: {},
       orders: []
@@ -95,9 +72,6 @@ export default {
     ...mapGetters({
       username: 'username'
     })
-    // recoverorders () {
-    //   return this.orders.length ? this.orders[0].recoverorders : []
-    // }
   },
   methods: {
     async getGroup () {
@@ -121,29 +95,25 @@ export default {
       let params
 
       if (this.group.name === 'QC') {
-        params = {status: 5}
+        params = {order__status: 5, page: this.page, 'page-size': this.pageSize}
       } else if (this.group.name === 'MFG') {
-        params = {status: 6}
+        params = {order__status: 6, page: this.page, 'page-size': this.pageSize}
       }
 
       if (params) {
-        getOrders(params)
+        getRecoverOrders(params)
           .then((res) => {
             this.count = res.data.count
-            // 这是没有办法的事情，防止后端的默认分页小于此处应有的数据
-            getOrders(params)
-              .then((res) => {
-                this.orders = res.data.results
-              })
+            this.orders = res.data.results
           })
           .catch((err) => {
             console.log(err)
           })
       }
     },
-    // handleCurrentChange (val) {
-    //   this.getOrders()
-    // },
+    handleCurrentChange (val) {
+      this.getOrders()
+    },
     formatDate (row, column, time, index) {
       let date = new Date(time)
       return formatDate(date, 'yyyy-MM-dd hh:mm:ss')

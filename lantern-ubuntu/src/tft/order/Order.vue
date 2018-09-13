@@ -67,7 +67,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { getOrders } from '@/api/tft'
+import { getOrders, getRecoverOrders } from '@/api/tft'
 import { getUser } from '@/api/user'
 
 export default {
@@ -78,7 +78,6 @@ export default {
       defaultActive: '',
       activeMenu: '',
       group: {},
-      params: undefined,
       start: null,
       recover: null
     }
@@ -115,18 +114,16 @@ export default {
           console.log(err)
         })
     },
-    async getParams () {
-      await this.getGroup()
-      if (this.group.name === 'MFG') {
-        this.params = {status: 1, page: this.page, 'page-size': this.pageSize}
-      } else if (this.group.name) {
-        this.params = {status: 2, charge_group: this.group.name, page: this.page, 'page-size': this.pageSize}
-      }
-    },
     async getStart () {
-      await this.getParams()
-      if (this.params) {
-        getOrders(this.params)
+      await this.getGroup()
+      let params
+      if (this.group.name === 'MFG') {
+        params = {status: 1}
+      } else if (this.group.name) {
+        params = {status: 2, charge_group: this.group.name}
+      }
+      if (params) {
+        getOrders(params)
           .then((res) => {
             this.start = res.data.count
           })
@@ -136,7 +133,22 @@ export default {
       }
     },
     async getRecover () {
-      this.recover = 0
+      await this.getGroup()
+      let params
+      if (this.group.name === 'QC') {
+        params = {order__status: 5}
+      } else if (this.group.name === 'MFG') {
+        params = {order__status: 6, charge_group: this.group.name}
+      }
+      if (params) {
+        getRecoverOrders(params)
+          .then((res) => {
+            this.recover = res.data.count
+          })
+          .catch((err) => {
+            console.log(err)
+          })
+      }
     }
   },
   mounted () {

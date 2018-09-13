@@ -7,11 +7,11 @@ from rest_framework.pagination import PageNumberPagination
 from django_filters import rest_framework as filters
 
 from account.models import GroupSetting
-from .models import Order
+from .models import Order, RecoverOrder
 
 
 class OrderPagination(PageNumberPagination):
-    page_size = 30
+    page_size = 15
     page_size_query_param = 'page-size'
     page_query_param = "page"
     max_page_size = None
@@ -48,6 +48,21 @@ class OrderFilter(filters.FilterSet):
 
     def r_audit_signer_filter(self, queryset, name, value):
         return queryset.filter(Q(recoverorders__audit__qc_signer__username=value) | Q(recoverorders__audit__p_signer__username=value))
+
+
+class RecoverOrderFilter(filters.FilterSet):
+    name = filters.CharFilter(method='name_filter', label='申请人或修改人')
+    audit_signer = filters.CharFilter(method='audit_signer_filter', label='审核人')
+
+    class Meta:
+        model = RecoverOrder
+        fields = ('order__status',)
+
+    def name_filter(self, queryset, name, value):
+        return queryset.filter(Q(user__username=value) | Q(mod_user__username=value))
+
+    def audit_signer_filter(self, queryset, name, value):
+        return queryset.filter(Q(audit__qc_signer__username=value) | Q(audit__p_signer__username=value))
 
 
 

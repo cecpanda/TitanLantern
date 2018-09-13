@@ -3,7 +3,7 @@
     <el-row>
       <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
         <h3 class='recover-order-title'>
-          复机单 {{ index }}
+          复机单 {{ recoverorder.id }}
         </h3>
       </el-col>
     </el-row>
@@ -145,8 +145,7 @@ export default {
     recoverorder: {
       type: Object,
       required: true
-    },
-    index: {}
+    }
   },
   data () {
     return {

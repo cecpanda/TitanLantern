@@ -199,6 +199,18 @@ export const getOrder = (order) => {
   return axios.get(`${host}/tft/order/query/${order}/`)
 }
 
+// query recover orders
+export const getRecoverOrders = (params) => {
+  return axios.get(`${host}/tft/order/recover/`, {
+    params: params
+  })
+}
+
+// query recover order
+export const getRecoverOrder = (id) => {
+  return axios.get(`${host}/tft/order/recover/${id}/`)
+}
+
 // update order
 // get report handler
 export const getReport = (url) => {

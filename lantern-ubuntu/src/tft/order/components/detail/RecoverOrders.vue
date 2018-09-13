@@ -19,7 +19,6 @@
       <el-carousel-item v-for='(recoverorder, index) in recoverorders' :key='index'>
         <RecoverOrder
           :recoverorder='recoverorder'
-          :index='index + 1'
           @change='handleChange'
           :status='status'
         ></RecoverOrder>

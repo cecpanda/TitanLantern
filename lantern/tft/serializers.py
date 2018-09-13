@@ -817,6 +817,20 @@ class QcRecoverAuditSerializer(serializers.Serializer):
             return '8'
         return '0'
 
+class UserOrderSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserModel
+        fields = ('username', 'realname')
+
+
+class ListRecoverSerializer(serializers.ModelSerializer):
+    user = UserOrderSerializer()
+    mod_user = UserOrderSerializer()
+    class Meta:
+        model = RecoverOrder
+        fields = ('id', 'order', 'user', 'created', 'mod_user', 'modified',
+                  'solution', 'explain', 'partial', 'eq', 'kind', 'step')
     def validate_id(self, value):
         try:
             recover_order = RecoverOrder.objects.get(id=value)
@@ -944,8 +958,8 @@ class ShortcutSerializer(serializers.ModelSerializer):
 
 
 # Order Serializer
-class UserOrderSerializer(serializers.ModelSerializer):
 
+class UserOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
         fields = ('username', 'realname')
@@ -1040,4 +1054,35 @@ class OrderSerializer(serializers.ModelSerializer):
         if not ret.get('mod_user'):
             ret['mod_user'] = {}
         return ret
-    
+
+
+# 复机单的查询
+
+class ListOrderSerializer(serializers.ModelSerializer):
+    status = serializers.SerializerMethodField()
+    class Meta:
+        model = Order
+        fields = ('id', 'status')
+
+    def get_status(self, obj):
+        return obj.get_status_display()
+
+
+class ListRecoverOrderSerializer(serializers.ModelSerializer):
+    order = ListOrderSerializer()
+    user = UserOrderSerializer()
+    mod_user = UserOrderSerializer()
+    audit = QueryRecoverAuditSerializer()
+
+    class Meta:
+        model = RecoverOrder
+        fields = ('order', 'id', 'user', 'created', 'mod_user', 'modified',
+                  'solution', 'explain', 'partial', 'eq', 'kind', 'step', 'audit')
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if not ret.get('audit'):
+            ret['audit'] = {'qc_signer': {}, 'p_signer': {}}
+        if not ret.get('mod_user'):
+            ret['mod_user'] = {}
+        return ret

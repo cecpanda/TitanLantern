@@ -14,87 +14,56 @@
       style="width: 100%"
       border
       header-row-class-name='table-header'
-      :row-class-name="tableRowClassName"
       @row-dblclick='rowdbClick'
     >
       <el-table-column label="编号" min-width='100'>
         <template slot-scope="scope">
           <router-link
-            :to="'/tft/order/detail/' + scope.row.id"
+            :to="'/tft/order/detail/' + scope.row.order.id"
             target='_blank'
             class='id-href'
           >
-            {{ scope.row.id }}
+            {{ scope.row.order.id }}
           </router-link>
         </template>
       </el-table-column>
-      <el-table-column prop="status.desc" label="状态" min-width='180'></el-table-column>
-      <!-- <el-table-column label="序号" min-width='60'>
-        <template slot-scope="scope">
-          {{ scope.$index + 1 }}
-        </template>
-      </el-table-column> -->
-      <!-- <el-table-column label="申请人" min-width='80'>
-        <template slot-scope="scope">
-          {{ recoverorders[scope.$index].user.username }}
-        </template>
-      </el-table-column>
-      <el-table-column label="申请时间" min-width='150'>
-        <template slot-scope="scope">
-          {{ recoverorders[scope.$index].created | formatDate }}
-        </template>
-      </el-table-column>
-      <el-table-column label="修改人" min-width='80'>
-        <template slot-scope="scope">
-          {{ recoverorders[scope.$index].mod_user.username }}
-        </template>
-      </el-table-column>
-      <el-table-column label="修改时间" min-width='150'>
-        <template slot-scope="scope">
-          {{ recoverorders[scope.$index].modified | formatDate }}
-        </template>
-      </el-table-column>
-      <el-table-column label="责任单位对策说明" min-width='150' show-overflow-tooltip>
-        <template slot-scope="scope">
-          {{ recoverorders[scope.$index].solution }}
-        </template>
-      </el-table-column>
-      <el-table-column label="先行 lot 结果说明" min-width='150' show-overflow-tooltip>
-        <template slot-scope="scope">
-          {{ recoverorders[scope.$index].explain }}
-        </template>
-      </el-table-column>
+      <el-table-column prop="order.status" label="状态" min-width='180'></el-table-column>
+      <el-table-column prop="id" label="序号" min-width='60'></el-table-column>
+      <el-table-column prop='user.username' label="申请人" min-width='80'></el-table-column>
+      <el-table-column prop='created' label="申请时间" :formatter='formatDate' min-width='150'></el-table-column>
+      <el-table-column prop='mod_user.username' label="修改人" min-width='80'></el-table-column>
+      <el-table-column prop='modified' label="修改时间" :formatter='formatDate' min-width='150'></el-table-column>
+      <el-table-column prop='solution' label="责任单位对策说明" min-width='150' show-overflow-tooltip></el-table-column>
+      <el-table-column prop='explain' label="先行 lot 结果说明" min-width='150' show-overflow-tooltip></el-table-column>
       <el-table-column label="部分复机" min-width='100'>
         <template slot-scope="scope">
-          <span v-if='recoverorders[scope.$index].partial'>是</span>
+          <span v-if='scope.row.partial'>是</span>
           <span v-else>否</span>
         </template>
-      </el-table-column> -->
+      </el-table-column>
     </el-table>
-    总数: {{ this.count }}
-<!--     <el-pagination
+    <el-pagination
       background
       @current-change="handleCurrentChange"
       :current-page.sync="page"
       :page-size='pageSize'
       layout="prev, pager, next, jumper"
       :total="count">
-    </el-pagination> -->
+    </el-pagination>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
 import { formatDate } from '@/common/js/date.js'
-import { getOrders } from '@/api/tft'
+import { getRecoverOrders } from '@/api/tft'
 
 export default {
   name: 'MyRecover',
   data () {
     return {
-      // 逻辑上无法分页
-      // page: 1,
-      // pageSize: 2,
+      page: 1,
+      pageSize: 15,
       count: null,
       orders: []
     }
@@ -103,9 +72,6 @@ export default {
     ...mapGetters({
       username: 'username'
     })
-    // recoverorders () {
-    //   return this.orders.length ? this.orders[0].recoverorders : []
-    // }
   },
   methods: {
     // handleClick (tab, event) {
@@ -117,14 +83,10 @@ export default {
     //   }
     // },
     getOrders () {
-      getOrders({r_name: this.username})
+      getRecoverOrders({page: this.page, 'page-size': this.pageSize, name: this.username})
         .then((res) => {
           this.count = res.data.count
-          // 这是没有办法的事情，防止后端的默认分页小于此处应有的数据
-          getOrders({'page-size': this.count, r_name: this.username})
-            .then((res) => {
-              this.orders = res.data.results
-            })
+          this.orders = res.data.results
         })
         .catch((error) => {
           console.log(error)
@@ -150,36 +112,31 @@ export default {
     //       console.log(error)
     //     })
     // },
-    tableRowClassName ({row, rowIndex}) {
-      if (row.status.code === '0') {
-        return 'status0'
-      } else if (row.status.code === '1') {
-        return 'status1'
-      } else if (row.status.code === '2') {
-        return 'status2'
-      } else if (row.status.code === '3') {
-        return 'status3'
-      } else if (row.status.code === '4') {
-        return 'status4'
-      } else if (row.status.code === '5') {
-        return 'status5'
-      } else if (row.status.code === '6') {
-        return 'status6'
-      } else if (row.status.code === '7') {
-        return 'status7'
-      } else if (row.status.code === '8') {
-        return 'status8'
-      } else if (row.status.code === '9') {
-        return 'status9'
-      }
-      return 'status0'
-    },
+    // tableRowClassName ({row, rowIndex}) {
+    //   if (row.status.code === '0') {
+    //     return 'status0'
+    //   } else if (row.status.code === '1') {
+    //     return 'status1'
+    //   } else if (row.status.code === '2') {
+    //     return 'status2'
+    //   } else if (row.status.code === '3') {
+    //     return 'status3'
+    //   } else if (row.status.code === '4') {
+    //     return 'status4'
+    //   } else if (row.status.code === '5') {
+    //     return 'status5'
+    //   } else if (row.status.code === '6') {
+    //     return 'status6'
+    //   } else if (row.status.code === '7') {
+    //     return 'status7'
+    //   } else if (row.status.code === '8') {
+    //     return 'status8'
+    //   } else if (row.status.code === '9') {
+    //     return 'status9'
+    //   }
+    //   return 'status0'
+    // },
     handleCurrentChange (val) {
-      // if (this.activeName === 'start') {
-      //   this.getStartOrders()
-      // } else if (this.activeName === 'mod') {
-      //   this.getModOrders()
-      // }
       this.getOrders()
     },
     formatDate (row, column, time, index) {

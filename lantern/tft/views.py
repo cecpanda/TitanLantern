@@ -19,12 +19,12 @@ from action.utils import create_action
 from .models import Order, Audit, RecoverOrder, RecoverAudit, Remark, Shortcut
 from .serializers import StartOrderSerializer, RetrieveStartOrderSerializer, \
                          ProductAuditSerializer, ChargeAuditSerializer, \
-                         RecoverOrderSerializer, UpdateRecoverOrderSerializer, \
+                         ListRecoverOrderSerializer, RecoverOrderSerializer, UpdateRecoverOrderSerializer, \
                          QcRecoverAuditSerializer, ProductRecoverAuditSerializer, \
                          RemarkSerializer, CreateRemarkSerializer, \
                          OrderSerializer, ShortcutSerializer
 
-from .utils import IsSameGroup, RecoverOrderIsSameGroup, IsMFGUser, OrderPagination, OrderFilter
+from .utils import IsSameGroup, RecoverOrderIsSameGroup, IsMFGUser, OrderPagination, OrderFilter, RecoverOrderFilter
 
 
 class StartOrderViewSet(CreateModelMixin,
@@ -172,18 +172,31 @@ class AuditViewSet(GenericViewSet):
         return Response({'id': order.id, 'status_code': order.status, 'status': order.get_status_display()})
 
 
-class RecoverOrderViewSet(CreateModelMixin, UpdateModelMixin, GenericViewSet):
+class RecoverOrderViewSet(CreateModelMixin,
+                          ListModelMixin,
+                          RetrieveModelMixin,
+                          UpdateModelMixin,
+                          GenericViewSet):
     queryset = RecoverOrder.objects.all()
     serializer_class = RecoverOrderSerializer
     lookup_field = 'pk'
     authentication_classes = [JSONWebTokenAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated]
+    pagination_class = OrderPagination
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filter_class = RecoverOrderFilter
+    search_fields = ('$id', '$user__username', '$user__realname')
+    ordering_fields = ('created',)
 
     def get_serializer_class(self):
         if self.action == 'create':
             return RecoverOrderSerializer
         if self.action == 'update':
             return UpdateRecoverOrderSerializer
+        if self.action == 'list':
+            return ListRecoverOrderSerializer
+        if self.action == 'retrieve':
+            return ListRecoverOrderSerializer
         return self.serializer_class
 
     def get_permissions(self):

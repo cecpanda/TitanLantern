@@ -302,12 +302,10 @@ export default {
         type: 'info',
         customClass: 'search-msg',
         dangerouslyUseHTMLString: true,
-        message: `<ul>
-                    <li>全部忽略大小写</li>
-                    <li>所有：包括工号、真名</li>
-                    <li>表格头部：当前表格中的当前页的数据</li>
-                    <li>其他: 搜索出的内容不再分页</li>
-                  </ul>
+        message: `<li>全部忽略大小写</li>
+                  <li>所有：包括编号、工号、真名</li>
+                  <li>表格头部：当前表格中的当前页的数据</li>
+                  <li>其他: 搜索出的内容不再分页 - 为了表头过滤</li>
                   `,
         position: 'top-left',
         offset: 150
