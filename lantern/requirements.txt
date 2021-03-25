@@ -44,7 +44,7 @@ pyflakes==1.6.0
 Pygments==2.2.0
 PyJWT==1.6.4
 pytz==2018.4
-PyYAML==3.13
+PyYAML==5.4
 redis==2.10.6
 requests==2.19.1
 simplegeneric==0.8.1
